@@ -1,0 +1,1 @@
+# lozynskiadam.github.io
