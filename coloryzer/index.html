@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Coloryzer</title>
     <script src="assets/coloryzer.js"></script>
 </head>
 <body>
@@ -10,8 +10,8 @@
 <script>
     window.addEventListener("load", function () {
         Coloryzer.make({
-            base: "assets/images/base.png",
-            mask: "assets/images/overlay.png",
+            base: "assets/base.png",
+            mask: "assets/mask.png",
             colors: ['#52b620', '#ff00df', '#818181'],
         }).then(image => {
             document.body.appendChild(image);
