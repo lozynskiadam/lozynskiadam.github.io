@@ -15,24 +15,22 @@ const Coloryzer = {
     },
 
     make: function (config) {
+        config = {...Coloryzer.baseConfig, ...config};
+
         return new Promise(async resolve => {
-            config = {...Coloryzer.baseConfig, ...config};
-
+            const placeholders = config.placeholders.map(hex => Coloryzer.hexToRGB(hex));
+            const colors = config.colors.map(hex => Coloryzer.hexToRGB(hex));
             const base = await Coloryzer.createImage(config.base);
-            const mask = await Coloryzer.replaceMaskColors(
-                await Coloryzer.createImage(config.mask),
-                config.placeholders.map(hex => Coloryzer.hexToRGB(hex)),
-                config.colors.map(hex => Coloryzer.hexToRGB(hex))
-            );
-
+            const mask = await Coloryzer.createImage(config.mask);
+            const overlay = Coloryzer.replaceMaskColors(mask, placeholders, colors);
             const ctx = document.createElement("canvas").getContext("2d");
             ctx.canvas.width = base.width;
             ctx.canvas.height = base.height;
             ctx.drawImage(base, 0, 0);
             ctx.globalCompositeOperation = "overlay";
-            ctx.drawImage(mask, 0, 0);
+            ctx.drawImage(overlay, 0, 0);
 
-            resolve(await Coloryzer.createImage(ctx.canvas.toDataURL()));
+            resolve(ctx.canvas);
         });
     },
 
@@ -45,34 +43,32 @@ const Coloryzer = {
     },
 
     replaceMaskColors: function (mask, placeholders, colors) {
-        return new Promise(async resolve => {
-            const ctx = document.createElement("canvas").getContext("2d");
-            ctx.canvas.width = mask.width;
-            ctx.canvas.height = mask.height;
-            ctx.drawImage(mask, 0, 0);
-            const imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
-            for (let i = 0; i < imageData.data.length; i += 4) {
-                let currentColor = [imageData.data[i], imageData.data[i + 1], imageData.data[i + 2]];
-                if (currentColor.toString() === [0, 0, 0].toString()) {
-                    continue;
-                }
-
-                let color = null;
-                placeholders.forEach((placeholderColor, index) => {
-                    if (currentColor.toString() === placeholderColor.toString()) {
-                        color = colors[index] || null;
-                    }
-                });
-
-                imageData.data[i] = color ? color[0] : 0;
-                imageData.data[i + 1] = color ? color[1] : 0;
-                imageData.data[i + 2] = color ? color[2] : 0;
-                imageData.data[i + 3] = color ? 255 : 0;
+        const ctx = document.createElement("canvas").getContext("2d");
+        ctx.canvas.width = mask.width;
+        ctx.canvas.height = mask.height;
+        ctx.drawImage(mask, 0, 0);
+        const imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+        for (let i = 0; i < imageData.data.length; i += 4) {
+            let currentColor = [imageData.data[i], imageData.data[i + 1], imageData.data[i + 2]];
+            if (currentColor.toString() === [0, 0, 0].toString()) {
+                continue;
             }
-            ctx.putImageData(imageData, 0, 0);
 
-            resolve(await Coloryzer.createImage(ctx.canvas.toDataURL()))
-        });
+            let color = null;
+            placeholders.forEach((placeholderColor, index) => {
+                if (currentColor.toString() === placeholderColor.toString()) {
+                    color = colors[index] || null;
+                }
+            });
+
+            imageData.data[i] = color ? color[0] : 0;
+            imageData.data[i + 1] = color ? color[1] : 0;
+            imageData.data[i + 2] = color ? color[2] : 0;
+            imageData.data[i + 3] = color ? 255 : 0;
+        }
+        ctx.putImageData(imageData, 0, 0);
+
+        return ctx.canvas;
     },
 
     hexToRGB: function (hex) {
