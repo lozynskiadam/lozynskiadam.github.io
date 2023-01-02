@@ -1,34 +1,53 @@
 class Player {
 
-  x = null;
-  y = null;
-  direction = null;
-
-  sprite = null;
-  speed = 10;
+  #direction = null;
+  #sprite = null;
+  #speed = 10;
 
   constructor() {
-    Sprite.createImage('assets/outfit.png').then((image) => {
-      this.sprite = new Sprite(image, 38, 38, false);
-    });
+    let image = new Image();
+    image.onload = () => {
+      this.#sprite = new Sprite(image, 64, 64);
+      this.#sprite.play(1000, true);
+      this.setDirection('south');
+    };
+    image.src = 'assets/outfit.png';
   }
 
-  rotate(direction) {
-    this.direction = direction;
+  getDirection() {
+    return this.#direction;
+  }
 
-    this.sprite.currentColumn = {
-      north: 0,
+  setDirection(direction) {
+    this.#direction = direction;
+    this.#sprite.setColumn({
       south: 1,
-    }[this.direction] ?? 0;
+      east: 2,
+      north: 3,
+      west: 4,
+    }[direction] ?? 1);
   }
 
-  move(x, y) {
-    this.x = x;
-    this.y = y;
+  walk(direction) {
+    this.#direction = direction;
+    this.#sprite.setRow(1);
+    this.#sprite.setColumn({
+      south: 5,
+      east: 6,
+      north: 7,
+      west: 8,
+    }[direction] ?? 1);
+    setTimeout(() => {
+      this.setDirection(direction);
+    }, this.getStepTime());
+  }
+
+  getImage() {
+    return this.#sprite?.getCurrentFrame();
   }
 
   getStepTime() {
-    return 600 - (this.speed * 5.5) + 35;
+    return 600 - (this.#speed * 5.5) + 35;
   }
 
 }

@@ -13,13 +13,14 @@
         window.player = new Player();
 
         window.render = function() {
-          if (!window.player.sprite) {
-            return;
-          }
           const canvas = document.querySelector('#board');
           const context = canvas.getContext('2d');
           context.clearRect(0, 0, canvas.width, canvas.height);
-          context.drawImage(window.player.sprite.getImage(), 0, 0);
+
+          let image = player.getImage();
+          if (image) {
+            context.drawImage(image, 0, 0);
+          }
         }
 
         setInterval(() => {
