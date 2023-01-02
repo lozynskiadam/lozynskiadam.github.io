@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sprite</title>
+    <script src="assets/Player.js"></script>
+    <script src="assets/Sprite.js"></script>
+</head>
+<body>
+<canvas id="board" width="100" height="100"></canvas>
+<script>
+    window.addEventListener("load", async () => {
+        window.player = new Player();
+
+        window.render = function() {
+          if (!window.player.sprite) {
+            return;
+          }
+          const canvas = document.querySelector('#board');
+          const context = canvas.getContext('2d');
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          context.drawImage(window.player.sprite.getImage(), 0, 0);
+        }
+
+        setInterval(() => {
+          window.render()
+        }, 10);
+
+    });
+</script>
+</body>
+</html>
