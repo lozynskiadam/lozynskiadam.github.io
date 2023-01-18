@@ -7,7 +7,7 @@ class Player {
   constructor() {
     let image = new Image();
     image.onload = () => {
-      this.#sprite = new Sprite(image, 64, 64);
+      this.#sprite = new Sprite(image, 38, 38);
       this.#sprite.play(1000, true);
       this.setDirection('south');
     };
