@@ -3,30 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <title>Sprite</title>
-    <script src="assets/Player.js"></script>
+    <script src="assets/Hero.js"></script>
     <script src="assets/Sprite.js"></script>
 </head>
 <body>
-<canvas id="board" width="100" height="100"></canvas>
+
+<img src="assets/charset.png"/>
+
+<hr/>
+
+<canvas id="hero" width="32" height="48"></canvas>
+
+<div>
+    <button onclick="hero.stay()">Stay</button>
+    <button onclick="hero.walk()">Walk</button>
+    <button onclick="hero.setDirection('south')">▼</button>
+    <button onclick="hero.setDirection('north')">▲</button>
+    <button onclick="hero.setDirection('west')">◀</button>
+    <button onclick="hero.setDirection('east')">▶</button>
+</div>
+
 <script>
     window.addEventListener("load", async () => {
-        window.player = new Player();
-
-        window.render = function() {
-          const canvas = document.querySelector('#board');
-          const context = canvas.getContext('2d');
-          context.clearRect(0, 0, canvas.width, canvas.height);
-
-          let image = player.getImage();
-          if (image) {
-            context.drawImage(image, 0, 0);
-          }
+        window.hero = new Hero;
+        window.ctx = document.querySelector('#hero').getContext('2d');
+        window.render = function () {
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            let image = hero.getImage();
+            if (image) {
+                ctx.drawImage(image, 0, 0);
+            }
         }
-
-        setInterval(() => {
-          window.render()
-        }, 10);
-
+        setInterval(window.render, 10);
     });
 </script>
 </body>
