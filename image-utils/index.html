@@ -11,10 +11,9 @@
     window.addEventListener("load", async () => {
         const base = await ImageUtils.createImage("assets/base.png");
         const mask = await ImageUtils.createImage("assets/mask.png");
-        const colors = ['#52b620', '#ff00df', '#818181'];
-        ImageUtils.dye(base, mask, colors).then(image => {
-            document.body.appendChild(image);
-        });
+        const colors = ['#ff0000', '#00ffe1', '#ffcb00'];
+        const image = ImageUtils.dye(base, mask, colors);
+        document.body.appendChild(image);
     });
 </script>
 </body>

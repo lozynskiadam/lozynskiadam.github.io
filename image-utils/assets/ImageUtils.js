@@ -40,24 +40,22 @@ class ImageUtils {
     }
 
     static dye(base, mask, colors) {
-        return new Promise(async resolve => {
-            const placeholders = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#00ffff', '#ff00ff'];
-            const map = {};
-            colors.forEach((color, index) => {
-                map[placeholders[index]] = color;
-            });
-
-            const overlayImg = await ImageUtils.replacePixels(mask, map);
-            const ctx = document.createElement("canvas").getContext("2d");
-
-            ctx.canvas.width = base.width;
-            ctx.canvas.height = base.height;
-            ctx.drawImage(base, 0, 0);
-            ctx.globalCompositeOperation = "overlay";
-            ctx.drawImage(overlayImg, 0, 0);
-
-            resolve(ctx.canvas);
+        const placeholders = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#00ffff', '#ff00ff'];
+        const map = {};
+        colors.forEach((color, index) => {
+            map[placeholders[index]] = color;
         });
+
+        const overlayImg = ImageUtils.replacePixels(mask, map);
+        const ctx = document.createElement("canvas").getContext("2d");
+
+        ctx.canvas.width = base.width;
+        ctx.canvas.height = base.height;
+        ctx.drawImage(base, 0, 0);
+        ctx.globalCompositeOperation = "overlay";
+        ctx.drawImage(overlayImg, 0, 0);
+
+        return ctx.canvas;
     };
 
 }

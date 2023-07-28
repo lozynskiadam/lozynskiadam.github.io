@@ -1,62 +1,55 @@
 class Sprite {
 
     #image = null;
-    #column = 1;
-    #columns = null;
-    #row = 1;
-    #rows = null;
+    #speed = null;
+    #states = [];
     #canvas = null;
     #ctx = null;
     #interval = null;
+    #currentState = null;
+    #currentFrame = null;
 
-    constructor(image, width, height) {
-        this.#image = image;
+    constructor(data) {
+        this.#image = data.image;
+        this.#speed = data.speed;
+        this.#states = data.states || [];
         this.#canvas = document.createElement("canvas");
         this.#ctx = this.#canvas.getContext("2d");
-        this.#canvas.width = width;
-        this.#canvas.height = height;
-        this.#columns = image.width / this.#canvas.width;
-        this.#rows = image.height / this.#canvas.height;
+        this.state(Object.keys(this.#states)[0]);
     }
 
-    setColumn(column) {
-        this.#column = column;
-    }
+    state(state = null) {
+        if (state === null) {
+            return this.#currentState;
+        }
 
-    setRow(row) {
-        this.#row = row;
-    }
-
-    play(time = 1000, continuous = false) {
-        if (this.#interval) {
+        if (this.#currentState === state) {
             return;
         }
-        this.#interval = setInterval(() => {
-            if (++this.#row > this.#rows) {
-                if (continuous) {
-                    this.#row = 1
-                } else {
-                    this.stop()
-                }
-            }
-        }, time / (this.#rows - 1));
-    }
 
-    stop() {
         clearInterval(this.#interval);
         this.#interval = null;
+        this.#currentState = state;
+        this.#currentFrame = 1;
+
+        const numberOfFrames = this.#states[state].length;
+        if (numberOfFrames > 1) {
+            this.#interval = setInterval(() => {
+                if (++this.#currentFrame > numberOfFrames) {
+                    this.#currentFrame = 1;
+                }
+            }, this.#speed);
+        }
     }
 
-    getCurrentFrame() {
-        this.#ctx.clearRect(0, 0, this.#canvas.width, this.#canvas.height);
-        this.#ctx.drawImage(this.#image, (this.#column - 1) * -this.#canvas.width, (this.#row - 1) * -this.#canvas.height);
+    get() {
+        const frame = this.#states[this.#currentState][this.#currentFrame - 1]
 
-        return this.#canvas;
-    }
+        this.#canvas.width = frame.w;
+        this.#canvas.height = frame.h;
 
-    getFrame(column, row) {
         this.#ctx.clearRect(0, 0, this.#canvas.width, this.#canvas.height);
-        this.#ctx.drawImage(this.#image, (column - 1) * -this.#canvas.width, (row - 1) * -this.#canvas.height);
+        this.#ctx.drawImage(this.#image, frame.x, frame.y, frame.w, frame.h, 0, 0, frame.w, frame.h);
 
         return this.#canvas;
     }

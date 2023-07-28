@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Sprite</title>
-    <script src="assets/Hero.js"></script>
     <script src="assets/Sprite.js"></script>
 </head>
 <body>
@@ -14,28 +13,92 @@
 
 <canvas id="hero" width="32" height="48"></canvas>
 
-<div>
-    <button onclick="hero.stay()">Stay</button>
-    <button onclick="hero.walk()">Walk</button>
-    <button onclick="hero.setDirection('south')">▼</button>
-    <button onclick="hero.setDirection('north')">▲</button>
-    <button onclick="hero.setDirection('west')">◀</button>
-    <button onclick="hero.setDirection('east')">▶</button>
-</div>
+<hr/>
+
+Idle:
+<button onclick="window.sprite.state('idleSouth')">▼</button>
+<button onclick="window.sprite.state('idleNorth')">▲</button>
+<button onclick="window.sprite.state('idleWest')">◀</button>
+<button onclick="window.sprite.state('idleEast')">▶</button>
+
+<br/>
+
+Walk:
+<button onclick="window.sprite.state('walkSouth')">▼</button>
+<button onclick="window.sprite.state('walkNorth')">▲</button>
+<button onclick="window.sprite.state('walkWest')">◀</button>
+<button onclick="window.sprite.state('walkEast')">▶</button>
+
 
 <script>
-    window.addEventListener("load", async () => {
-        window.hero = new Hero;
-        window.ctx = document.querySelector('#hero').getContext('2d');
-        window.render = function () {
-            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-            let image = hero.getImage();
-            if (image) {
-                ctx.drawImage(image, 0, 0);
-            }
-        }
-        setInterval(window.render, 10);
-    });
+    window.sprite = null;
+    const ctx = document.querySelector('#hero').getContext('2d');
+
+    function render() {
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.drawImage(window.sprite.get(), 0, 0);
+        requestAnimationFrame(render);
+    }
+
+    const image = new Image();
+    image.onload = () => {
+        window.sprite = new Sprite({
+            image: image,
+            speed: 200,
+            states: {
+                idleSouth: [
+                    {x: 0, y: 0, w: 32, h: 48},
+                    {x: 0, y: 48, w: 32, h: 48},
+                    {x: 0, y: 96, w: 32, h: 48},
+                    {x: 0, y: 144, w: 32, h: 48},
+                ],
+                idleWest: [
+                    {x: 32, y: 0, w: 32, h: 48},
+                    {x: 32, y: 48, w: 32, h: 48},
+                    {x: 32, y: 96, w: 32, h: 48},
+                    {x: 32, y: 144, w: 32, h: 48},
+                ],
+                idleNorth: [
+                    {x: 64, y: 0, w: 32, h: 48},
+                    {x: 64, y: 48, w: 32, h: 48},
+                    {x: 64, y: 96, w: 32, h: 48},
+                    {x: 64, y: 144, w: 32, h: 48},
+                ],
+                idleEast: [
+                    {x: 96, y: 0, w: 32, h: 48},
+                    {x: 96, y: 48, w: 32, h: 48},
+                    {x: 96, y: 96, w: 32, h: 48},
+                    {x: 96, y: 144, w: 32, h: 48},
+                ],
+                walkSouth: [
+                    {x: 128, y: 0, w: 32, h: 48},
+                    {x: 128, y: 48, w: 32, h: 48},
+                    {x: 128, y: 96, w: 32, h: 48},
+                    {x: 128, y: 144, w: 32, h: 48},
+                ],
+                walkWest: [
+                    {x: 160, y: 0, w: 32, h: 48},
+                    {x: 160, y: 48, w: 32, h: 48},
+                    {x: 160, y: 96, w: 32, h: 48},
+                    {x: 160, y: 144, w: 32, h: 48},
+                ],
+                walkNorth: [
+                    {x: 192, y: 0, w: 32, h: 48},
+                    {x: 192, y: 48, w: 32, h: 48},
+                    {x: 192, y: 96, w: 32, h: 48},
+                    {x: 192, y: 144, w: 32, h: 48},
+                ],
+                walkEast: [
+                    {x: 224, y: 0, w: 32, h: 48},
+                    {x: 224, y: 48, w: 32, h: 48},
+                    {x: 224, y: 96, w: 32, h: 48},
+                    {x: 224, y: 144, w: 32, h: 48},
+                ],
+            },
+        })
+        render();
+    };
+    image.src = 'assets/charset.png';
 </script>
 </body>
 </html>
