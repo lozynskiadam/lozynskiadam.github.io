@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dye</title>
+    <script src="assets/ImageExt.js"></script>
+</head>
+<body>
+
+<img src="assets/base.png"/>
+<img src="assets/mask.png"/>
+
+<hr/>
+
+<input id="color1" type="color" value="#ffffff"/>
+<input id="color2" type="color" value="#ffffff"/>
+<input id="color3" type="color" value="#ffffff"/>
+
+<hr/>
+
+<script>
+    ImageExt.registerCreate();
+    ImageExt.registerPrototypeDye();
+
+    window.addEventListener("load", () => {
+        Image.create("assets/base.png").then(async (image) => {
+            window.image = image;
+            image.mask = await Image.create("assets/mask.png");
+        });
+    });
+
+    document.querySelectorAll('[type="color"]').forEach((el) => {
+        el.addEventListener('change', () => {
+            const color1 = document.querySelector('#color1').value;
+            const color2 = document.querySelector('#color2').value;
+            const color3 = document.querySelector('#color3').value;
+            document.querySelector('canvas')?.remove();
+            document.body.appendChild(window.image.dye([color1, color2, color3]));
+        })
+    });
+</script>
+</body>
+</html>
