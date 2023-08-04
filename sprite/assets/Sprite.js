@@ -1,8 +1,10 @@
 class Sprite {
 
     #image = null;
+    #mask = null;
+    #colors = null;
     #speed = null;
-    #states = [];
+    #states = null;
     #canvas = null;
     #ctx = null;
     #interval = null;
@@ -11,10 +13,14 @@ class Sprite {
 
     constructor(data) {
         this.#image = data.image;
-        this.#speed = data.speed;
-        this.#states = data.states || [];
+        this.#mask = data.mask || null;
+        this.#colors = data.colors || null;
+        this.#speed = data.speed || null;
+        this.#states = data.states || {};
+        this.#states.origin = [{x: 0, y: 0, w: this.#image.width, h: this.#image.height}];
         this.#canvas = document.createElement("canvas");
         this.#ctx = this.#canvas.getContext("2d");
+
         this.state(Object.keys(this.#states)[0]);
     }
 
@@ -33,7 +39,7 @@ class Sprite {
         this.#currentFrame = 1;
 
         const numberOfFrames = this.#states[state].length;
-        if (numberOfFrames > 1) {
+        if (numberOfFrames > 1 && this.#speed) {
             this.#interval = setInterval(() => {
                 if (++this.#currentFrame > numberOfFrames) {
                     this.#currentFrame = 1;

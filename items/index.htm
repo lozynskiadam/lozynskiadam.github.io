@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="../sprite/assets/Sprite.js"></script>
+    <script src="../dye/assets/ImageExt.js"></script>
+</head>
+<body>
+
+<pre>
+- Move method `Image.prototype.dye()` to `Sprite.dye()`
+- `Sprite.dye()` should return new Sprite instance.
+</pre>
+
+<canvas id="canvas" width="100" height="100"></canvas>
+
+<script>
+    ImageExt.registerPrototypeDye();
+
+    window.Sprites = {};
+    fetch('./sprites.json').then((response) => response.json()).then((json) => {
+        for (const [key, data] of Object.entries(json)) {
+            const image = new Image();
+            image.onload = () => {
+                const mask = new Image();
+                mask.onload = () => {
+                    Sprites[key] = new Sprite({
+                        image: image,
+                        mask: mask,
+                        speed: data.speed || null,
+                        states: data.states || null
+                    });
+
+                    render();
+                };
+                mask.src = data.mask;
+            };
+            image.src = data.base;
+        }
+    });
+
+    const render = function() {
+        const ctx = document.querySelector('#canvas').getContext('2d');
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.drawImage(Sprites['dagger'].get(), 0, 0);
+        window.requestAnimationFrame(render);
+    }
+
+</script>
+</body>
+</html>
