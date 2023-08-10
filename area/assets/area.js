@@ -1,6 +1,6 @@
 const areaWidth = 5;
 const areaHeight = 5;
-const position = {x: 10, y: 10};
+const position = {};
 window.area = {};
 
 function refreshArea()
@@ -25,23 +25,21 @@ function refreshArea()
     }
     window.area = freshArea;
     requestTiles(missingTiles);
+    document.querySelector('#area').innerText = JSON.stringify(window.area, null, 4);
 }
 
-function requestTiles(missingTiles)
-{
+function requestTiles(missingTiles) {
     for (const tile of missingTiles) {
-        if ((window.area[tile.y]) && (window.area[tile.y][tile.x])) {
-            window.area[tile.y][tile.x] = [1];
+        if ((typeof window.area[tile.y] != 'undefined') && (typeof window.area[tile.y][tile.x] != 'undefined')) {
+            window.area[tile.y][tile.x] = [];
         }
     }
 }
 
-refreshArea();
-console.log(window.area);
+setPosition(100, 100);
 
-setTimeout(() => {
-    position.x = 12;
-    position.y = 12;
+function setPosition(x, y) {
+    position.x = x;
+    position.y = y;
     refreshArea();
-    console.log(window.area);
-}, 2000);
+}
