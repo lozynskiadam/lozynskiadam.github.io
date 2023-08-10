@@ -1,5 +1,5 @@
-const areaWidth = 3;
-const areaHeight = 3;
+const areaWidth = 5;
+const areaHeight = 5;
 const position = {x: 10, y: 10};
 window.area = {};
 
@@ -24,6 +24,16 @@ function refreshArea()
         }
     }
     window.area = freshArea;
+    requestTiles(missingTiles);
+}
+
+function requestTiles(missingTiles)
+{
+    for (const tile of missingTiles) {
+        if ((window.area[tile.y]) && (window.area[tile.y][tile.x])) {
+            window.area[tile.y][tile.x] = [1];
+        }
+    }
 }
 
 refreshArea();
