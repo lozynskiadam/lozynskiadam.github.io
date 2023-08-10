@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PoC</title>
+    <script src="assets/Hero.js"></script>
+    <script src="assets/Board.js"></script>
+</head>
+<body>
+    <button onclick="hero.setPosition(hero.position.x, hero.position.y+1)">▼</button>
+    <button onclick="hero.setPosition(hero.position.x, hero.position.y-1)">▲</button>
+    <button onclick="hero.setPosition(hero.position.x-1, hero.position.y)">◀</button>
+    <button onclick="hero.setPosition(hero.position.x+1, hero.position.y)">▶</button>
+
+    <pre id="area"></pre>
+
+    <script>
+        const hero = new Hero();
+        const board = new Board();
+    </script>
+</body>
+</html>
