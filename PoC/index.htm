@@ -13,10 +13,10 @@
     <button onclick="hero.setPosition(hero.position.x, hero.position.y+1)">▼</button>
     <button onclick="hero.setPosition(hero.position.x, hero.position.y-1)">▲</button>
     <button onclick="hero.setPosition(hero.position.x-1, hero.position.y)">◀</button>
-    <button onclick="hero.setPosition(hero.position.x+1, hero.position.y)">▶</button>
+    <button onclick="hero.walk('right')">▶</button>
 </div>
 
-<canvas id="board" width="160" height="160"></canvas>
+<canvas id="board" width="224" height="224"></canvas>
 
 <script>
     const hero = new Hero();

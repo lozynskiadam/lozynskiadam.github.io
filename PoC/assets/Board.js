@@ -1,11 +1,12 @@
 class Board {
 
-    width = 5;
-    height = 5;
+    width = 7;
+    height = 7;
     tiles = {};
 
     constructor() {
         this.update();
+        window.addEventListener("hero-position-changed", () => {this.update()});
     }
 
     update() {
@@ -30,16 +31,20 @@ class Board {
         this.requestTiles(missingTiles);
     }
 
+    updateTile(x, y, stack) {
+        if ((typeof this.tiles[y] != 'undefined') && (typeof this.tiles[y][x] != 'undefined')) {
+            this.tiles[y][x] = stack;
+        }
+    }
+
     requestTiles(missingTiles) {
         setTimeout(() => {
             for (const tile of missingTiles) {
                 const x = tile.x;
                 const y = tile.y;
-                const rand = Math.floor(Math.random() * 2) + 1;
-                if ((typeof this.tiles[y] != 'undefined') && (typeof this.tiles[y][x] != 'undefined')) {
-                    this.tiles[y][x] = [rand];
-                }
+                const stack = [String(Math.floor(Math.random() * 2) + 1)];
+                this.updateTile(x, y, stack);
             }
-        }, 500);
+        }, 250);
     }
 }
