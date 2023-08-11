@@ -7,22 +7,45 @@
     <script src="assets/Board.js"></script>
 </head>
 <body>
-    <button onclick="hero.setPosition(hero.position.x, hero.position.y+1)">▼</button>
-    <button onclick="hero.setPosition(hero.position.x, hero.position.y-1)">▲</button>
-    <button onclick="hero.setPosition(hero.position.x-1, hero.position.y)">◀</button>
-    <button onclick="hero.setPosition(hero.position.x+1, hero.position.y)">▶</button>
+<button onclick="hero.setPosition(hero.position.x, hero.position.y+1)">▼</button>
+<button onclick="hero.setPosition(hero.position.x, hero.position.y-1)">▲</button>
+<button onclick="hero.setPosition(hero.position.x-1, hero.position.y)">◀</button>
+<button onclick="hero.setPosition(hero.position.x+1, hero.position.y)">▶</button>
 
-    <pre id="position"></pre>
-    <pre id="area"></pre>
+<pre id="position"></pre>
+<canvas id="board" width="160" height="160"></canvas>
 
-    <script>
-        const hero = new Hero();
-        const board = new Board();
-        board.update();
-        setInterval(() => {
-            document.querySelector('#position').innerText = JSON.stringify(hero.position, null, 4);
-            document.querySelector('#area').innerText = JSON.stringify(board.tiles, null, 4);
-        }, 100)
-    </script>
+<script>
+    const hero = new Hero();
+    const board = new Board();
+    board.update();
+
+    function render() {
+        const ctx = document.querySelector('#board').getContext('2d');
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        document.querySelector('#position').innerText = JSON.stringify(hero.position, null, 4);
+
+        let y = 0;
+        for (let [sy, row] of Object.entries(board.tiles)) {
+            let x = 0;
+            for (let [sx, tile] of Object.entries(row)) {
+                tile.forEach((item) => {
+                    ctx.fillStyle = item == '1' ? '#81c06d' : '#515e4e';
+                    ctx.fillRect(x * 32, y * 32, 32, 32);
+                });
+                if (sx == hero.position.x && sy == hero.position.y) {
+                    ctx.fillStyle = '#ff0000';
+                    ctx.fillRect(x * 32 + 5, y * 32 + 5, 22, 22);
+                }
+                x++;
+            }
+            y++;
+        }
+        window.requestAnimationFrame(render);
+    }
+
+    render();
+</script>
 </body>
 </html>

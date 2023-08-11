@@ -17,7 +17,7 @@ class Board {
                 if ((this.tiles[y]) && (this.tiles[y][x])) {
                     _tiles[y][x] = this.tiles[y][x];
                 } else {
-                    _tiles[y][x] = null;
+                    _tiles[y][x] = [];
                     missingTiles.push({x: x, y: y});
                 }
             }
