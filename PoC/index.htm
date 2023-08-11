@@ -17,6 +17,10 @@
     <script>
         const hero = new Hero();
         const board = new Board();
+
+        setInterval(() => {
+            document.querySelector('#area').innerText = JSON.stringify(board.tiles, null, 4);
+        }, 100)
     </script>
 </body>
 </html>

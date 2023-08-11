@@ -24,16 +24,18 @@ class Board {
         }
         this.tiles = _tiles;
         this.requestTiles(missingTiles);
-        document.querySelector('#area').innerText = JSON.stringify(this.tiles, null, 4);
     }
 
     requestTiles(missingTiles) {
-        for (const tile of missingTiles) {
-            const x = tile.x;
-            const y = tile.y;
-            if ((typeof this.tiles[y] != 'undefined') && (typeof this.tiles[y][x] != 'undefined')) {
-                this.tiles[y][x] = [];
+        setTimeout(() => {
+            for (const tile of missingTiles) {
+                const x = tile.x;
+                const y = tile.y;
+                const rand = Math.floor(Math.random() * 2) + 1;
+                if ((typeof this.tiles[y] != 'undefined') && (typeof this.tiles[y][x] != 'undefined')) {
+                    this.tiles[y][x] = [rand];
+                }
             }
-        }
+        }, 500);
     }
 }
