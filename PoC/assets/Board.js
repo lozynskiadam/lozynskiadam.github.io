@@ -4,6 +4,10 @@ class Board {
     height = 5;
     tiles = {};
 
+    constructor() {
+        this.update();
+    }
+
     update() {
         const fromX = hero.position.x - Math.floor(this.width / 2);
         const toX = hero.position.x + Math.floor(this.width / 2);
