@@ -12,13 +12,15 @@
     <button onclick="hero.setPosition(hero.position.x-1, hero.position.y)">◀</button>
     <button onclick="hero.setPosition(hero.position.x+1, hero.position.y)">▶</button>
 
+    <pre id="position"></pre>
     <pre id="area"></pre>
 
     <script>
         const hero = new Hero();
         const board = new Board();
-
+        board.update();
         setInterval(() => {
+            document.querySelector('#position').innerText = JSON.stringify(hero.position, null, 4);
             document.querySelector('#area').innerText = JSON.stringify(board.tiles, null, 4);
         }, 100)
     </script>
