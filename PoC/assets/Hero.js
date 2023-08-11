@@ -1,7 +1,7 @@
 class Hero {
     position = {
-        x: 10,
-        y: 10,
+        x: 100,
+        y: 100,
     };
     offset = {
         x: 0,
@@ -16,26 +16,55 @@ class Hero {
     }
 
     walk(direction) {
-        switch (direction) {
-            case 'right': return this.walkRight();
-        }
-    }
-
-    walkRight() {
         if (this.interval !== null) {
             return;
         }
         this.interval = setInterval(() => {
-            this.offset.x++;
-            if (this.offset.x === 16) {
-                this.position.x++;
-                window.dispatchEvent(new CustomEvent("hero-position-changed"));
-                this.offset.x = -16;
-            }
-            if (this.offset.x === 0) {
+            if (direction === 'up') this.walkUp();
+            if (direction === 'down') this.walkDown();
+            if (direction === 'left') this.walkLeft();
+            if (direction === 'right') this.walkRight();
+            if (this.offset.x === 0 && this.offset.y === 0) {
                 clearInterval(this.interval);
                 this.interval = null;
             }
-        }, 10);
+        }, 10)
+    }
+
+
+    walkUp() {
+        this.offset.y--;
+        if (this.offset.y === -16) {
+            this.position.y--;
+            window.dispatchEvent(new CustomEvent("hero-position-changed"));
+            this.offset.y = 16;
+        }
+    }
+
+    walkDown() {
+        this.offset.y++;
+        if (this.offset.y === 16) {
+            this.position.y++;
+            window.dispatchEvent(new CustomEvent("hero-position-changed"));
+            this.offset.y = -16;
+        }
+    }
+
+    walkLeft() {
+        this.offset.x--;
+        if (this.offset.x === -16) {
+            this.position.x--;
+            window.dispatchEvent(new CustomEvent("hero-position-changed"));
+            this.offset.x = 16;
+        }
+    }
+
+    walkRight() {
+        this.offset.x++;
+        if (this.offset.x === 16) {
+            this.position.x++;
+            window.dispatchEvent(new CustomEvent("hero-position-changed"));
+            this.offset.x = -16;
+        }
     }
 }

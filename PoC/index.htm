@@ -9,19 +9,19 @@
 </head>
 <body>
 
-<div>
-    <button onclick="hero.setPosition(hero.position.x, hero.position.y+1)">▼</button>
-    <button onclick="hero.setPosition(hero.position.x, hero.position.y-1)">▲</button>
-    <button onclick="hero.setPosition(hero.position.x-1, hero.position.y)">◀</button>
-    <button onclick="hero.walk('right')">▶</button>
-</div>
-
 <canvas id="board" width="224" height="224"></canvas>
 
 <script>
     const hero = new Hero();
     const board = new Board();
     Renderer.render();
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowUp' || e.key === 'w') hero.walk('up');
+        if (e.key === 'ArrowDown' || e.key === 's') hero.walk('down');
+        if (e.key === 'ArrowLeft' || e.key === 'a') hero.walk('left');
+        if (e.key === 'ArrowRight' || e.key === 'd') hero.walk('right');
+    });
 </script>
 </body>
 </html>
