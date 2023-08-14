@@ -44,7 +44,7 @@
     const render = function() {
         const ctx = document.querySelector('#canvas').getContext('2d');
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        ctx.drawImage(Sprites['dagger'].get(), 0, 0);
+        ctx.drawImage(Sprites['dagger'].getFrame(), 0, 0);
         window.requestAnimationFrame(render);
     }
 

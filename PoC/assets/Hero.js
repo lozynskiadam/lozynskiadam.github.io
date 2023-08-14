@@ -8,6 +8,11 @@ class Hero {
         y: 0,
     };
     interval = null;
+    sprite = null;
+
+    constructor(sprite) {
+        this.sprite = sprite;
+    }
 
     setPosition(x, y) {
         this.position.x = x;
@@ -34,37 +39,53 @@ class Hero {
 
     walkUp() {
         this.offset.y--;
+        this.sprite.state('walkNorth');
         if (this.offset.y === -16) {
             this.position.y--;
             window.dispatchEvent(new CustomEvent("hero-position-changed"));
             this.offset.y = 16;
         }
+        if (this.offset.x === 0 && this.offset.y === 0) {
+            this.sprite.state('idleNorth');
+        }
     }
 
     walkDown() {
         this.offset.y++;
+        this.sprite.state('walkSouth');
         if (this.offset.y === 16) {
             this.position.y++;
             window.dispatchEvent(new CustomEvent("hero-position-changed"));
             this.offset.y = -16;
         }
+        if (this.offset.x === 0 && this.offset.y === 0) {
+            this.sprite.state('idleSouth');
+        }
     }
 
     walkLeft() {
         this.offset.x--;
+        this.sprite.state('walkWest');
         if (this.offset.x === -16) {
             this.position.x--;
             window.dispatchEvent(new CustomEvent("hero-position-changed"));
             this.offset.x = 16;
         }
+        if (this.offset.x === 0 && this.offset.y === 0) {
+            this.sprite.state('idleWest');
+        }
     }
 
     walkRight() {
         this.offset.x++;
+        this.sprite.state('walkEast');
         if (this.offset.x === 16) {
             this.position.x++;
             window.dispatchEvent(new CustomEvent("hero-position-changed"));
             this.offset.x = -16;
+        }
+        if (this.offset.x === 0 && this.offset.y === 0) {
+            this.sprite.state('idleEast');
         }
     }
 }

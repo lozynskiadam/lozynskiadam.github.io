@@ -36,7 +36,7 @@ Walk:
 
     function render() {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        ctx.drawImage(window.sprite.get(), 0, 0);
+        ctx.drawImage(window.sprite.getFrame(), 0, 0);
         requestAnimationFrame(render);
     }
 

@@ -1,7 +1,7 @@
 class Board {
 
-    width = 7;
-    height = 7;
+    width = 9;
+    height = 9;
     tiles = {};
 
     constructor() {

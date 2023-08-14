@@ -49,7 +49,7 @@ class Sprite {
         }
     }
 
-    get() {
+    getFrame() {
         const frame = this.#states[this.#currentState][this.#currentFrame - 1];
         if (this.#lastFrame === frame) {
             return this.#canvas;
