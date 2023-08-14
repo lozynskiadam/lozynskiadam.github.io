@@ -42,7 +42,17 @@ class Board {
             for (const tile of missingTiles) {
                 const x = tile.x;
                 const y = tile.y;
-                const stack = [String(Math.floor(Math.random() * 2) + 1)];
+                const stack = [];
+
+                if (Math.floor(Math.random() * 2)) {
+                    stack.push('grass')
+                    if (Math.floor(Math.random() * 3) === 2) {
+                        stack.push('flower');
+                    }
+                } else {
+                    stack.push('stone-tile');
+                }
+
                 this.updateTile(x, y, stack);
             }
         }, 250);

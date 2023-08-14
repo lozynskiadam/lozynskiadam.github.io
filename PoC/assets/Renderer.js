@@ -5,9 +5,7 @@ class Renderer {
     static renderTile(x, y, sx, sy, layer, tile) {
         if (layer === 'ground') {
             tile.forEach((item) => {
-                Renderer.tempCtx.fillStyle = item === '1'
-                  ? Renderer.drawSprite(Sprites['grass'].getFrame(), x, y)
-                  : Renderer.drawSprite(Sprites['tile'].getFrame(), x, y);
+                Renderer.drawSprite(Sprites[item].getFrame(), x, y)
             });
         }
 

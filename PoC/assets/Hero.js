@@ -24,6 +24,17 @@ class Hero {
         if (this.interval !== null) {
             return;
         }
+
+        let targetPos = {}
+        if (direction === 'up') targetPos = {x: this.position.x, y: this.position.y - 1};
+        if (direction === 'down') targetPos = {x: this.position.x, y: this.position.y + 1};
+        if (direction === 'left') targetPos = {x: this.position.x - 1, y: this.position.y};
+        if (direction === 'right') targetPos = {x: this.position.x + 1, y: this.position.y};
+
+        if (board.tiles[targetPos.y][targetPos.x].find((item) => item === 'flower')) {
+            return;
+        }
+
         this.interval = setInterval(() => {
             if (direction === 'up') this.walkUp();
             if (direction === 'down') this.walkDown();
