@@ -10,6 +10,7 @@ class Sprite {
     #interval = null;
     #currentState = null;
     #currentFrame = null;
+    #lastFrame = null;
 
     constructor(data) {
         this.#image = data.image;
@@ -49,8 +50,12 @@ class Sprite {
     }
 
     get() {
-        const frame = this.#states[this.#currentState][this.#currentFrame - 1]
+        const frame = this.#states[this.#currentState][this.#currentFrame - 1];
+        if (this.#lastFrame === frame) {
+            return this.#canvas;
+        }
 
+        this.#lastFrame = frame;
         this.#canvas.width = frame.w;
         this.#canvas.height = frame.h;
 
