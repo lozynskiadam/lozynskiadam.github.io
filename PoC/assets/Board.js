@@ -57,4 +57,15 @@ class Board {
             }
         }, 250);
     }
+
+    isWalkable(x, y) {
+        if (typeof this.tiles[y] == 'undefined' || typeof this.tiles[y][x] == 'undefined') {
+            return false
+        }
+        if (this.tiles[y][x].find((item) => item === 'flower')) {
+            return false
+        }
+
+        return true;
+    }
 }

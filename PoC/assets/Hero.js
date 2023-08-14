@@ -31,7 +31,7 @@ class Hero {
         if (direction === 'left') targetPos = {x: this.position.x - 1, y: this.position.y};
         if (direction === 'right') targetPos = {x: this.position.x + 1, y: this.position.y};
 
-        if (board.tiles[targetPos.y][targetPos.x].find((item) => item === 'flower')) {
+        if (!board.isWalkable(targetPos.x, targetPos.y)) {
             return;
         }
 
