@@ -3,11 +3,18 @@ class Renderer {
     static renderTile(x, y, sx, sy, layer, tile) {
         if (layer === 'ground') {
             tile.forEach((item) => {
-                Renderer.drawSprite(Sprites[item].getFrame(), x, y)
+                if (['floor-1', 'floor-2', 'floor-3', 'floor-4'].includes(item)) {
+                    Renderer.drawSprite(Sprites[item].getFrame(), x, y);
+                }
             });
         }
 
-        if (layer === 'creatures') {
+        if (layer === 'objects') {
+            tile.forEach((item) => {
+                if (['barrel', 'chest', 'wall'].includes(item)) {
+                    Renderer.drawSprite(Sprites[item].getFrame(), x, y)
+                }
+            });
             if (sx === hero.position.x && sy === hero.position.y) {
                 Renderer.drawCreature(hero, x, y)
             }
@@ -35,7 +42,7 @@ class Renderer {
         Renderer.tempCtx = canvas.getContext('2d');
         Renderer.tempCtx.fillStyle = '#25131a';
         Renderer.tempCtx.fillRect(0, 0, Renderer.tempCtx.canvas.width, Renderer.tempCtx.canvas.height);
-        for (let layer of ['ground', 'creatures']) {
+        for (let layer of ['ground', 'objects']) {
             let y = 0;
             for (let [sy, row] of Object.entries(board.tiles)) {
                 let x = 0;

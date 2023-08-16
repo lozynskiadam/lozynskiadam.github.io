@@ -1,6 +1,6 @@
 const TILE_SIZE = 32;
-const BOARD_WIDTH = 13;
-const BOARD_HEIGHT = 11;
+const BOARD_WIDTH = 17;
+const BOARD_HEIGHT = 13;
 
 // prepare canvas
 const canvas = document.createElement('canvas');

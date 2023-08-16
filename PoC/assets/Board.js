@@ -8,7 +8,9 @@ class Board {
         this.width = width;
         this.height = height;
         this.update();
-        window.addEventListener("hero-position-changed", () => {this.update()});
+        window.addEventListener("hero-position-changed", () => {
+            this.update()
+        });
     }
 
     update() {
@@ -46,17 +48,22 @@ class Board {
                 const y = tile.y;
                 const stack = [];
 
-                if (!Math.floor(Math.random() * 16)) {
-
+                if (!Math.floor(Math.random() * 40)) {
+                    stack.push('floor-2');
+                } else if (!Math.floor(Math.random() * 40)) {
+                    stack.push('floor-3');
+                } else if (!Math.floor(Math.random() * 5)) {
+                    stack.push('floor-4');
                 } else {
-                    stack.push('floor')
-                    if (!Math.floor(Math.random() * 30)) {
-                        stack.push('barrel');
-                    } else if (!Math.floor(Math.random() * 30)) {
-                        stack.push('chest');
-                    } else if (!Math.floor(Math.random() * 30)) {
-                        stack.push('wall');
-                    }
+                    stack.push('floor-1')
+                }
+
+                if (!Math.floor(Math.random() * 30)) {
+                    stack.push('barrel');
+                } else if (!Math.floor(Math.random() * 75)) {
+                    stack.push('chest');
+                } else if (!Math.floor(Math.random() * 10)) {
+                    stack.push('wall');
                 }
 
                 this.updateTile(x, y, stack);
@@ -68,7 +75,7 @@ class Board {
         if (typeof this.tiles[y] == 'undefined' || typeof this.tiles[y][x] == 'undefined') {
             return false
         }
-        if (!this.tiles[y][x].find((item) => item === 'floor')) {
+        if (!this.tiles[y][x].find((item) => ['floor-1', 'floor-2', 'floor-3', 'floor-4'].includes(item))) {
             return false
         }
         if (this.tiles[y][x].find((item) => ['barrel', 'chest', 'wall'].includes(item))) {
@@ -78,4 +85,5 @@ class Board {
         return true;
     }
 }
+
 S
