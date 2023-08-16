@@ -1,6 +1,6 @@
 class Renderer {
 
-    static TILE_SIZE = 32;
+    static TILE_SIZE = 32; // must be even
 
     static renderTile(x, y, sx, sy, layer, tile) {
         if (layer === 'ground') {

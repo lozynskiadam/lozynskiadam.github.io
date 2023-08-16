@@ -43,9 +43,9 @@ window.addEventListener("sprites-loaded", () => {
     window.board = new Board();
     Renderer.render();
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowUp' || e.key === 'w' || e.code === 'Numpad8') hero.walk('up');
-        if (e.key === 'ArrowDown' || e.key === 's' || e.code === 'Numpad2') hero.walk('down');
-        if (e.key === 'ArrowLeft' || e.key === 'a' || e.code === 'Numpad4') hero.walk('left');
-        if (e.key === 'ArrowRight' || e.key === 'd' || e.code === 'Numpad6') hero.walk('right');
+        if (e.key === 'ArrowUp' || e.key === 'w' || e.code === 'Numpad8') hero.walk('north');
+        if (e.key === 'ArrowDown' || e.key === 's' || e.code === 'Numpad2') hero.walk('south');
+        if (e.key === 'ArrowLeft' || e.key === 'a' || e.code === 'Numpad4') hero.walk('west');
+        if (e.key === 'ArrowRight' || e.key === 'd' || e.code === 'Numpad6') hero.walk('east');
     });
 });

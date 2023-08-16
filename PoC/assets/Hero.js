@@ -7,96 +7,91 @@ class Hero {
         x: 0,
         y: 0,
     };
-    interval = null;
     sprite = null;
+    speed = 500; // miliseconds to pass tile
+    movement = {
+        queuedMove: null,
+        interval: null,
+        currentFrame: 0,
+    };
 
     constructor(sprite) {
         this.sprite = sprite;
     }
 
     setPosition(x, y) {
-        this.position.x = x;
-        this.position.y = y;
+        this.position = {x: x, y: y};
         window.dispatchEvent(new CustomEvent("hero-position-changed"));
     }
 
     walk(direction) {
-        if (this.interval !== null) {
-            return;
-        }
-
-        let targetPos = {}
-        if (direction === 'up') targetPos = {x: this.position.x, y: this.position.y - 1};
-        if (direction === 'down') targetPos = {x: this.position.x, y: this.position.y + 1};
-        if (direction === 'left') targetPos = {x: this.position.x - 1, y: this.position.y};
-        if (direction === 'right') targetPos = {x: this.position.x + 1, y: this.position.y};
-
-        if (!board.isWalkable(targetPos.x, targetPos.y)) {
-            return;
-        }
-
-        this.interval = setInterval(() => {
-            if (direction === 'up') this.walkUp();
-            if (direction === 'down') this.walkDown();
-            if (direction === 'left') this.walkLeft();
-            if (direction === 'right') this.walkRight();
-            if (this.offset.x === 0 && this.offset.y === 0) {
-                clearInterval(this.interval);
-                this.interval = null;
+        if (this.movement.interval !== null) {
+            if (this.movement.currentFrame > (Renderer.TILE_SIZE - (Renderer.TILE_SIZE/3))) {
+                this.movement.queuedMove = direction;
             }
-        }, 10)
+            return;
+        }
+
+        const targetPosition = this.getTargetPosition(direction);
+        if (!board.isWalkable(targetPosition.x, targetPosition.y)) {
+            return;
+        }
+
+        this.movement.interval = setInterval(() => {
+            this.sprite.state('walk-' + direction);
+            this.movement.currentFrame++;
+            this.updateOffsetAfterAnimationFrameChange(direction);
+            if (this.movement.currentFrame === (Renderer.TILE_SIZE / 2)) {
+                this.position = targetPosition;
+                window.dispatchEvent(new CustomEvent("hero-position-changed"));
+                this.updateOffsetAfterPositionChange(direction);
+            }
+            if (this.movement.currentFrame === Renderer.TILE_SIZE) {
+                clearInterval(this.movement.interval);
+                this.movement.interval = null;
+                this.movement.currentFrame = 0;
+                if (this.movement.queuedMove) {
+                    direction = this.movement.queuedMove;
+                    this.movement.queuedMove = null;
+                    this.walk(direction);
+                } else {
+                    this.sprite.state('idle-' + direction);
+                }
+            }
+        }, this.speed / Renderer.TILE_SIZE);
     }
 
+    getTargetPosition(direction) {
+        const map = {
+            'north': { x: 0, y: -1 },
+            'south': { x: 0, y: 1 },
+            'west': { x: -1, y: 0 },
+            'east': { x: 1, y: 0 }
+        };
 
-    walkUp() {
-        this.offset.y--;
-        this.sprite.state('walkNorth');
-        if (this.offset.y === -16) {
-            this.position.y--;
-            window.dispatchEvent(new CustomEvent("hero-position-changed"));
-            this.offset.y = 16;
-        }
-        if (this.offset.x === 0 && this.offset.y === 0) {
-            this.sprite.state('idleNorth');
-        }
+        return {
+            x: this.position.x + map[direction].x,
+            y: this.position.y + map[direction].y
+        };
     }
 
-    walkDown() {
-        this.offset.y++;
-        this.sprite.state('walkSouth');
-        if (this.offset.y === 16) {
-            this.position.y++;
-            window.dispatchEvent(new CustomEvent("hero-position-changed"));
-            this.offset.y = -16;
+    updateOffsetAfterAnimationFrameChange(direction) {
+        const map = {
+            'north': () => this.offset.y--,
+            'south': () => this.offset.y++,
+            'west': () => this.offset.x--,
+            'east': () => this.offset.x++
         }
-        if (this.offset.x === 0 && this.offset.y === 0) {
-            this.sprite.state('idleSouth');
-        }
+        map[direction]();
     }
 
-    walkLeft() {
-        this.offset.x--;
-        this.sprite.state('walkWest');
-        if (this.offset.x === -16) {
-            this.position.x--;
-            window.dispatchEvent(new CustomEvent("hero-position-changed"));
-            this.offset.x = 16;
+    updateOffsetAfterPositionChange(direction) {
+        const map = {
+            'north': () => this.offset.y = (Renderer.TILE_SIZE / 2),
+            'south': () => this.offset.y = -(Renderer.TILE_SIZE / 2),
+            'west': () => this.offset.x = (Renderer.TILE_SIZE / 2),
+            'east': () => this.offset.x = -(Renderer.TILE_SIZE / 2)
         }
-        if (this.offset.x === 0 && this.offset.y === 0) {
-            this.sprite.state('idleWest');
-        }
-    }
-
-    walkRight() {
-        this.offset.x++;
-        this.sprite.state('walkEast');
-        if (this.offset.x === 16) {
-            this.position.x++;
-            window.dispatchEvent(new CustomEvent("hero-position-changed"));
-            this.offset.x = -16;
-        }
-        if (this.offset.x === 0 && this.offset.y === 0) {
-            this.sprite.state('idleEast');
-        }
+        map[direction]();
     }
 }
