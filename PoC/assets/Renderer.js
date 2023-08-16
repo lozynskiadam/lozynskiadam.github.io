@@ -1,7 +1,5 @@
 class Renderer {
 
-    static TILE_SIZE = 32; // must be even
-
     static renderTile(x, y, sx, sy, layer, tile) {
         if (layer === 'ground') {
             tile.forEach((item) => {
@@ -17,15 +15,15 @@ class Renderer {
     }
 
     static drawSprite(image, x, y) {
-        let top = (y * Renderer.TILE_SIZE) + (Renderer.TILE_SIZE - image.height);
-        let left = (x * Renderer.TILE_SIZE) + (Math.ceil(Renderer.TILE_SIZE / 2) - Math.ceil(image.width / 2));
+        let top = (y * TILE_SIZE) + (TILE_SIZE - image.height);
+        let left = (x * TILE_SIZE) + (Math.ceil(TILE_SIZE / 2) - Math.ceil(image.width / 2));
         Renderer.tempCtx.drawImage(image, left, top);
     }
 
     static drawCreature(creature, x, y) {
         let image = creature.sprite.getFrame();
-        let top = (y * Renderer.TILE_SIZE) + (Renderer.TILE_SIZE - image.height) + creature.offset.y;
-        let left = (x * Renderer.TILE_SIZE) + (Math.ceil(Renderer.TILE_SIZE / 2) - Math.ceil(image.width / 2)) + creature.offset.x;
+        let top = (y * TILE_SIZE) + (TILE_SIZE - image.height) + creature.offset.y;
+        let left = (x * TILE_SIZE) + (Math.ceil(TILE_SIZE / 2) - Math.ceil(image.width / 2)) + creature.offset.x;
         Renderer.tempCtx.drawImage(image, left, top);
     }
 

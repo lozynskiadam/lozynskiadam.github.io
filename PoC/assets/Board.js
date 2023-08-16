@@ -1,10 +1,12 @@
 class Board {
 
-    width = 9;
-    height = 9;
+    width = null;
+    height = null;
     tiles = {};
 
-    constructor() {
+    constructor(width, height) {
+        this.width = width;
+        this.height = height;
         this.update();
         window.addEventListener("hero-position-changed", () => {this.update()});
     }

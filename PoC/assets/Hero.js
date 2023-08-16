@@ -26,39 +26,44 @@ class Hero {
 
     walk(direction) {
         if (this.movement.interval !== null) {
-            if (this.movement.currentFrame > (Renderer.TILE_SIZE - (Renderer.TILE_SIZE/3))) {
+            if (this.movement.currentFrame > (TILE_SIZE - (TILE_SIZE/3))) {
                 this.movement.queuedMove = direction;
+                return true;
             }
-            return;
+            return false;
         }
 
         const targetPosition = this.getTargetPosition(direction);
         if (!board.isWalkable(targetPosition.x, targetPosition.y)) {
-            return;
+            return false;
         }
 
         this.movement.interval = setInterval(() => {
             this.sprite.state('walk-' + direction);
             this.movement.currentFrame++;
             this.updateOffsetAfterAnimationFrameChange(direction);
-            if (this.movement.currentFrame === (Renderer.TILE_SIZE / 2)) {
+            if (this.movement.currentFrame === (TILE_SIZE / 2)) {
                 this.position = targetPosition;
                 window.dispatchEvent(new CustomEvent("hero-position-changed"));
                 this.updateOffsetAfterPositionChange(direction);
             }
-            if (this.movement.currentFrame === Renderer.TILE_SIZE) {
+            if (this.movement.currentFrame === TILE_SIZE) {
                 clearInterval(this.movement.interval);
                 this.movement.interval = null;
                 this.movement.currentFrame = 0;
                 if (this.movement.queuedMove) {
                     direction = this.movement.queuedMove;
                     this.movement.queuedMove = null;
-                    this.walk(direction);
+                    if (!this.walk(direction)) {
+                        this.sprite.state('idle-' + direction);
+                    }
                 } else {
                     this.sprite.state('idle-' + direction);
                 }
             }
-        }, this.speed / Renderer.TILE_SIZE);
+        }, this.speed / TILE_SIZE);
+
+        return true;
     }
 
     getTargetPosition(direction) {
@@ -87,10 +92,10 @@ class Hero {
 
     updateOffsetAfterPositionChange(direction) {
         const map = {
-            'north': () => this.offset.y = (Renderer.TILE_SIZE / 2),
-            'south': () => this.offset.y = -(Renderer.TILE_SIZE / 2),
-            'west': () => this.offset.x = (Renderer.TILE_SIZE / 2),
-            'east': () => this.offset.x = -(Renderer.TILE_SIZE / 2)
+            'north': () => this.offset.y = (TILE_SIZE / 2),
+            'south': () => this.offset.y = -(TILE_SIZE / 2),
+            'west': () => this.offset.x = (TILE_SIZE / 2),
+            'east': () => this.offset.x = -(TILE_SIZE / 2)
         }
         map[direction]();
     }

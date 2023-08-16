@@ -1,3 +1,13 @@
+const TILE_SIZE = 32;
+const BOARD_WIDTH = 13;
+const BOARD_HEIGHT = 11;
+
+// prepare canvas
+const canvas = document.createElement('canvas');
+canvas.id = 'board';
+canvas.width = TILE_SIZE * BOARD_WIDTH;
+canvas.height = TILE_SIZE * BOARD_HEIGHT;
+document.querySelector('#app').append(canvas);
 
 // load sprites
 window.Sprites = {};
@@ -40,7 +50,7 @@ fetch('assets/sprites.json').then((response) => response.json()).then((json) => 
 
 window.addEventListener("sprites-loaded", () => {
     window.hero = new Hero(Sprites['outfit']);
-    window.board = new Board();
+    window.board = new Board(BOARD_WIDTH, BOARD_HEIGHT);
     Renderer.render();
     document.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowUp' || e.key === 'w' || e.code === 'Numpad8') hero.walk('north');
