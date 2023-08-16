@@ -8,7 +8,7 @@ class Hero {
         y: 0,
     };
     sprite = null;
-    speed = 500; // miliseconds to pass tile
+    speed = 2; // tiles per second
     movement = {
         queuedMove: null,
         interval: null,
@@ -61,7 +61,7 @@ class Hero {
                     this.sprite.state('idle-' + direction);
                 }
             }
-        }, this.speed / TILE_SIZE);
+        }, 1000 / this.speed / TILE_SIZE);
 
         return true;
     }
