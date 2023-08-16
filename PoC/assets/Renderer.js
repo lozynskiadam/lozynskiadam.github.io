@@ -33,7 +33,7 @@ class Renderer {
         canvas.width = mainCtx.canvas.width;
         canvas.height = mainCtx.canvas.height;
         Renderer.tempCtx = canvas.getContext('2d');
-        Renderer.tempCtx.fillStyle = '#000000';
+        Renderer.tempCtx.fillStyle = '#25131a';
         Renderer.tempCtx.fillRect(0, 0, Renderer.tempCtx.canvas.width, Renderer.tempCtx.canvas.height);
         for (let layer of ['ground', 'creatures']) {
             let y = 0;
@@ -49,7 +49,7 @@ class Renderer {
             }
         }
         mainCtx.clearRect(0, 0, mainCtx.canvas.width, mainCtx.canvas.height);
-        mainCtx.drawImage(canvas, hero.offset.x * (-1), hero.offset.y * (-1));
+        mainCtx.drawImage(canvas, -hero.offset.x, -hero.offset.y);
         window.requestAnimationFrame(Renderer.render);
     }
 

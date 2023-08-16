@@ -46,13 +46,17 @@ class Board {
                 const y = tile.y;
                 const stack = [];
 
-                if (Math.floor(Math.random() * 2)) {
-                    stack.push('grass')
-                    if (Math.floor(Math.random() * 3) === 2) {
-                        stack.push('flower');
-                    }
+                if (!Math.floor(Math.random() * 16)) {
+
                 } else {
-                    stack.push('stone-tile');
+                    stack.push('floor')
+                    if (!Math.floor(Math.random() * 30)) {
+                        stack.push('barrel');
+                    } else if (!Math.floor(Math.random() * 30)) {
+                        stack.push('chest');
+                    } else if (!Math.floor(Math.random() * 30)) {
+                        stack.push('wall');
+                    }
                 }
 
                 this.updateTile(x, y, stack);
@@ -64,7 +68,18 @@ class Board {
         if (typeof this.tiles[y] == 'undefined' || typeof this.tiles[y][x] == 'undefined') {
             return false
         }
-        if (this.tiles[y][x].find((item) => item === 'flower')) {
+        if (
+            !this.tiles[y][x].find((item) => item === 'floor')
+        ) {
+            return false
+        }
+        if (this.tiles[y][x].find((item) => item === 'barrel')) {
+            return false
+        }
+        if (this.tiles[y][x].find((item) => item === 'chest')) {
+            return false
+        }
+        if (this.tiles[y][x].find((item) => item === 'wall')) {
             return false
         }
 
