@@ -68,21 +68,14 @@ class Board {
         if (typeof this.tiles[y] == 'undefined' || typeof this.tiles[y][x] == 'undefined') {
             return false
         }
-        if (
-            !this.tiles[y][x].find((item) => item === 'floor')
-        ) {
+        if (!this.tiles[y][x].find((item) => item === 'floor')) {
             return false
         }
-        if (this.tiles[y][x].find((item) => item === 'barrel')) {
-            return false
-        }
-        if (this.tiles[y][x].find((item) => item === 'chest')) {
-            return false
-        }
-        if (this.tiles[y][x].find((item) => item === 'wall')) {
+        if (this.tiles[y][x].find((item) => ['barrel', 'chest', 'wall'].includes(item))) {
             return false
         }
 
         return true;
     }
 }
+S
