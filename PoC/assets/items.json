@@ -1,0 +1,51 @@
+[
+  {
+    "id": 1,
+    "name": "floor",
+    "sprite": "floor-1",
+    "type": "ground",
+    "isBlockingCreatures": false
+  },
+  {
+    "id": 2,
+    "name": "floor",
+    "sprite": "floor-2",
+    "type": "ground",
+    "isBlockingCreatures": false
+  },
+  {
+    "id": 3,
+    "name": "floor",
+    "sprite": "floor-3",
+    "type": "ground",
+    "isBlockingCreatures": false
+  },
+  {
+    "id": 4,
+    "name": "floor",
+    "sprite": "floor-4",
+    "type": "ground",
+    "isBlockingCreatures": false
+  },
+  {
+    "id": 5,
+    "name": "barrel",
+    "sprite": "barrel",
+    "type": "object",
+    "isBlockingCreatures": true
+  },
+  {
+    "id": 6,
+    "name": "chest",
+    "sprite": "chest",
+    "type": "object",
+    "isBlockingCreatures": true
+  },
+  {
+    "id": 7,
+    "name": "wall",
+    "sprite": "wall",
+    "type": "object",
+    "isBlockingCreatures": true
+  }
+]

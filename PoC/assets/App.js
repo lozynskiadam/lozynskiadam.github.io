@@ -47,8 +47,18 @@ fetch('assets/sprites.json').then((response) => response.json()).then((json) => 
     }
 });
 
-
+// load items
+window.Items = {};
 window.addEventListener("sprites-loaded", () => {
+    fetch('assets/items.json').then((response) => response.json()).then((json) => {
+        Object.values(json).forEach((item) => {
+            Items[item.id] = item;
+        });
+        window.dispatchEvent(new CustomEvent("items-loaded"));
+    });
+});
+
+window.addEventListener("items-loaded", () => {
     window.hero = new Hero(Sprites['outfit']);
     window.board = new Board(BOARD_WIDTH, BOARD_HEIGHT);
     Renderer.render();

@@ -49,21 +49,21 @@ class Board {
                 const stack = [];
 
                 if (!Math.floor(Math.random() * 40)) {
-                    stack.push('floor-2');
+                    stack.push(2);
                 } else if (!Math.floor(Math.random() * 40)) {
-                    stack.push('floor-3');
+                    stack.push(3);
                 } else if (!Math.floor(Math.random() * 5)) {
-                    stack.push('floor-4');
+                    stack.push(4);
                 } else {
-                    stack.push('floor-1')
+                    stack.push(1)
                 }
 
                 if (!Math.floor(Math.random() * 30)) {
-                    stack.push('barrel');
+                    stack.push(5);
                 } else if (!Math.floor(Math.random() * 75)) {
-                    stack.push('chest');
+                    stack.push(6);
                 } else if (!Math.floor(Math.random() * 10)) {
-                    stack.push('wall');
+                    stack.push(7);
                 }
 
                 this.updateTile(x, y, stack);
@@ -75,15 +75,13 @@ class Board {
         if (typeof this.tiles[y] == 'undefined' || typeof this.tiles[y][x] == 'undefined') {
             return false
         }
-        if (!this.tiles[y][x].find((item) => ['floor-1', 'floor-2', 'floor-3', 'floor-4'].includes(item))) {
+        if (!this.tiles[y][x].find((itemId) => Items[itemId].type === 'ground')) {
             return false
         }
-        if (this.tiles[y][x].find((item) => ['barrel', 'chest', 'wall'].includes(item))) {
+        if (this.tiles[y][x].find((itemId) => Items[itemId].isBlockingCreatures)) {
             return false
         }
 
         return true;
     }
 }
-
-S

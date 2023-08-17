@@ -2,17 +2,17 @@ class Renderer {
 
     static renderTile(x, y, sx, sy, layer, tile) {
         if (layer === 'ground') {
-            tile.forEach((item) => {
-                if (['floor-1', 'floor-2', 'floor-3', 'floor-4'].includes(item)) {
-                    Renderer.drawSprite(Sprites[item].getFrame(), x, y);
+            tile.forEach((itemId) => {
+                if (Items[itemId].type === 'ground') {
+                    Renderer.drawSprite(Sprites[Items[itemId].sprite].getFrame(), x, y);
                 }
             });
         }
 
         if (layer === 'objects') {
-            tile.forEach((item) => {
-                if (['barrel', 'chest', 'wall'].includes(item)) {
-                    Renderer.drawSprite(Sprites[item].getFrame(), x, y)
+            tile.forEach((itemId) => {
+                if (Items[itemId].type === 'object') {
+                    Renderer.drawSprite(Sprites[Items[itemId].sprite].getFrame(), x, y)
                 }
             });
             if (sx === hero.position.x && sy === hero.position.y) {
