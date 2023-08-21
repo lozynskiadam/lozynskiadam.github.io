@@ -34,6 +34,13 @@ class Renderer {
         Renderer.tempCtx.drawImage(image, left, top);
     }
 
+    static cropEdges(ctx) {
+        ctx.clearRect(0, 0, TILE_SIZE, ctx.canvas.height);
+        ctx.clearRect(0, 0, ctx.canvas.width, TILE_SIZE);
+        ctx.clearRect(ctx.canvas.width - TILE_SIZE, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.clearRect(0, ctx.canvas.height - TILE_SIZE, ctx.canvas.width, ctx.canvas.height);
+    }
+
     static render() {
         const mainCtx = document.querySelector('#board').getContext('2d');
         const canvas = document.createElement('canvas');
@@ -57,6 +64,8 @@ class Renderer {
         }
         mainCtx.clearRect(0, 0, mainCtx.canvas.width, mainCtx.canvas.height);
         mainCtx.drawImage(canvas, -hero.offset.x, -hero.offset.y);
+        Renderer.cropEdges(mainCtx);
+
         window.requestAnimationFrame(Renderer.render);
     }
 
