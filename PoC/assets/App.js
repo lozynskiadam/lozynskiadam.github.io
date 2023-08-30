@@ -1,6 +1,6 @@
 const TILE_SIZE = 32;
-const BOARD_WIDTH = 21;
-const BOARD_HEIGHT = 17;
+const BOARD_WIDTH = 33;
+const BOARD_HEIGHT = 19;
 
 // prepare canvas
 const canvas = document.createElement('canvas');
@@ -13,12 +13,14 @@ document.querySelector('#app').append(canvas);
 window.Sprites = {};
 fetch('assets/sprites.json').then((response) => response.json()).then((json) => {
     let loadedSprites = 0;
+
     function loaded() {
         loadedSprites++;
         if (loadedSprites === Object.entries(json).length) {
             window.dispatchEvent(new CustomEvent("sprites-loaded"));
         }
     }
+
     for (const [key, data] of Object.entries(json)) {
         const image = new Image();
         image.onload = () => {
@@ -70,6 +72,6 @@ window.addEventListener("items-loaded", () => {
         if (window.keystrokes.checkKey('ArrowRight')) hero.walk('east');
     }
 
-    document.addEventListener("keydown", triggerKeyHoldingFunctions);
+    document.addEventListener("keydown", () => setTimeout(triggerKeyHoldingFunctions));
     window.keyboardLoop = setInterval(triggerKeyHoldingFunctions, 200);
 });

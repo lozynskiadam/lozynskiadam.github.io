@@ -16,3 +16,10 @@ body {
     align-items: center;
     justify-content: center;
 }
+
+canvas {
+    transform: scale(2);
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+}
