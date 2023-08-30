@@ -11,8 +11,9 @@ class Hero {
     speed = 2; // tiles per second
     movement = {
         queuedMove: null,
-        interval: null,
+        isMoving: false,
         currentFrame: 0,
+        timeouts: []
     };
 
     constructor(sprite) {
@@ -21,11 +22,16 @@ class Hero {
 
     setPosition(x, y) {
         this.position = {x: x, y: y};
+        this.movement.timeouts.forEach((timeout) => clearTimeout(timeout));
+        this.movement.timeouts = [];
+        this.movement.queuedMove = null;
+        this.movement.isMoving = false;
+        this.movement.currentFrame = 0;
         window.dispatchEvent(new CustomEvent("hero-position-changed"));
     }
 
     walk(direction) {
-        if (this.movement.interval !== null) {
+        if (this.movement.isMoving) {
             if (this.movement.currentFrame > (TILE_SIZE - (TILE_SIZE/3))) {
                 this.movement.queuedMove = direction;
                 return true;
@@ -38,32 +44,39 @@ class Hero {
             return false;
         }
 
-        this.movement.interval = setInterval(() => {
-            this.sprite.state('walk-' + direction);
-            this.movement.currentFrame++;
-            this.updateOffsetAfterAnimationFrameChange(direction);
-            if (this.movement.currentFrame === (TILE_SIZE / 2)) {
-                this.position = targetPosition;
-                window.dispatchEvent(new CustomEvent("hero-position-changed"));
-                this.updateOffsetAfterPositionChange(direction);
-            }
-            if (this.movement.currentFrame === TILE_SIZE) {
-                clearInterval(this.movement.interval);
-                this.movement.interval = null;
-                this.movement.currentFrame = 0;
-                if (this.movement.queuedMove) {
-                    direction = this.movement.queuedMove;
-                    this.movement.queuedMove = null;
-                    if (!this.walk(direction)) {
-                        this.sprite.state('idle-' + direction);
-                    }
-                } else {
-                    this.sprite.state('idle-' + direction);
-                }
-            }
-        }, 1000 / this.speed / TILE_SIZE);
+        this.movement.isMoving = true;
+        for (let i = 0; i < TILE_SIZE; i++) {
+            const timeout = setTimeout(() => this.handleWalkFrame(direction, targetPosition), (1000 / this.speed / TILE_SIZE) * i);
+            this.movement.timeouts.push(timeout);
+        }
 
         return true;
+    }
+
+    handleWalkFrame(direction, targetPosition) {
+        this.sprite.state('walk-' + direction);
+        this.movement.currentFrame++;
+        this.updateOffsetAfterAnimationFrameChange(direction);
+        if (this.movement.currentFrame === (TILE_SIZE / 2)) {
+            this.position = targetPosition;
+            window.dispatchEvent(new CustomEvent("hero-position-changed"));
+            this.updateOffsetAfterPositionChange(direction);
+        }
+        if (this.movement.currentFrame === TILE_SIZE) {
+            this.movement.isMoving = false;
+            this.movement.currentFrame = 0;
+            this.movement.timeouts.forEach((timeout) => clearTimeout(timeout));
+            this.movement.timeouts = [];
+            if (this.movement.queuedMove) {
+                direction = this.movement.queuedMove;
+                this.movement.queuedMove = null;
+                if (!this.walk(direction)) {
+                    this.sprite.state('idle-' + direction);
+                }
+            } else {
+                this.sprite.state('idle-' + direction);
+            }
+        }
     }
 
     getTargetPosition(direction) {
