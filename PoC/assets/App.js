@@ -1,6 +1,6 @@
 const TILE_SIZE = 32;
-const BOARD_WIDTH = 19;
-const BOARD_HEIGHT = 15;
+const BOARD_WIDTH = 21;
+const BOARD_HEIGHT = 17;
 
 // prepare canvas
 const canvas = document.createElement('canvas');
@@ -62,10 +62,14 @@ window.addEventListener("items-loaded", () => {
     window.hero = new Hero(Sprites['outfit']);
     window.board = new Board(BOARD_WIDTH, BOARD_HEIGHT);
     Renderer.render();
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowUp' || e.key === 'w' || e.code === 'Numpad8') hero.walk('north');
-        if (e.key === 'ArrowDown' || e.key === 's' || e.code === 'Numpad2') hero.walk('south');
-        if (e.key === 'ArrowLeft' || e.key === 'a' || e.code === 'Numpad4') hero.walk('west');
-        if (e.key === 'ArrowRight' || e.key === 'd' || e.code === 'Numpad6') hero.walk('east');
-    });
+
+    const triggerKeyHoldingFunctions = () => {
+        if (window.keystrokes.checkKey('ArrowUp')) hero.walk('north');
+        if (window.keystrokes.checkKey('ArrowDown')) hero.walk('south');
+        if (window.keystrokes.checkKey('ArrowLeft')) hero.walk('west');
+        if (window.keystrokes.checkKey('ArrowRight')) hero.walk('east');
+    }
+
+    document.addEventListener("keydown", triggerKeyHoldingFunctions);
+    window.keyboardLoop = setInterval(triggerKeyHoldingFunctions, 200);
 });
