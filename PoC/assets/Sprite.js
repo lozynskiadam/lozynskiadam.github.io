@@ -1,5 +1,7 @@
 class Sprite {
 
+    static #instances = {};
+
     #image = null;
     #mask = null;
     #colors = null;
@@ -12,7 +14,53 @@ class Sprite {
     #currentFrame = null;
     #lastFrame = null;
 
-    constructor(data) {
+    static async load(url) {
+        return new Promise((resolve) => {
+            fetch(url).then((response) => response.json()).then((json) => {
+
+                let loadedSprites = 0;
+                function loaded() {
+                    if (++loadedSprites === Object.entries(json).length) {
+                        window.dispatchEvent(new CustomEvent("sprites-loaded"));
+                        resolve();
+                    }
+                }
+
+                for (const [id, data] of Object.entries(json)) {
+                    const image = new Image();
+                    image.onload = () => {
+                        let spriteOptions = {
+                            image: image,
+                            speed: data.speed || null,
+                            states: data.states || null
+                        }
+
+                        if (data.mask) {
+                            const mask = new Image();
+                            mask.onload = () => {
+                                spriteOptions.mask = mask;
+                                new Sprite(id, spriteOptions);
+                                loaded();
+                            };
+                            mask.src = data.mask;
+                        } else {
+                            new Sprite(id, spriteOptions);
+                            loaded();
+                        }
+                    };
+                    image.src = data.base;
+                }
+            });
+        });
+    }
+
+    static get(key) {
+        return Sprite.#instances[key];
+    }
+
+    constructor(key, data) {
+        Sprite.#instances[key] = this;
+
         this.#image = data.image;
         this.#mask = data.mask || null;
         this.#colors = data.colors || null;

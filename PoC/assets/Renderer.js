@@ -1,10 +1,12 @@
 class Renderer {
 
+    static creatures = [];
+
     static renderTile(x, y, sx, sy, layer, tile) {
         if (layer === 'ground') {
             tile.forEach((itemId) => {
                 if (Items[itemId].type === 'ground') {
-                    Renderer.drawSprite(Sprites[Items[itemId].sprite].getFrame(), x, y);
+                    Renderer.drawSprite(Sprite.get(Items[itemId].sprite).getFrame(), x, y);
                 }
             });
         }
@@ -12,12 +14,15 @@ class Renderer {
         if (layer === 'objects') {
             tile.forEach((itemId) => {
                 if (Items[itemId].type === 'object') {
-                    Renderer.drawSprite(Sprites[Items[itemId].sprite].getFrame(), x, y)
+                    Renderer.drawSprite(Sprite.get(Items[itemId].sprite).getFrame(), x, y)
                 }
             });
-            if (sx === hero.position.x && sy === hero.position.y) {
-                Renderer.drawCreature(hero, x, y)
-            }
+
+            Renderer.creatures.forEach((creature) => {
+                if (sx === creature.position.x && sy === creature.position.y) {
+                    Renderer.drawCreature(creature, x, y)
+                }
+            });
         }
     }
 

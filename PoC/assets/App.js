@@ -10,44 +10,7 @@ canvas.height = TILE_SIZE * BOARD_HEIGHT;
 document.querySelector('#app').append(canvas);
 
 // load sprites
-window.Sprites = {};
-fetch('assets/sprites.json').then((response) => response.json()).then((json) => {
-    let loadedSprites = 0;
-
-    function loaded() {
-        loadedSprites++;
-        if (loadedSprites === Object.entries(json).length) {
-            window.dispatchEvent(new CustomEvent("sprites-loaded"));
-        }
-    }
-
-    for (const [key, data] of Object.entries(json)) {
-        const image = new Image();
-        image.onload = () => {
-            if (data.mask) {
-                const mask = new Image();
-                mask.onload = () => {
-                    Sprites[key] = new Sprite({
-                        image: image,
-                        mask: mask,
-                        speed: data.speed || null,
-                        states: data.states || null
-                    });
-                    loaded();
-                };
-                mask.src = data.mask;
-            } else {
-                Sprites[key] = new Sprite({
-                    image: image,
-                    speed: data.speed || null,
-                    states: data.states || null
-                });
-                loaded();
-            }
-        };
-        image.src = data.base;
-    }
-});
+Sprite.load('assets/sprites.json');
 
 // load items
 window.Items = {};
@@ -60,9 +23,19 @@ window.addEventListener("sprites-loaded", () => {
     });
 });
 
+
 window.addEventListener("items-loaded", () => {
-    window.hero = new Hero(Sprites['outfit']);
+    window.hero = new Hero(Sprite.get('outfit'));
     window.board = new Board(BOARD_WIDTH, BOARD_HEIGHT);
+    Renderer.creatures.push(window.hero);
+
+    // add a temporary creature
+    Renderer.creatures.push({
+        sprite: Sprite.get('outfit'),
+        position: {x: 50, y: 50},
+        offset: {x: 0, y: 0},
+    });
+
     Renderer.render();
 
     const triggerKeyHoldingFunctions = () => {
