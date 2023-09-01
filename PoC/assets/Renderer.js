@@ -5,16 +5,17 @@ class Renderer {
     static renderTile(x, y, sx, sy, layer, tile) {
         if (layer === 'ground') {
             tile.forEach((itemId) => {
-                if (Items[itemId].type === 'ground') {
-                    Renderer.drawSprite(Sprite.get(Items[itemId].sprite).getFrame(), x, y);
+                if (Item.get(itemId).type === 'ground') {
+                    Renderer.drawSprite(Sprite.get(Item.get(itemId).sprite).getFrame(), x, y);
                 }
             });
         }
 
         if (layer === 'objects') {
             tile.forEach((itemId) => {
-                if (Items[itemId].type === 'object') {
-                    Renderer.drawSprite(Sprite.get(Items[itemId].sprite).getFrame(), x, y)
+                const item = Item.get(itemId);
+                if (item.type === 'object') {
+                    Renderer.drawSprite(Sprite.get(item.sprite).getFrame(), x, y)
                 }
             });
 

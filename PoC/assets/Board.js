@@ -75,10 +75,10 @@ class Board {
         if (typeof this.tiles[y] == 'undefined' || typeof this.tiles[y][x] == 'undefined') {
             return false
         }
-        if (!this.tiles[y][x].find((itemId) => Items[itemId].type === 'ground')) {
+        if (!this.tiles[y][x].find((itemId) => Item.get(itemId).type === 'ground')) {
             return false
         }
-        if (this.tiles[y][x].find((itemId) => Items[itemId].isBlockingCreatures)) {
+        if (this.tiles[y][x].find((itemId) => Item.get(itemId).isBlockingCreatures)) {
             return false
         }
 

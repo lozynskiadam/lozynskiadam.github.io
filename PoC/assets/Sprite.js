@@ -2,6 +2,7 @@ class Sprite {
 
     static #instances = {};
 
+    #id = null;
     #image = null;
     #mask = null;
     #colors = null;
@@ -15,52 +16,44 @@ class Sprite {
     #lastFrame = null;
 
     static async load(url) {
+        try {
+            const response = await fetch(url);
+            const json = await response.json();
+            await Promise.all(Object.entries(json).map(async ([id, data]) => {
+                const image = await Sprite.loadImage(data.base);
+                const spriteOptions = {
+                    image: image,
+                    speed: data.speed || null,
+                    states: data.states || null
+                };
+
+                if (data.mask) {
+                    spriteOptions.mask = await Sprite.loadImage(data.mask);
+                }
+
+                new Sprite(id, spriteOptions);
+            }));
+        } catch (error) {
+            console.error("Error loading sprites:", error);
+        }
+    }
+
+    static async loadImage(src) {
         return new Promise((resolve) => {
-            fetch(url).then((response) => response.json()).then((json) => {
-
-                let loadedSprites = 0;
-                function loaded() {
-                    if (++loadedSprites === Object.entries(json).length) {
-                        window.dispatchEvent(new CustomEvent("sprites-loaded"));
-                        resolve();
-                    }
-                }
-
-                for (const [id, data] of Object.entries(json)) {
-                    const image = new Image();
-                    image.onload = () => {
-                        let spriteOptions = {
-                            image: image,
-                            speed: data.speed || null,
-                            states: data.states || null
-                        }
-
-                        if (data.mask) {
-                            const mask = new Image();
-                            mask.onload = () => {
-                                spriteOptions.mask = mask;
-                                new Sprite(id, spriteOptions);
-                                loaded();
-                            };
-                            mask.src = data.mask;
-                        } else {
-                            new Sprite(id, spriteOptions);
-                            loaded();
-                        }
-                    };
-                    image.src = data.base;
-                }
-            });
+            const image = new Image();
+            image.onload = () => resolve(image);
+            image.src = src;
         });
     }
 
-    static get(key) {
-        return Sprite.#instances[key];
+    static get(id) {
+        return Sprite.#instances[id] ?? null;
     }
 
-    constructor(key, data) {
-        Sprite.#instances[key] = this;
+    constructor(id, data) {
+        Sprite.#instances[id] = this;
 
+        this.#id = id;
         this.#image = data.image;
         this.#mask = data.mask || null;
         this.#colors = data.colors || null;
