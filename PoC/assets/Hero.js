@@ -18,6 +18,19 @@ class Hero {
 
     constructor(sprite) {
         this.sprite = sprite;
+
+        window.addEventListener("move-north", () => {
+            this.walk('north')
+        });
+        window.addEventListener("move-south", () => {
+            this.walk('south')
+        });
+        window.addEventListener("move-west", () => {
+            this.walk('west')
+        });
+        window.addEventListener("move-east", () => {
+            this.walk('east')
+        });
     }
 
     setPosition(x, y) {
