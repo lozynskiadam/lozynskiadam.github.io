@@ -1,51 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-    <script src="../PoC/assets/Sprite.js"></script>
-    <script src="../dye/assets/ImageExt.js"></script>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <script src="../PoC/assets/Sprite.js"></script>
+  <script src="../PoC/assets/ImageUtils.js"></script>
 </head>
 <body>
 
 <pre>
-- Move method `Image.prototype.dye()` to `Sprite.dye()`
 - `Sprite.dye()` should return new Sprite instance.
 - compress/decompress string - https://stackoverflow.com/a/75793593/8205393
 </pre>
 
-<canvas id="canvas" width="100" height="100"></canvas>
+<canvas id="canvas" width="64" height="32"></canvas>
+
+<hr/>
+
+<input type="text" id="script-1" style="width: 350px;" value="Sprite.get('sword').dye(['#11ba11', '#b38c3d']);">
+<button id="run-1">▶</button>
+
+<br/>
+
+<input type="text" id="script-2" style="width: 350px;" value="Sprite.get('axe').dye(['#aa0033', '#b38c3d', '#915e30']);">
+<button id="run-2">▶</button>
 
 <script>
-    ImageExt.registerPrototypeDye();
+  const render = function () {
+    const ctx = document.querySelector('#canvas').getContext('2d');
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.drawImage(Sprite.get('sword').getFrame(), 0, 0);
+    ctx.drawImage(Sprite.get('axe').getFrame(), 32, 0);
+    window.requestAnimationFrame(render);
+  }
 
-    fetch('./sprites.json').then((response) => response.json()).then((json) => {
-        for (const [key, data] of Object.entries(json)) {
-            const image = new Image();
-            image.onload = () => {
-                const mask = new Image();
-                mask.onload = () => {
-                    new Sprite(key, {
-                        image: image,
-                        mask: mask,
-                        speed: data.speed || null,
-                        states: data.states || null
-                    });
+  Sprite.load('./sprites.json').then(() => {
+    render();
+  });
 
-                    render();
-                };
-                mask.src = data.mask;
-            };
-            image.src = data.base;
-        }
-    });
-
-    const render = function() {
-        const ctx = document.querySelector('#canvas').getContext('2d');
-        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        ctx.drawImage(Sprite.get('dagger').getFrame(), 0, 0);
-        window.requestAnimationFrame(render);
-    }
+  document.querySelector('#run-1').addEventListener('click', () => {
+    eval(document.querySelector('#script-1').value);
+  });
+  document.querySelector('#run-2').addEventListener('click', () => {
+    eval(document.querySelector('#script-2').value);
+  });
 
 </script>
 </body>

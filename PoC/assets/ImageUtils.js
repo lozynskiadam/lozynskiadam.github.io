@@ -1,6 +1,6 @@
-class ImageExt {
+class ImageUtils {
 
-    static hexToRGB (hex) {
+    static hexToRGB(hex) {
         const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
 
         return result ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)] : null;
@@ -8,9 +8,10 @@ class ImageExt {
 
     static replaceColors(image, colorMap) {
         Object.keys(colorMap).forEach(key => {
-            colorMap[ImageExt.hexToRGB(key).toString()] = ImageExt.hexToRGB(colorMap[key])
+            colorMap[ImageUtils.hexToRGB(key).toString()] = ImageUtils.hexToRGB(colorMap[key])
             delete colorMap[key];
         });
+
 
         const ctx = document.createElement("canvas").getContext("2d");
         ctx.canvas.width = image.width;
@@ -33,20 +34,18 @@ class ImageExt {
         return ctx.canvas;
     }
 
-    static registerCreate() {
-        Image.create = function (src) {
-            return new Promise(resolve => {
-                let img = new Image();
-                img.onload = () => resolve(img);
-                img.src = src;
-            });
-        }
+    static async load(src) {
+        return new Promise((resolve) => {
+            const image = new Image();
+            image.onload = () => resolve(image);
+            image.src = src;
+        });
     }
 
-    static registerPrototypeDye() {
-        Image.prototype.dye = function (colors) {
-            if (!this.mask ?? false) {
-                return this;
+    static async dye(image, mask, colors) {
+        return new Promise(resolve => {
+            if (!mask ?? false) {
+                return image;
             }
 
             const placeholders = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#00ffff', '#ff00ff'];
@@ -55,17 +54,19 @@ class ImageExt {
                 map[placeholders[index]] = color;
             });
 
-            const coloredMask = ImageExt.replaceColors(this.mask, map);
+            const coloredMask = ImageUtils.replaceColors(mask, map);
             const ctx = document.createElement("canvas").getContext("2d");
 
-            ctx.canvas.width = this.width;
-            ctx.canvas.height = this.height;
-            ctx.drawImage(this, 0, 0);
+            ctx.canvas.width = image.width;
+            ctx.canvas.height = image.height;
+            ctx.drawImage(image, 0, 0);
             ctx.globalCompositeOperation = "overlay";
             ctx.drawImage(coloredMask, 0, 0);
 
-            return ctx.canvas;
-        }
+            const newImage = new Image();
+            newImage.onload = () => resolve(newImage);
+            newImage.src = ctx.canvas.toDataURL('image/png');
+        });
     }
 
 }

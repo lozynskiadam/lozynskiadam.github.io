@@ -1,20 +1,14 @@
 [
   {
     "id": 1,
-    "sprite": "dagger",
-    "name": "Golden dagger",
+    "sprite": "sword",
+    "name": "Magic Blade",
     "colors": ["#ffb800", "#bd7900"]
   },
   {
     "id": 2,
-    "sprite": "dagger",
-    "name": "Ice dagger",
-    "colors": ["#92accc", "#4d76b4"]
-  },
-  {
-    "id": 3,
-    "sprite": "dagger",
-    "name": "Fire dagger",
-    "colors": ["#ff2f00", "#730000"]
+    "sprite": "axe",
+    "name": "Magic Axe",
+    "colors": ["#ffb800", "#bd7900"]
   }
 ]

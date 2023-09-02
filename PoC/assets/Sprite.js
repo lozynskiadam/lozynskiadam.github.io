@@ -4,8 +4,8 @@ class Sprite {
 
     #id = null;
     #image = null;
+    #originImage = null;
     #mask = null;
-    #colors = null;
     #speed = null;
     #states = null;
     #canvas = null;
@@ -20,7 +20,7 @@ class Sprite {
             const response = await fetch(url);
             const json = await response.json();
             await Promise.all(Object.entries(json).map(async ([id, data]) => {
-                const image = await Sprite.loadImage(data.base);
+                const image = await ImageUtils.load(data.base);
                 const spriteOptions = {
                     image: image,
                     speed: data.speed || null,
@@ -28,7 +28,7 @@ class Sprite {
                 };
 
                 if (data.mask) {
-                    spriteOptions.mask = await Sprite.loadImage(data.mask);
+                    spriteOptions.mask = await ImageUtils.load(data.mask);
                 }
 
                 new Sprite(id, spriteOptions);
@@ -38,25 +38,19 @@ class Sprite {
         }
     }
 
-    static async loadImage(src) {
-        return new Promise((resolve) => {
-            const image = new Image();
-            image.onload = () => resolve(image);
-            image.src = src;
-        });
-    }
-
     static get(id) {
         return Sprite.#instances[id] ?? null;
     }
 
     constructor(id, data) {
-        Sprite.#instances[id] = this;
+        if (id) {
+            Sprite.#instances[id] = this;
+        }
 
         this.#id = id;
         this.#image = data.image;
+        this.#originImage = data.image;
         this.#mask = data.mask || null;
-        this.#colors = data.colors || null;
         this.#speed = data.speed || null;
         this.#states = data.states || {};
         this.#states.origin = [{x: 0, y: 0, w: this.#image.width, h: this.#image.height}];
@@ -64,6 +58,15 @@ class Sprite {
         this.#ctx = this.#canvas.getContext("2d");
 
         this.state(Object.keys(this.#states)[0]);
+    }
+
+    clone() {
+        return new Sprite(null, {
+            image: this.#originImage,
+            mask: this.#mask,
+            speed: this.#speed,
+            states: this.#states,
+        })
     }
 
     state(state = null) {
@@ -88,6 +91,11 @@ class Sprite {
                 }
             }, this.#speed);
         }
+    }
+
+    async dye(colors) {
+        this.#image = await ImageUtils.dye(this.#originImage, this.#mask, colors);
+        this.#lastFrame = null;
     }
 
     getFrame() {
