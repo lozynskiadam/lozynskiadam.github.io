@@ -6,16 +6,16 @@ class Keyboard {
     }
 
     static triggerKeyHoldingFunctions = () => {
-        if (window.keystrokes.checkKey('ArrowUp')) {
+        if (window.keystrokes.checkKey('ArrowUp') || window.keystrokes.checkKey('w')) {
             window.dispatchEvent(new CustomEvent("move-north"));
         }
-        if (window.keystrokes.checkKey('ArrowDown')) {
+        if (window.keystrokes.checkKey('ArrowDown') || window.keystrokes.checkKey('s')) {
             window.dispatchEvent(new CustomEvent("move-south"));
         }
-        if (window.keystrokes.checkKey('ArrowLeft')) {
+        if (window.keystrokes.checkKey('ArrowLeft') || window.keystrokes.checkKey('a')) {
             window.dispatchEvent(new CustomEvent("move-west"));
         }
-        if (window.keystrokes.checkKey('ArrowRight')) {
+        if (window.keystrokes.checkKey('ArrowRight') || window.keystrokes.checkKey('d')) {
             window.dispatchEvent(new CustomEvent("move-east"));
         }
     }

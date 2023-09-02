@@ -12,6 +12,12 @@ class Renderer {
         }
 
         if (layer === 'objects') {
+
+            const mousePos = Mouse.getPosition();
+            if (mousePos.x === x && mousePos.y === y) {
+                Renderer.drawSprite(Sprite.get('cursor').getFrame(), x, y)
+            }
+
             tile.forEach((itemId) => {
                 const item = Item.get(itemId);
                 if (item.type === 'object') {

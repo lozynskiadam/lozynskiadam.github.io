@@ -17,6 +17,8 @@ app = async () => {
         document.querySelector('#app').append(canvas);
 
         Keyboard.init();
+        Mouse.init();
+
         window.hero = new Hero(Sprite.get('outfit'));
         window.board = new Board(BOARD_WIDTH, BOARD_HEIGHT);
         Renderer.creatures.push(window.hero);
