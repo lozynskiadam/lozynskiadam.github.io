@@ -32,7 +32,8 @@ class Item {
 
         this.id = data.id;
         this.name = data.name;
-        this.sprite = data.sprite;
+        this.sprite = Sprite.get(data.sprite);
+        this.sprite.loop();
         this.type = data.type;
         this.isBlockingCreatures = data.isBlockingCreatures;
     }

@@ -56,7 +56,7 @@ class Hero {
         }
 
         const targetPosition = this.getTargetPosition(direction);
-        if (!board.isWalkable(targetPosition.x, targetPosition.y)) {
+        if (!Board.isWalkable(targetPosition.x, targetPosition.y)) {
             this.sprite.loop('idle-' + direction);
             return false;
         }

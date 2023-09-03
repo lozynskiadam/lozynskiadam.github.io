@@ -6,13 +6,13 @@ class Renderer {
         if (layer === 'ground') {
             tile.forEach((itemId) => {
                 if (Item.get(itemId).type === 'ground') {
-                    Renderer.drawSprite(Sprite.get(Item.get(itemId).sprite).getFrame(), x, y);
+                    Renderer.drawSprite(Item.get(itemId).sprite.getFrame(), x, y);
                 }
             });
         }
 
         if (layer === 'objects') {
-            const mousePos = Mouse.getPosition();
+            const mousePos = Mouse.getLocalPosition();
             if (mousePos.x === x && mousePos.y === y) {
                 Renderer.drawSprite(Sprite.get('cursor').getFrame(), x, y)
             }
@@ -20,7 +20,7 @@ class Renderer {
             tile.forEach((itemId) => {
                 const item = Item.get(itemId);
                 if (item.type === 'object') {
-                    Renderer.drawSprite(Sprite.get(item.sprite).getFrame(), x, y)
+                    Renderer.drawSprite(item.sprite.getFrame(), x, y)
                 }
             });
 
@@ -57,16 +57,15 @@ class Renderer {
     }
 
     static render() {
-        const mainCtx = document.querySelector('#board').getContext('2d');
         const canvas = document.createElement('canvas');
-        canvas.width = mainCtx.canvas.width;
-        canvas.height = mainCtx.canvas.height;
+        canvas.width = Board.ctx.canvas.width;
+        canvas.height = Board.ctx.canvas.height;
         Renderer.tempCtx = canvas.getContext('2d');
         Renderer.tempCtx.fillStyle = '#25131a';
         Renderer.tempCtx.fillRect(0, 0, Renderer.tempCtx.canvas.width, Renderer.tempCtx.canvas.height);
         for (let layer of ['ground', 'objects']) {
             let y = 0;
-            for (let [sy, row] of Object.entries(board.tiles)) {
+            for (let [sy, row] of Object.entries(Board.tiles)) {
                 let x = 0;
                 for (let [sx, tile] of Object.entries(row)) {
                     sx = Number(sx);
@@ -77,9 +76,9 @@ class Renderer {
                 y++;
             }
         }
-        mainCtx.clearRect(0, 0, mainCtx.canvas.width, mainCtx.canvas.height);
-        mainCtx.drawImage(canvas, -hero.offset.x, -hero.offset.y);
-        Renderer.cropEdges(mainCtx);
+        Board.ctx.clearRect(0, 0, Board.ctx.canvas.width, Board.ctx.canvas.height);
+        Board.ctx.drawImage(canvas, -hero.offset.x, -hero.offset.y);
+        Renderer.cropEdges(Board.ctx);
 
         window.requestAnimationFrame(Renderer.render);
     }

@@ -1,47 +1,55 @@
 class Board {
 
-    width = null;
-    height = null;
-    tiles = {};
+    static ctx = null;
+    static width = null;
+    static height = null;
+    static tiles = {};
 
-    constructor(width, height) {
-        this.width = width;
-        this.height = height;
-        this.update();
+    static init(width, height) {
+        const canvas = document.createElement('canvas');
+        canvas.id = 'board';
+        canvas.width = TILE_SIZE * BOARD_WIDTH;
+        canvas.height = TILE_SIZE * BOARD_HEIGHT;
+        document.querySelector('#app').append(canvas);
+
+        Board.ctx = canvas.getContext("2d");
+        Board.width = width;
+        Board.height = height;
+        Board.update();
         window.addEventListener("hero-position-changed", () => {
-            this.update()
+            Board.update()
         });
     }
 
-    update() {
-        const fromX = hero.position.x - Math.floor(this.width / 2);
-        const toX = hero.position.x + Math.floor(this.width / 2);
-        const fromY = hero.position.y - Math.floor(this.height / 2);
-        const toY = hero.position.y + Math.floor(this.height / 2);
+    static update() {
+        const fromX = hero.position.x - Math.floor(Board.width / 2);
+        const toX = hero.position.x + Math.floor(Board.width / 2);
+        const fromY = hero.position.y - Math.floor(Board.height / 2);
+        const toY = hero.position.y + Math.floor(Board.height / 2);
         const missingTiles = [];
         const _tiles = {};
         for (let y = fromY; y <= toY; y++) {
             for (let x = fromX; x <= toX; x++) {
                 _tiles[y] = _tiles[y] || {};
-                if ((this.tiles[y]) && (this.tiles[y][x])) {
-                    _tiles[y][x] = this.tiles[y][x];
+                if ((Board.tiles[y]) && (Board.tiles[y][x])) {
+                    _tiles[y][x] = Board.tiles[y][x];
                 } else {
                     _tiles[y][x] = [];
                     missingTiles.push({x: x, y: y});
                 }
             }
         }
-        this.tiles = _tiles;
-        this.requestTiles(missingTiles);
+        Board.tiles = _tiles;
+        Board.requestTiles(missingTiles);
     }
 
-    updateTile(x, y, stack) {
-        if ((typeof this.tiles[y] != 'undefined') && (typeof this.tiles[y][x] != 'undefined')) {
-            this.tiles[y][x] = stack;
+    static updateTile(x, y, stack) {
+        if ((typeof Board.tiles[y] != 'undefined') && (typeof Board.tiles[y][x] != 'undefined')) {
+            Board.tiles[y][x] = stack;
         }
     }
 
-    requestTiles(missingTiles) {
+    static requestTiles(missingTiles) {
         setTimeout(() => {
             for (const tile of missingTiles) {
                 const x = tile.x;
@@ -66,28 +74,28 @@ class Board {
                     stack.push(7);
                 }
 
-                this.updateTile(x, y, stack);
+                Board.updateTile(x, y, stack);
             }
         }, 250);
     }
 
-    isWalkable(x, y) {
-        if (typeof this.tiles[y] == 'undefined' || typeof this.tiles[y][x] == 'undefined') {
+    static isWalkable(x, y) {
+        if (typeof Board.tiles[y] == 'undefined' || typeof Board.tiles[y][x] == 'undefined') {
             return false
         }
-        if (!this.tiles[y][x].find((itemId) => Item.get(itemId).type === 'ground')) {
+        if (!Board.tiles[y][x].find((itemId) => Item.get(itemId).type === 'ground')) {
             return false
         }
-        if (this.tiles[y][x].find((itemId) => Item.get(itemId).isBlockingCreatures)) {
+        if (Board.tiles[y][x].find((itemId) => Item.get(itemId).isBlockingCreatures)) {
             return false
         }
 
         return true;
     }
 
-    positionLocalToServer(x, y) {
-        const fromX = hero.position.x - Math.floor(this.width / 2);
-        const fromY = hero.position.y - Math.floor(this.height / 2);
+    static positionLocalToServer(x, y) {
+        const fromX = hero.position.x - Math.floor(Board.width / 2);
+        const fromY = hero.position.y - Math.floor(Board.height / 2);
 
         return {
             x: fromX + x,

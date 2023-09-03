@@ -11,19 +11,11 @@ app = async () => {
     }
 
     async function init() {
-        const canvas = document.createElement('canvas');
-        canvas.id = 'board';
-        canvas.width = TILE_SIZE * BOARD_WIDTH;
-        canvas.height = TILE_SIZE * BOARD_HEIGHT;
-        document.querySelector('#app').append(canvas);
-
         Keyboard.init();
         Mouse.init();
-
         window.hero = new Hero(Sprite.get('outfit'));
-        window.board = new Board(BOARD_WIDTH, BOARD_HEIGHT);
+        Board.init(BOARD_WIDTH, BOARD_HEIGHT);
         Renderer.creatures.push(window.hero);
-
         Renderer.render();
     }
 
