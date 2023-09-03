@@ -17,7 +17,9 @@ class Hero {
     };
 
     constructor(sprite) {
-        this.sprite = sprite;
+        this.sprite = sprite.clone()
+        this.sprite.dye(['#ffffff', '#ffffff']);
+        this.sprite.loop('idle-south');
 
         window.addEventListener("move-north", () => {
             this.walk('north')
@@ -54,7 +56,7 @@ class Hero {
 
         const targetPosition = this.getTargetPosition(direction);
         if (!board.isWalkable(targetPosition.x, targetPosition.y)) {
-            this.sprite.state('idle-' + direction);
+            this.sprite.loop('idle-' + direction);
             return false;
         }
 
@@ -68,7 +70,7 @@ class Hero {
     }
 
     handleWalkFrame(direction, targetPosition) {
-        this.sprite.state('walk-' + direction);
+        this.sprite.loop('walk-' + direction);
         this.movement.currentFrame++;
         this.updateOffsetAfterAnimationFrameChange(direction);
         if (this.movement.currentFrame === (TILE_SIZE / 2)) {
@@ -85,10 +87,10 @@ class Hero {
                 direction = this.movement.queuedMove;
                 this.movement.queuedMove = null;
                 if (!this.walk(direction)) {
-                    this.sprite.state('idle-' + direction);
+                    this.sprite.loop('idle-' + direction);
                 }
             } else {
-                this.sprite.state('idle-' + direction);
+                this.sprite.loop('idle-' + direction);
             }
         }
     }

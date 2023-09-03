@@ -56,8 +56,8 @@ class Sprite {
         this.#states.origin = [{x: 0, y: 0, w: this.#image.width, h: this.#image.height}];
         this.#canvas = document.createElement("canvas");
         this.#ctx = this.#canvas.getContext("2d");
-
-        this.state(Object.keys(this.#states)[0]);
+        this.#currentState = this.getDefaultState();
+        this.#currentFrame = 1;
     }
 
     clone() {
@@ -69,19 +69,44 @@ class Sprite {
         })
     }
 
-    state(state = null) {
-        if (state === null) {
-            return this.#currentState;
-        }
+    async play(state = null) {
+        return new Promise((resolve) => {
+            state = state || this.getDefaultState();
+            this.stop();
+            this.rewind();
+            this.#currentState = state;
 
-        if (this.#currentState === state) {
+            const numberOfFrames = this.#states[state].length;
+            if (numberOfFrames > 1 && this.#speed) {
+                this.#interval = setInterval(() => {
+                    if (++this.#currentFrame > numberOfFrames) {
+                        this.stop();
+                        resolve();
+                    }
+                }, this.#speed);
+            }
+        });
+    }
+
+    stop() {
+        clearInterval(this.#interval);
+        this.#interval = null;
+    }
+
+    rewind() {
+        this.#currentFrame = 1;
+    }
+
+    loop(state = null) {
+        state = state || this.getDefaultState();
+
+        if (this.#interval && this.#currentState === state) {
             return;
         }
 
-        clearInterval(this.#interval);
-        this.#interval = null;
+        this.stop();
+        this.rewind();
         this.#currentState = state;
-        this.#currentFrame = 1;
 
         const numberOfFrames = this.#states[state].length;
         if (numberOfFrames > 1 && this.#speed) {
@@ -96,6 +121,10 @@ class Sprite {
     async dye(colors) {
         this.#image = await ImageUtils.dye(this.#originImage, this.#mask, colors);
         this.#lastFrame = null;
+    }
+
+    getDefaultState() {
+        return Object.keys(this.#states)[0];
     }
 
     getFrame() {
