@@ -19,7 +19,7 @@ class Item {
                 resolve();
             });
         } catch (error) {
-            console.error("Error loading sprites:", error);
+            console.error("Error loading items:", error);
         }
     }
 

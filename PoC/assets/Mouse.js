@@ -8,6 +8,11 @@ class Mouse {
             Mouse.x = e.clientX;
             Mouse.y = e.clientY;
         });
+        document.addEventListener('mousedown', () => {
+            const mousePos = Mouse.getPosition();
+            const serverPos = board.positionLocalToServer(mousePos.x, mousePos.y);
+            Effect.get('energy').run(serverPos.x, serverPos.y);
+        });
     }
 
     static getPosition() {

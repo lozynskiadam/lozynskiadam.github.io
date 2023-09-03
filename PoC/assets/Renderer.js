@@ -12,7 +12,6 @@ class Renderer {
         }
 
         if (layer === 'objects') {
-
             const mousePos = Mouse.getPosition();
             if (mousePos.x === x && mousePos.y === y) {
                 Renderer.drawSprite(Sprite.get('cursor').getFrame(), x, y)
@@ -29,6 +28,10 @@ class Renderer {
                 if (sx === creature.position.x && sy === creature.position.y) {
                     Renderer.drawCreature(creature, x, y)
                 }
+            });
+
+            Effect.getBoardEffects(sx, sy).forEach((effect) => {
+                Renderer.drawSprite(effect.getFrame(), x, y)
             });
         }
     }

@@ -20,6 +20,7 @@ class Hero {
         this.sprite = sprite.clone()
         this.sprite.dye(['#ffffff', '#ffffff']);
         this.sprite.loop('idle-south');
+        Effect.get('energy').run(this.position.x, this.position.y);
 
         window.addEventListener("move-north", () => {
             this.walk('north')

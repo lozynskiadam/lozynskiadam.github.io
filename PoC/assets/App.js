@@ -7,6 +7,7 @@ app = async () => {
     async function load() {
         await Sprite.load('assets/sprites.json');
         await Item.load('assets/items.json');
+        await Effect.load('assets/effects.json');
     }
 
     async function init() {

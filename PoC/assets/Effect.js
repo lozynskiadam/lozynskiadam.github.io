@@ -2,10 +2,25 @@ class Effect {
 
     static #instances = {};
     static #board = {};
-    static #nextUID = 0;
+    static #lastUID = 0;
 
     #id = null;
     #sprite = null;
+
+    static async load(url) {
+        try {
+            const response = await fetch(url);
+            const json = await response.json();
+            return new Promise((resolve) => {
+                Object.values(json).forEach((data) => {
+                    new Effect(data.id, Sprite.get(data.sprite));
+                });
+                resolve();
+            });
+        } catch (error) {
+            console.error("Error loading effects:", error);
+        }
+    }
 
     constructor(id, sprite) {
         Effect.#instances[id] = this;
@@ -18,27 +33,25 @@ class Effect {
         return Effect.#instances[id] ?? null;
     }
 
-    run(x, y) {
-        if (!Effect.#board[y]) {
-            Effect.#board[y] = {};
+    run(sx, sy) {
+        if (!Effect.#board[sy]) {
+            Effect.#board[sy] = {};
         }
-        if (!Effect.#board[y][x]) {
-            Effect.#board[y][x] = {};
+        if (!Effect.#board[sy][sx]) {
+            Effect.#board[sy][sx] = {};
         }
 
-        const uuid = ++Effect.#nextUID;
+        const uuid = ++Effect.#lastUID;
         const sprite = this.#sprite.clone();
-        Effect.#board[y][x][uuid] = {
-            sprite: sprite
-        };
+        Effect.#board[sy][sx][uuid] = sprite;
         sprite.play().then(() => {
-            delete Effect.#board[y][x][uuid];
+            delete Effect.#board[sy][sx][uuid];
         });
     }
 
-    static getBoardEffects(x, y) {
-        if (Effect.#board && Effect.#board[y] && Effect.#board[y][x]) {
-            return this.#board[y][x];
+    static getBoardEffects(sx, sy) {
+        if (Effect.#board && Effect.#board[sy] && Effect.#board[sy][sx]) {
+            return Object.values(this.#board[sy][sx]);
         }
 
         return [];

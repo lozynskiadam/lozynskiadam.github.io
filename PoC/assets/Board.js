@@ -84,4 +84,14 @@ class Board {
 
         return true;
     }
+
+    positionLocalToServer(x, y) {
+        const fromX = hero.position.x - Math.floor(this.width / 2);
+        const fromY = hero.position.y - Math.floor(this.height / 2);
+
+        return {
+            x: fromX + x,
+            y: fromY + y,
+        }
+    }
 }
