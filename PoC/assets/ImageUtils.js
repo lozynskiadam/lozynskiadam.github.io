@@ -48,7 +48,7 @@ class ImageUtils {
                 return image;
             }
 
-            const placeholders = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#00ffff', '#ff00ff'];
+            const placeholders = ['#ff0000', '#ff00ff', '#0000ff', '#ffff00', '#00ffff', '#ff00ff'];
             const map = {};
             colors.forEach((color, index) => {
                 map[placeholders[index]] = color;

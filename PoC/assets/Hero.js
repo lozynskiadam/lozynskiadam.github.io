@@ -18,7 +18,7 @@ class Hero {
 
     constructor() {
         this.sprite = Sprite.get('outfit').clone()
-        const randColor = () => '#' + Math.floor(Math.random()*16777215).toString(16);
+        const randColor = () => "#000000".replace(/0/g,function(){return (~~(Math.random()*16)).toString(16);});
         this.sprite.dye([randColor(), randColor(), randColor(), randColor()]);
         this.sprite.loop('idle-south');
         Effect.get('energy').run(this.position.x, this.position.y);
