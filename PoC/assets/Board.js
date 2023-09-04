@@ -76,7 +76,7 @@ class Board {
 
                 Board.updateTile(x, y, stack);
             }
-        }, 250);
+        }, 100);
     }
 
     static isWalkable(x, y) {
