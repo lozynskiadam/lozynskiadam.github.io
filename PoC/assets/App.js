@@ -13,7 +13,7 @@ app = async () => {
     async function init() {
         Keyboard.init();
         Mouse.init();
-        window.hero = new Hero(Sprite.get('outfit'));
+        window.hero = new Hero();
         Board.init(BOARD_WIDTH, BOARD_HEIGHT);
         Renderer.creatures.push(window.hero);
         Renderer.render();

@@ -16,9 +16,10 @@ class Hero {
         timeouts: []
     };
 
-    constructor(sprite) {
-        this.sprite = sprite.clone()
-        this.sprite.dye(['#ffffff', '#ffffff']);
+    constructor() {
+        this.sprite = Sprite.get('outfit').clone()
+        const randColor = () => '#' + Math.floor(Math.random()*16777215).toString(16);
+        this.sprite.dye([randColor(), randColor(), randColor(), randColor()]);
         this.sprite.loop('idle-south');
         Effect.get('energy').run(this.position.x, this.position.y);
 
