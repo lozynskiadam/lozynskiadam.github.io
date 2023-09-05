@@ -3,6 +3,8 @@ class Keyboard {
     static init() {
         document.addEventListener("keydown", () => setTimeout(Keyboard.triggerKeyHoldingFunctions));
         window.keyboardLoop = setInterval(Keyboard.triggerKeyHoldingFunctions, 200);
+        window.keystrokes.bindKey(' ', () => window.dispatchEvent(new CustomEvent("randomize-outfit")));
+        window.keystrokes.bindKey('Spacebar', () => window.dispatchEvent(new CustomEvent("randomize-outfit")));
     }
 
     static triggerKeyHoldingFunctions = () => {

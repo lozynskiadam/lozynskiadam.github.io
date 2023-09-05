@@ -35,6 +35,10 @@ class Hero {
         window.addEventListener("move-east", () => {
             this.walk('east')
         });
+        window.addEventListener("randomize-outfit", () => {
+            const randColor = () => "#000000".replace(/0/g,function(){return (~~(Math.random()*16)).toString(16);});
+            this.sprite.dye([randColor(), randColor(), randColor(), randColor()]);
+        });
     }
 
     setPosition(x, y) {
