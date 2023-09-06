@@ -43,6 +43,14 @@ class Board {
         Board.requestTiles(missingTiles);
     }
 
+    static getTileStack(x, y) {
+        if (typeof Board.tiles[y] == 'undefined' || typeof Board.tiles[y][x] == 'undefined') {
+            return []
+        }
+
+        return Board.tiles[y][x];
+    }
+
     static updateTile(x, y, stack) {
         if ((typeof Board.tiles[y] != 'undefined') && (typeof Board.tiles[y][x] != 'undefined')) {
             Board.tiles[y][x] = stack;
@@ -72,6 +80,8 @@ class Board {
                     stack.push(6);
                 } else if (!Math.floor(Math.random() * 10)) {
                     stack.push(7);
+                } else if (!Math.floor(Math.random() * 30)) {
+                    stack.push(8);
                 }
 
                 Board.updateTile(x, y, stack);
@@ -80,13 +90,12 @@ class Board {
     }
 
     static isWalkable(x, y) {
-        if (typeof Board.tiles[y] == 'undefined' || typeof Board.tiles[y][x] == 'undefined') {
+        const stack = Board.getTileStack(x, y);
+
+        if (!stack.find((itemId) => Item.get(itemId).type === 'ground')) {
             return false
         }
-        if (!Board.tiles[y][x].find((itemId) => Item.get(itemId).type === 'ground')) {
-            return false
-        }
-        if (Board.tiles[y][x].find((itemId) => Item.get(itemId).isBlockingCreatures)) {
+        if (stack.find((itemId) => Item.get(itemId).isBlockingCreatures)) {
             return false
         }
 

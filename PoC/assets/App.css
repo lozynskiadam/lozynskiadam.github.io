@@ -23,3 +23,7 @@ canvas {
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
 }
+
+canvas[cursor="pointer"] {
+    cursor: pointer;
+}

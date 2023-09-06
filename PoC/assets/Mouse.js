@@ -7,10 +7,32 @@ class Mouse {
         document.addEventListener('mousemove', (e) => {
             Mouse.x = e.clientX;
             Mouse.y = e.clientY;
-        });
-        document.addEventListener('mousedown', () => {
+
             const position = Mouse.getServerPosition();
-            Effect.get('energy').run(position.x, position.y);
+            Board.getTileStack(position.x, position.y).forEach((itemId) => {
+                if (itemId === 8) {
+                    Board.ctx.canvas.setAttribute('cursor', 'pointer');
+                } else {
+                    Board.ctx.canvas.removeAttribute('cursor');
+                }
+            });
+        });
+
+        var isClickBlocked = false
+        document.addEventListener('mousedown', () => {
+            if (isClickBlocked) {
+                return;
+            }
+            const position = Mouse.getServerPosition();
+            Board.getTileStack(position.x, position.y).forEach((itemId) => {
+                if (itemId === 8) {
+                    isClickBlocked = true;
+                    Effect.get('ore-hit').run(position.x, position.y);
+                    setTimeout(() => {
+                        isClickBlocked = false;
+                    }, 600);
+                }
+            });
         });
     }
 

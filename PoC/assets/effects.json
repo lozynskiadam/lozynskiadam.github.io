@@ -2,5 +2,9 @@
     {
         "id": "energy",
         "sprite": "effect-energy"
+    },
+    {
+        "id": "ore-hit",
+        "sprite": "effect-ore-hit"
     }
 ]

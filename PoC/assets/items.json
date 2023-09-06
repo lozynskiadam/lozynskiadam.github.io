@@ -47,5 +47,12 @@
     "sprite": "wall",
     "type": "object",
     "isBlockingCreatures": true
+  },
+  {
+    "id": 8,
+    "name": "ore",
+    "sprite": "ore",
+    "type": "object",
+    "isBlockingCreatures": true
   }
 ]
