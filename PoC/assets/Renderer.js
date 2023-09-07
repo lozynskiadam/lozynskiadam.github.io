@@ -12,8 +12,7 @@ class Renderer {
         }
 
         if (layer === 'objects') {
-            const mousePos = Mouse.getLocalPosition();
-            if (mousePos.x === x && mousePos.y === y) {
+            if (Mouse.position.x === x && Mouse.position.y === y) {
                 Renderer.drawSprite(Sprite.get('cursor').getFrame(), x, y)
             }
 
