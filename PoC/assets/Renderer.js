@@ -1,7 +1,5 @@
 class Renderer {
 
-    static creatures = [];
-
     static renderTile(x, y, sx, sy, layer, tile) {
         if (layer === 'ground') {
             tile.forEach((itemId) => {
@@ -23,11 +21,9 @@ class Renderer {
                 }
             });
 
-            Renderer.creatures.forEach((creature) => {
-                if (sx === creature.position.x && sy === creature.position.y) {
-                    Renderer.drawCreature(creature, x, y)
-                }
-            });
+            if (sx === Hero.position.x && sy === Hero.position.y) {
+                Renderer.drawCreature({sprite: Hero.sprite, offset: Hero.offset}, x, y)
+            }
 
             Effect.getBoardEffects(sx, sy).forEach((effect) => {
                 Renderer.drawSprite(effect.getFrame(), x, y)
@@ -76,7 +72,7 @@ class Renderer {
             }
         }
         Board.ctx.clearRect(0, 0, Board.ctx.canvas.width, Board.ctx.canvas.height);
-        Board.ctx.drawImage(canvas, -hero.offset.x, -hero.offset.y);
+        Board.ctx.drawImage(canvas, -Hero.offset.x, -Hero.offset.y);
         Renderer.cropEdges(Board.ctx);
 
         window.requestAnimationFrame(Renderer.render);

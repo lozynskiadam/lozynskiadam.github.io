@@ -49,8 +49,8 @@ class Mouse {
 
         Mouse.position.clientX = e.clientX;
         Mouse.position.clientY = e.clientY;
-        Mouse.position.x = Math.floor((((e.clientX - rect.left) / (rect.right - rect.left) * Board.ctx.canvas.width) + hero.offset.x) / TILE_SIZE);
-        Mouse.position.y = Math.floor((((e.clientY - rect.top) / (rect.bottom - rect.top) * Board.ctx.canvas.height) + hero.offset.y) / TILE_SIZE);
+        Mouse.position.x = Math.floor((((e.clientX - rect.left) / (rect.right - rect.left) * Board.ctx.canvas.width) + Hero.offset.x) / TILE_SIZE);
+        Mouse.position.y = Math.floor((((e.clientY - rect.top) / (rect.bottom - rect.top) * Board.ctx.canvas.height) + Hero.offset.y) / TILE_SIZE);
 
         const serverPosition = Board.positionLocalToServer(Mouse.position.x, Mouse.position.y)
         Mouse.position.serverX = serverPosition.x;

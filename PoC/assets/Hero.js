@@ -1,107 +1,110 @@
 class Hero {
-    position = {
+
+    static position = {
         x: 100,
         y: 100,
     };
-    offset = {
+
+    static offset = {
         x: 0,
         y: 0,
     };
-    sprite = null;
-    speed = 2; // tiles per second
-    movement = {
+
+    static sprite = null;
+
+    static speed = 2; // tiles per second
+
+    static movement = {
         queuedMove: null,
         isMoving: false,
         currentFrame: 0,
         timeouts: []
     };
 
-    constructor() {
-        this.sprite = Sprite.get('outfit').clone()
-        const randColor = () => "#000000".replace(/0/g,function(){return (~~(Math.random()*16)).toString(16);});
-        this.sprite.dye([randColor(), randColor(), randColor(), randColor()]);
-        this.sprite.loop('idle-south');
-        Effect.get('energy').run(this.position.x, this.position.y);
+    static init() {
+        Hero.sprite = Sprite.get('outfit').clone()
+        Hero.sprite.dye([ImageUtils.randomColor(), ImageUtils.randomColor(), ImageUtils.randomColor(), ImageUtils.randomColor()]);
+        Hero.sprite.loop('idle-south');
+        Effect.get('energy').run(Hero.position.x, Hero.position.y);
 
         window.addEventListener("move-north", () => {
-            this.walk('north')
+            Hero.walk('north')
         });
         window.addEventListener("move-south", () => {
-            this.walk('south')
+            Hero.walk('south')
         });
         window.addEventListener("move-west", () => {
-            this.walk('west')
+            Hero.walk('west')
         });
         window.addEventListener("move-east", () => {
-            this.walk('east')
+            Hero.walk('east')
         });
         window.addEventListener("randomize-outfit", () => {
-            const randColor = () => "#000000".replace(/0/g,function(){return (~~(Math.random()*16)).toString(16);});
-            this.sprite.dye([randColor(), randColor(), randColor(), randColor()]);
+            Hero.sprite.dye([ImageUtils.randomColor(), ImageUtils.randomColor(), ImageUtils.randomColor(), ImageUtils.randomColor()]);
         });
     }
 
-    setPosition(x, y) {
-        this.position = {x: x, y: y};
-        this.movement.timeouts.forEach((timeout) => clearTimeout(timeout));
-        this.movement.timeouts = [];
-        this.movement.queuedMove = null;
-        this.movement.isMoving = false;
-        this.movement.currentFrame = 0;
+    static setPosition(x, y) {
+        Hero.position = {x: x, y: y};
+        Hero.movement.timeouts.forEach((timeout) => clearTimeout(timeout));
+        Hero.movement.timeouts = [];
+        Hero.movement.queuedMove = null;
+        Hero.movement.isMoving = false;
+        Hero.movement.currentFrame = 0;
         window.dispatchEvent(new CustomEvent("hero-position-changed"));
     }
 
-    walk(direction) {
-        if (this.movement.isMoving) {
-            if (this.movement.currentFrame > (TILE_SIZE - (TILE_SIZE/3))) {
-                this.movement.queuedMove = direction;
+    static walk(direction) {
+        if (Hero.movement.isMoving) {
+            if (Hero.movement.currentFrame > (TILE_SIZE - (TILE_SIZE/3))) {
+                Hero.movement.queuedMove = direction;
                 return true;
             }
             return false;
         }
 
-        const targetPosition = this.getTargetPosition(direction);
+        const targetPosition = Hero.getTargetPosition(direction);
         if (!Board.isWalkable(targetPosition.x, targetPosition.y)) {
-            this.sprite.loop('idle-' + direction);
+            Hero.sprite.loop('idle-' + direction);
             return false;
         }
 
-        this.movement.isMoving = true;
+        Hero.movement.isMoving = true;
         for (let i = 0; i < TILE_SIZE; i++) {
-            const timeout = setTimeout(() => this.handleWalkFrame(direction, targetPosition), (1000 / this.speed / TILE_SIZE) * i);
-            this.movement.timeouts.push(timeout);
+            const timeout = setTimeout(() => Hero.handleWalkFrame(direction, targetPosition), (1000 / Hero.speed / TILE_SIZE) * i);
+            Hero.movement.timeouts.push(timeout);
         }
 
         return true;
     }
 
-    handleWalkFrame(direction, targetPosition) {
-        this.sprite.loop('walk-' + direction);
-        this.movement.currentFrame++;
-        this.updateOffsetAfterAnimationFrameChange(direction);
-        if (this.movement.currentFrame === (TILE_SIZE / 2)) {
-            this.position = targetPosition;
+    static handleWalkFrame(direction, targetPosition) {
+        Hero.sprite.loop('walk-' + direction);
+        Hero.movement.currentFrame++;
+        Hero.updateOffsetAfterAnimationFrameChange(direction);
+        if (Hero.movement.currentFrame === (TILE_SIZE / 2)) {
+            Hero.position = targetPosition;
             window.dispatchEvent(new CustomEvent("hero-position-changed"));
-            this.updateOffsetAfterPositionChange(direction);
+            Hero.updateOffsetAfterPositionChange(direction);
         }
-        if (this.movement.currentFrame === TILE_SIZE) {
-            this.movement.isMoving = false;
-            this.movement.currentFrame = 0;
-            this.movement.timeouts.forEach((timeout) => clearTimeout(timeout));
-            this.movement.timeouts = [];
-            if (this.movement.queuedMove) {
-                direction = this.movement.queuedMove;
-                this.movement.queuedMove = null;
-                if (!this.walk(direction)) {
-                    this.sprite.loop('idle-' + direction);
+        if (Hero.movement.currentFrame === TILE_SIZE) {
+            Hero.movement.isMoving = false;
+            Hero.movement.currentFrame = 0;
+            Hero.movement.timeouts.forEach((timeout) => clearTimeout(timeout));
+            Hero.movement.timeouts = [];
+            if (Hero.movement.queuedMove) {
+                direction = Hero.movement.queuedMove;
+                Hero.movement.queuedMove = null;
+                if (!Hero.walk(direction)) {
+                    Hero.sprite.loop('idle-' + direction);
                 }
             } else {
-                this.sprite.loop('idle-' + direction);
+                Hero.sprite.loop('idle-' + direction);
             }
         }
     }
 
-    getTargetPosition(direction) {
+    static getTargetPosition(direction) {
         const map = {
             'north': { x: 0, y: -1 },
             'south': { x: 0, y: 1 },
@@ -110,27 +113,27 @@ class Hero {
         };
 
         return {
-            x: this.position.x + map[direction].x,
-            y: this.position.y + map[direction].y
+            x: Hero.position.x + map[direction].x,
+            y: Hero.position.y + map[direction].y
         };
     }
 
-    updateOffsetAfterAnimationFrameChange(direction) {
+    static updateOffsetAfterAnimationFrameChange(direction) {
         const map = {
-            'north': () => this.offset.y--,
-            'south': () => this.offset.y++,
-            'west': () => this.offset.x--,
-            'east': () => this.offset.x++
+            'north': () => Hero.offset.y--,
+            'south': () => Hero.offset.y++,
+            'west': () => Hero.offset.x--,
+            'east': () => Hero.offset.x++
         }
         map[direction]();
     }
 
-    updateOffsetAfterPositionChange(direction) {
+    static updateOffsetAfterPositionChange(direction) {
         const map = {
-            'north': () => this.offset.y = (TILE_SIZE / 2),
-            'south': () => this.offset.y = -(TILE_SIZE / 2),
-            'west': () => this.offset.x = (TILE_SIZE / 2),
-            'east': () => this.offset.x = -(TILE_SIZE / 2)
+            'north': () => Hero.offset.y = (TILE_SIZE / 2),
+            'south': () => Hero.offset.y = -(TILE_SIZE / 2),
+            'west': () => Hero.offset.x = (TILE_SIZE / 2),
+            'east': () => Hero.offset.x = -(TILE_SIZE / 2)
         }
         map[direction]();
     }

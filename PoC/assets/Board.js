@@ -22,10 +22,10 @@ class Board {
     }
 
     static update() {
-        const fromX = hero.position.x - Math.floor(Board.width / 2);
-        const toX = hero.position.x + Math.floor(Board.width / 2);
-        const fromY = hero.position.y - Math.floor(Board.height / 2);
-        const toY = hero.position.y + Math.floor(Board.height / 2);
+        const fromX = Hero.position.x - Math.floor(Board.width / 2);
+        const toX = Hero.position.x + Math.floor(Board.width / 2);
+        const fromY = Hero.position.y - Math.floor(Board.height / 2);
+        const toY = Hero.position.y + Math.floor(Board.height / 2);
         const missingTiles = [];
         const _tiles = {};
         for (let y = fromY; y <= toY; y++) {
@@ -80,14 +80,16 @@ class Board {
                     stack.push(1)
                 }
 
-                if (!Math.floor(Math.random() * 30)) {
-                    stack.push(5);
-                } else if (!Math.floor(Math.random() * 75)) {
-                    stack.push(6);
-                } else if (!Math.floor(Math.random() * 10)) {
-                    stack.push(7);
-                } else if (!Math.floor(Math.random() * 30)) {
-                    stack.push(8);
+                if ((x === Hero.position.x && y === Hero.position.y) === false) {
+                    if (!Math.floor(Math.random() * 30)) {
+                        stack.push(5);
+                    } else if (!Math.floor(Math.random() * 75)) {
+                        stack.push(6);
+                    } else if (!Math.floor(Math.random() * 10)) {
+                        stack.push(7);
+                    } else if (!Math.floor(Math.random() * 30)) {
+                        stack.push(8);
+                    }
                 }
 
                 Board.updateTile(x, y, stack);
@@ -109,8 +111,8 @@ class Board {
     }
 
     static positionLocalToServer(x, y) {
-        const fromX = hero.position.x - Math.floor(Board.width / 2);
-        const fromY = hero.position.y - Math.floor(Board.height / 2);
+        const fromX = Hero.position.x - Math.floor(Board.width / 2);
+        const fromY = Hero.position.y - Math.floor(Board.height / 2);
 
         return {
             x: fromX + x,

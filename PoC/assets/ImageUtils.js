@@ -1,5 +1,9 @@
 class ImageUtils {
 
+    static randomColor() {
+        return "#000000".replace(/0/g,function(){return (~~(Math.random()*16)).toString(16);});
+    }
+
     static hexToRGB(hex) {
         const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
 
