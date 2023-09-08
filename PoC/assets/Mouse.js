@@ -66,13 +66,19 @@ class Mouse {
 
     static onPositionChange() {
         const position = Board.positionLocalToServer(Mouse.position.x, Mouse.position.y);
-        Board.getTileStack(position.x, position.y).forEach((itemId) => {
-            if (itemId === 8) {
-                Board.ctx.canvas.setAttribute('cursor', 'pointer');
-            } else {
-                Board.ctx.canvas.removeAttribute('cursor');
-            }
-        });
+        const itemId = Board.getTileTopItem(position.x, position.y);
+        if (!itemId) {
+            Board.ctx.canvas.removeAttribute('cursor');
+            return;
+        }
+
+        if (itemId === 8) {
+            Board.ctx.canvas.setAttribute('cursor', 'pick');
+        } else if (itemId === 6) {
+            Board.ctx.canvas.setAttribute('cursor', 'chest');
+        } else {
+            Board.ctx.canvas.removeAttribute('cursor');
+        }
     }
 
     static onLeftButtonClick() {

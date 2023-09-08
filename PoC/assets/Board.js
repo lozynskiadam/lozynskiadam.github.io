@@ -51,6 +51,12 @@ class Board {
         return Board.tiles[y][x];
     }
 
+    static getTileTopItem(x, y) {
+        const stack = Board.getTileStack(x, y);
+
+        return stack[stack.length-1] ?? null;
+    }
+
     static updateTile(x, y, stack) {
         if ((typeof Board.tiles[y] != 'undefined') && (typeof Board.tiles[y][x] != 'undefined')) {
             Board.tiles[y][x] = stack;

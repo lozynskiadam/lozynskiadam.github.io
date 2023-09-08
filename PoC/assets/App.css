@@ -22,8 +22,12 @@ canvas {
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
+    cursor: url(cursor.png), default;
 }
 
-canvas[cursor="pointer"] {
-    cursor: pointer;
+canvas[cursor="pick"] {
+    cursor: url(cursor-pick.png), pointer;
+}
+canvas[cursor="chest"] {
+    cursor: url(cursor-chest.png), pointer;
 }
