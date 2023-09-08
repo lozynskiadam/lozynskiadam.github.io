@@ -72,10 +72,10 @@ class Mouse {
             return;
         }
 
-        if (itemId === 8) {
-            Board.ctx.canvas.setAttribute('cursor', 'pick');
-        } else if (itemId === 6) {
+        if (itemId === 6) {
             Board.ctx.canvas.setAttribute('cursor', 'chest');
+        } else if (itemId === 8) {
+            Board.ctx.canvas.setAttribute('cursor', 'pick');
         } else {
             Board.ctx.canvas.removeAttribute('cursor');
         }
@@ -85,15 +85,29 @@ class Mouse {
         if (Mouse.buttons.left.isBlocked) return;
 
         const position = Board.positionLocalToServer(Mouse.position.x, Mouse.position.y);
-        Board.getTileStack(position.x, position.y).forEach((itemId) => {
-            if (itemId === 8) {
-                Mouse.buttons.left.isBlocked = true;
-                Effect.get('ore-hit').run(position.x, position.y);
-                setTimeout(() => {
-                    Mouse.buttons.left.isBlocked = false;
-                }, 600);
-            }
-        });
+        const itemId = Board.getTileTopItem(position.x, position.y);
+        if (!itemId) {
+            return;
+        }
+
+        if (itemId === 6) {
+            Mouse.buttons.left.isBlocked = true;
+            Effect.get('yellow-sparkles').run(position.x, position.y);
+            Board.tiles[position.y][position.x].pop();
+            setTimeout(() => {
+                Mouse.buttons.left.isBlocked = false;
+            }, 600);
+            return;
+        }
+
+        if (itemId === 8) {
+            Mouse.buttons.left.isBlocked = true;
+            Effect.get('ore-hit').run(position.x, position.y);
+            setTimeout(() => {
+                Mouse.buttons.left.isBlocked = false;
+            }, 600);
+            return;
+        }
     }
 
     static onRightButtonClick() {

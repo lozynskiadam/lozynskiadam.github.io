@@ -121,5 +121,34 @@
                 {"x": 224, "y": 0, "w": 32, "h": 32}
             ]
         }
+    },
+    "effect-yellow-sparkles": {
+        "base": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgBAMAAAB54XoeAAAAAXNSR0IB2cksfwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAA9QTFRFAAAA//Jo//rB18UA//73HrZIagAAAAV0Uk5TAP////8c0CZSAAABG0lEQVR4nO2W7RGDIAyGWYEVXMEV3H+m1vbwSoAkliAcvM8/L+RRPkxwDgAAwHR4z8e3DUJb/TNCLucU3p7jo8KT/kIAQB1jVMNEIsT7156RhUN0ZDbnHWQ/4h1M4s8KnbxM7YUZe2GMD5F9/6r4N3UQOiLUYCKsW/WMvolQOLxs/BRGTnPhJ4lJ0MTbC8GChKJbqr3hb1T3vLmFtcUriZsLf7gaamHMlatdugWFTt6CGx25nZDN6Sz0cY6nf17yKF3mq4VbvAn+IAOOeIq5eGOhI8ckM6VoEzRraC4EAEyFdJsKNULdPxcUZnLNqBFe9b/g+P8is44Q1GN+kzAX0usZfQF9Fk+RuXD8NQQAzIJ5n1xQCAAAAACg4wVf+S7jOIrWmwAAAABJRU5ErkJggg==",
+        "speed": 35,
+        "states": {
+            "default": [
+                {"x": 0, "y": 0, "w": 32, "h": 32},
+                {"x": 32, "y": 0, "w": 32, "h": 32},
+                {"x": 64, "y": 0, "w": 32, "h": 32},
+                {"x": 96, "y": 0, "w": 32, "h": 32},
+                {"x": 128, "y": 0, "w": 32, "h": 32},
+                {"x": 0, "y": 32, "w": 32, "h": 32},
+                {"x": 32, "y": 32, "w": 32, "h": 32},
+                {"x": 64, "y": 32, "w": 32, "h": 32},
+                {"x": 96, "y": 32, "w": 32, "h": 32},
+                {"x": 128, "y": 32, "w": 32, "h": 32},
+                {"x": 0, "y": 64, "w": 32, "h": 32},
+                {"x": 32, "y": 64, "w": 32, "h": 32},
+                {"x": 64, "y": 64, "w": 32, "h": 32},
+                {"x": 96, "y": 64, "w": 32, "h": 32},
+                {"x": 128, "y": 64, "w": 32, "h": 32},
+                {"x": 0, "y": 96, "w": 32, "h": 32},
+                {"x": 32, "y": 96, "w": 32, "h": 32},
+                {"x": 64, "y": 96, "w": 32, "h": 32},
+                {"x": 96, "y": 96, "w": 32, "h": 32},
+                {"x": 128, "y": 96, "w": 32, "h": 32},
+                {"x": 0, "y": 128, "w": 32, "h": 32}
+            ]
+        }
     }
 }
