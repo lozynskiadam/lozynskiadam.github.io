@@ -1,4 +1,11 @@
-class Renderer {
+import Item from "./Item.js";
+import Mouse from "./Mouse.js";
+import Sprite from "./Sprite.js";
+import Hero from "./Hero.js";
+import Board from "./Board.js";
+import {TILE_SIZE} from "../config.js";
+
+export default class Renderer {
 
     static renderTile(x, y, sx, sy, layer, tile) {
         if (layer === 'ground') {

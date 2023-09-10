@@ -1,4 +1,9 @@
-class Board {
+import {BOARD_HEIGHT, BOARD_WIDTH, TILE_SIZE} from "../config.js";
+import Hero from "./Hero.js";
+import Utils from "./Utils.js";
+import Item from "./Item.js";
+
+export default class Board {
 
     static ctx = null;
     static width = null;

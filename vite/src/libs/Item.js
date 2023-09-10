@@ -1,4 +1,6 @@
-class Item {
+import Sprite from "./Sprite.js";
+
+export default class Item {
 
     static #instances = {};
 

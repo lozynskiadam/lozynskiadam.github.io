@@ -1,4 +1,9 @@
-class Mouse {
+import Board from "./Board.js";
+import Effect from "./Effect.js";
+import {TILE_SIZE} from "../config.js";
+import Hero from "./Hero.js";
+
+export default class Mouse {
 
     static position = {
         x: null,

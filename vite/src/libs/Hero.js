@@ -1,4 +1,10 @@
-class Hero {
+import Sprite from "./Sprite.js";
+import Utils from "./Utils.js";
+import Effect from "./Effect.js";
+import {TILE_SIZE} from "../config.js";
+import Board from "./Board.js";
+
+export default class Hero {
 
     static position = {
         x: 100,

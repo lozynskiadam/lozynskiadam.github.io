@@ -1,4 +1,6 @@
-class Sprite {
+import Utils from "./Utils.js";
+
+export default class Sprite {
 
     static #instances = {};
 

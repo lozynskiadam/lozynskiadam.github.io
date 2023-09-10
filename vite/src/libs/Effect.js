@@ -1,4 +1,7 @@
-class Effect {
+import Sprite from "./Sprite.js";
+import Board from "./Board.js";
+
+export default class Effect {
 
     static #instances = {};
     static #lastUID = 0;

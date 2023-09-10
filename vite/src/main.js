@@ -1,8 +1,15 @@
-const TILE_SIZE = 32;
-const BOARD_WIDTH = 33;
-const BOARD_HEIGHT = 19;
+import Sprite from "./libs/Sprite.js";
+import Item from "./libs/Item.js";
+import Effect from "./libs/Effect.js";
+import Keyboard from "./libs/Keyboard.js";
+import Mouse from "./libs/Mouse.js";
+import Hero from "./libs/Hero.js";
+import Board from "./libs/Board.js";
+import Renderer from "./libs/Renderer.js";
 
-app = async () => {
+import './style.css'
+
+const app = async () => {
 
     async function load() {
         await Sprite.load('data/sprites.json');

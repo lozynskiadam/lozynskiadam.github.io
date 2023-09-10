@@ -1,0 +1,33 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #25131a;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#app {
+  display: flex;
+  height: inherit;
+  align-items: center;
+  justify-content: center;
+}
+
+canvas {
+  transform: scale(2);
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  cursor: url(images/cursor.png), default;
+}
+
+canvas[cursor="pick"] {
+  cursor: url(images/cursor-pick.png), pointer;
+}
+canvas[cursor="chest"] {
+  cursor: url(images/cursor-chest.png), pointer;
+}
