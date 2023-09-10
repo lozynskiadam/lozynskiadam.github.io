@@ -10,7 +10,7 @@ class Renderer {
         }
 
         if (layer === 'objects') {
-            if (Mouse.position.x === x && Mouse.position.y === y) {
+            if (Mouse.buttons.right.isDown && Mouse.position.x === x && Mouse.position.y === y) {
                 Renderer.drawSprite(Sprite.get('cursor').getFrame(), x, y)
             }
 
