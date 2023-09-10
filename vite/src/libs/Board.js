@@ -87,13 +87,9 @@ export default class Board {
                 }
 
                 if ((x === Hero.position.x && y === Hero.position.y) === false) {
-                    if (Utils.roll(30)) {
-                        stack.push(5);
-                    } else if (Utils.roll(75)) {
+                    if (Utils.roll(100)) {
                         stack.push(6);
-                    } else if (Utils.roll(10)) {
-                        stack.push(7);
-                    } else if (Utils.roll(30)) {
+                    } else if (Utils.roll(100)) {
                         stack.push(8);
                     }
                 }

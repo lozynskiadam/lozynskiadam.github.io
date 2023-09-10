@@ -2,6 +2,7 @@ import Board from "./Board.js";
 import Effect from "./Effect.js";
 import {TILE_SIZE} from "../config.js";
 import Hero from "./Hero.js";
+import Item from "./Item.js";
 
 export default class Mouse {
 
@@ -25,6 +26,14 @@ export default class Mouse {
         },
     }
 
+    static grabbing = {
+        itemId: null,
+        from: {
+            x: null,
+            y: null,
+        },
+    }
+
     static init() {
         document.addEventListener('mousemove', Mouse.onMove, false);
         document.addEventListener('mousedown', (e) => {
@@ -40,6 +49,9 @@ export default class Mouse {
         document.addEventListener('mouseup', (e) => {
             if (e.which === 1 || e.button === 0) {
                 Mouse.buttons.left.isDown = false;
+                if (Mouse.grabbing.itemId) {
+                    Mouse.onGrabEnd();
+                }
             }
             if (e.which === 3 || e.button === 2) {
                 Mouse.buttons.right.isDown = false;
@@ -70,6 +82,9 @@ export default class Mouse {
     }
 
     static onPositionChange() {
+        if (Mouse.grabbing.itemId) {
+            return;
+        }
         const position = Board.positionLocalToServer(Mouse.position.x, Mouse.position.y);
         const itemId = Board.getTileTopItem(position.x, position.y);
         if (!itemId) {
@@ -87,18 +102,21 @@ export default class Mouse {
     }
 
     static onLeftButtonClick() {
-        if (Mouse.buttons.left.isBlocked) return;
-
-        const position = Board.positionLocalToServer(Mouse.position.x, Mouse.position.y);
-        const itemId = Board.getTileTopItem(position.x, position.y);
-        if (!itemId) {
+        const itemId = Board.getTileTopItem(Mouse.position.serverX, Mouse.position.serverY);
+        if (itemId && Item.get(Board.getTileTopItem(Mouse.position.serverX, Mouse.position.serverY)).isMoveable) {
+            Mouse.onGrabStart(itemId);
             return;
         }
 
+        if (Mouse.buttons.left.isBlocked) return;
+        if (!itemId) return;
+
         if (itemId === 6) {
             Mouse.buttons.left.isBlocked = true;
-            Effect.get('yellow-sparkles').run(position.x, position.y);
-            Board.tiles[position.y][position.x].pop();
+            Effect.get('yellow-sparkles').run(Mouse.position.serverX, Mouse.position.serverY);
+            Board.tiles[Mouse.position.serverY][Mouse.position.serverX].pop();
+            Board.tiles[Mouse.position.serverY][Mouse.position.serverX].push(9);
+            Mouse.onPositionChange();
             setTimeout(() => {
                 Mouse.buttons.left.isBlocked = false;
             }, 600);
@@ -107,7 +125,8 @@ export default class Mouse {
 
         if (itemId === 8) {
             Mouse.buttons.left.isBlocked = true;
-            Effect.get('ore-hit').run(position.x, position.y);
+            Effect.get('ore-hit').run(Mouse.position.serverX, Mouse.position.serverY);
+            Board.tiles[Hero.position.y][Hero.position.x].push(10);
             setTimeout(() => {
                 Mouse.buttons.left.isBlocked = false;
             }, 600);
@@ -116,5 +135,26 @@ export default class Mouse {
     }
 
     static onRightButtonClick() {
+    }
+
+    static onGrabStart(itemId) {
+        Mouse.grabbing.itemId = itemId;
+        Mouse.grabbing.from = {x: Mouse.position.serverX, y: Mouse.position.serverY};
+        Board.ctx.canvas.setAttribute('cursor', 'crosshair');
+    }
+
+    static onGrabEnd() {
+        if (Mouse.grabbing.from.x !== Mouse.position.serverX || Mouse.grabbing.from.Y !== Mouse.position.serverY) {
+            const itemId = Board.getTileTopItem(Mouse.grabbing.from.x, Mouse.grabbing.from.y);
+            if (itemId === Mouse.grabbing.itemId) {
+                if (!Board.getTileStack(Mouse.position.serverX, Mouse.position.serverY).find((itemId) => Item.get(itemId).isBlockingCreatures)) {
+                    Board.tiles[Mouse.grabbing.from.y][Mouse.grabbing.from.x].pop();
+                    Board.tiles[Mouse.position.serverY][Mouse.position.serverX].push(itemId);
+                }
+            }
+        }
+        Mouse.grabbing.itemId = null;
+        Mouse.grabbing.from = {x: null, y: null};
+        Mouse.onPositionChange();
     }
 }

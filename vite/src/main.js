@@ -1,3 +1,6 @@
+import {EFFECTS_PATH, ITEMS_PATH, SPRITES_PATH} from "./config.js";
+import './style.css'
+
 import Sprite from "./libs/Sprite.js";
 import Item from "./libs/Item.js";
 import Effect from "./libs/Effect.js";
@@ -7,14 +10,12 @@ import Hero from "./libs/Hero.js";
 import Board from "./libs/Board.js";
 import Renderer from "./libs/Renderer.js";
 
-import './style.css'
-
 const app = async () => {
 
     async function load() {
-        await Sprite.load('data/sprites.json');
-        await Item.load('data/items.json');
-        await Effect.load('data/effects.json');
+        await Sprite.load(SPRITES_PATH);
+        await Item.load(ITEMS_PATH);
+        await Effect.load(EFFECTS_PATH);
     }
 
     async function init() {

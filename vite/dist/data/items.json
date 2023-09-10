@@ -4,55 +4,79 @@
     "name": "floor",
     "sprite": "floor-1",
     "type": "ground",
-    "isBlockingCreatures": false
+    "isBlockingCreatures": false,
+    "isMoveable": false
   },
   {
     "id": 2,
     "name": "floor",
     "sprite": "floor-2",
     "type": "ground",
-    "isBlockingCreatures": false
+    "isBlockingCreatures": false,
+    "isMoveable": false
   },
   {
     "id": 3,
     "name": "floor",
     "sprite": "floor-3",
     "type": "ground",
-    "isBlockingCreatures": false
+    "isBlockingCreatures": false,
+    "isMoveable": false
   },
   {
     "id": 4,
     "name": "floor",
     "sprite": "floor-4",
     "type": "ground",
-    "isBlockingCreatures": false
+    "isBlockingCreatures": false,
+    "isMoveable": false
   },
   {
     "id": 5,
     "name": "barrel",
     "sprite": "barrel",
     "type": "object",
-    "isBlockingCreatures": true
+    "isBlockingCreatures": true,
+    "isMoveable": false
   },
   {
     "id": 6,
     "name": "chest",
     "sprite": "chest",
     "type": "object",
-    "isBlockingCreatures": true
+    "isBlockingCreatures": true,
+    "isMoveable": false
   },
   {
     "id": 7,
     "name": "wall",
     "sprite": "wall",
     "type": "object",
-    "isBlockingCreatures": true
+    "isBlockingCreatures": true,
+    "isMoveable": false
   },
   {
     "id": 8,
+    "name": "ore vein",
+    "sprite": "ore-vein",
+    "type": "object",
+    "isBlockingCreatures": true,
+    "isMoveable": false
+  },
+  {
+    "id": 9,
+    "name": "potion",
+    "sprite": "potion",
+    "type": "object",
+    "isBlockingCreatures": false,
+    "isMoveable": true
+  },
+  {
+    "id": 10,
     "name": "ore",
     "sprite": "ore",
     "type": "object",
-    "isBlockingCreatures": true
+    "isBlockingCreatures": false,
+    "isMoveable": true
   }
 ]
