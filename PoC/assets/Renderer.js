@@ -25,7 +25,7 @@ class Renderer {
                 Renderer.drawCreature({sprite: Hero.sprite, offset: Hero.offset}, x, y)
             }
 
-            Effect.getBoardEffects(sx, sy).forEach((effect) => {
+            Board.getEffects(sx, sy).forEach((effect) => {
                 Renderer.drawSprite(effect.getFrame(), x, y)
             });
         }
@@ -63,9 +63,7 @@ class Renderer {
             for (let [sy, row] of Object.entries(Board.tiles)) {
                 let x = 0;
                 for (let [sx, tile] of Object.entries(row)) {
-                    sx = Number(sx);
-                    sy = Number(sy);
-                    Renderer.renderTile(x, y, sx, sy, layer, tile);
+                    Renderer.renderTile(x, y, Number(sx), Number(sy), layer, tile);
                     x++;
                 }
                 y++;

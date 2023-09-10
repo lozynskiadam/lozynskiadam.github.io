@@ -1,4 +1,12 @@
-class ImageUtils {
+class Utils {
+
+    static rand(max) {
+        return Math.floor(Math.random() * (max + 1));
+    }
+
+    static roll(max) {
+        return !Utils.rand(max);
+    }
 
     static randomColor() {
         return "#000000".replace(/0/g,function(){return (~~(Math.random()*16)).toString(16);});
@@ -12,7 +20,7 @@ class ImageUtils {
 
     static replaceColors(image, colorMap) {
         Object.keys(colorMap).forEach(key => {
-            colorMap[ImageUtils.hexToRGB(key).toString()] = ImageUtils.hexToRGB(colorMap[key])
+            colorMap[Utils.hexToRGB(key).toString()] = Utils.hexToRGB(colorMap[key])
             delete colorMap[key];
         });
 
@@ -38,7 +46,7 @@ class ImageUtils {
         return ctx.canvas;
     }
 
-    static async load(src) {
+    static async loadImage(src) {
         return new Promise((resolve) => {
             const image = new Image();
             image.onload = () => resolve(image);
@@ -58,7 +66,7 @@ class ImageUtils {
                 map[placeholders[index]] = color;
             });
 
-            const coloredMask = ImageUtils.replaceColors(mask, map);
+            const coloredMask = Utils.replaceColors(mask, map);
             const ctx = document.createElement("canvas").getContext("2d");
 
             ctx.canvas.width = image.width;

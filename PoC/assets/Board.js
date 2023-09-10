@@ -4,8 +4,9 @@ class Board {
     static width = null;
     static height = null;
     static tiles = {};
+    static effects = {};
 
-    static init(width, height) {
+    static init() {
         const canvas = document.createElement('canvas');
         canvas.id = 'board';
         canvas.width = TILE_SIZE * BOARD_WIDTH;
@@ -13,8 +14,8 @@ class Board {
         document.querySelector('#app').append(canvas);
 
         Board.ctx = canvas.getContext("2d");
-        Board.width = width;
-        Board.height = height;
+        Board.width = BOARD_WIDTH;
+        Board.height = BOARD_HEIGHT;
         Board.update();
         window.addEventListener("hero-position-changed", () => {
             Board.update()
@@ -70,24 +71,24 @@ class Board {
                 const y = tile.y;
                 const stack = [];
 
-                if (!Math.floor(Math.random() * 40)) {
+                if (Utils.roll(40)) {
                     stack.push(2);
-                } else if (!Math.floor(Math.random() * 40)) {
+                } else if (Utils.roll(40)) {
                     stack.push(3);
-                } else if (!Math.floor(Math.random() * 5)) {
+                } else if (Utils.roll(5)) {
                     stack.push(4);
                 } else {
                     stack.push(1)
                 }
 
                 if ((x === Hero.position.x && y === Hero.position.y) === false) {
-                    if (!Math.floor(Math.random() * 30)) {
+                    if (Utils.roll(30)) {
                         stack.push(5);
-                    } else if (!Math.floor(Math.random() * 75)) {
+                    } else if (Utils.roll(75)) {
                         stack.push(6);
-                    } else if (!Math.floor(Math.random() * 10)) {
+                    } else if (Utils.roll(10)) {
                         stack.push(7);
-                    } else if (!Math.floor(Math.random() * 30)) {
+                    } else if (Utils.roll(30)) {
                         stack.push(8);
                     }
                 }
@@ -118,5 +119,13 @@ class Board {
             x: fromX + x,
             y: fromY + y,
         }
+    }
+
+    static getEffects(x, y) {
+        if (Board.effects && Board.effects[y] && Board.effects[y][x]) {
+            return Object.values(this.effects[y][x]);
+        }
+
+        return [];
     }
 }

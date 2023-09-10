@@ -23,7 +23,7 @@ class Hero {
 
     static init() {
         Hero.sprite = Sprite.get('outfit').clone()
-        Hero.sprite.dye([ImageUtils.randomColor(), ImageUtils.randomColor(), ImageUtils.randomColor(), ImageUtils.randomColor()]);
+        Hero.sprite.dye([Utils.randomColor(), Utils.randomColor(), Utils.randomColor(), Utils.randomColor()]);
         Hero.sprite.loop('idle-south');
         Effect.get('energy').run(Hero.position.x, Hero.position.y);
 
@@ -40,7 +40,7 @@ class Hero {
             Hero.walk('east')
         });
         window.addEventListener("randomize-outfit", () => {
-            Hero.sprite.dye([ImageUtils.randomColor(), ImageUtils.randomColor(), ImageUtils.randomColor(), ImageUtils.randomColor()]);
+            Hero.sprite.dye([Utils.randomColor(), Utils.randomColor(), Utils.randomColor(), Utils.randomColor()]);
         });
     }
 

@@ -5,16 +5,16 @@ const BOARD_HEIGHT = 19;
 app = async () => {
 
     async function load() {
-        await Sprite.load('assets/sprites.json');
-        await Item.load('assets/items.json');
-        await Effect.load('assets/effects.json');
+        await Sprite.load('data/sprites.json');
+        await Item.load('data/items.json');
+        await Effect.load('data/effects.json');
     }
 
     async function init() {
         Keyboard.init();
         Mouse.init();
         Hero.init();
-        Board.init(BOARD_WIDTH, BOARD_HEIGHT);
+        Board.init();
         Renderer.render();
     }
 

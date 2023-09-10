@@ -1,7 +1,6 @@
 class Effect {
 
     static #instances = {};
-    static #board = {};
     static #lastUID = 0;
 
     #id = null;
@@ -33,27 +32,19 @@ class Effect {
         return Effect.#instances[id] ?? null;
     }
 
-    run(sx, sy) {
-        if (!Effect.#board[sy]) {
-            Effect.#board[sy] = {};
+    run(x, y) {
+        if (!Board.effects[y]) {
+            Board.effects[y] = {};
         }
-        if (!Effect.#board[sy][sx]) {
-            Effect.#board[sy][sx] = {};
+        if (!Board.effects[y][x]) {
+            Board.effects[y][x] = {};
         }
 
         const uuid = ++Effect.#lastUID;
         const sprite = this.#sprite.clone();
-        Effect.#board[sy][sx][uuid] = sprite;
+        Board.effects[y][x][uuid] = sprite;
         sprite.play().then(() => {
-            delete Effect.#board[sy][sx][uuid];
+            delete Board.effects[y][x][uuid];
         });
-    }
-
-    static getBoardEffects(sx, sy) {
-        if (Effect.#board && Effect.#board[sy] && Effect.#board[sy][sx]) {
-            return Object.values(this.#board[sy][sx]);
-        }
-
-        return [];
     }
 }
