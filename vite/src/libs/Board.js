@@ -10,6 +10,12 @@ export default class Board {
     static height = null;
     static tiles = {};
     static effects = {};
+    static area = {
+        fromX: null,
+        fromY: null,
+        toX: null,
+        toY: null,
+    }
 
     static init() {
         const canvas = document.createElement('canvas');
@@ -28,14 +34,14 @@ export default class Board {
     }
 
     static update() {
-        const fromX = Hero.position.x - Math.floor(Board.width / 2);
-        const toX = Hero.position.x + Math.floor(Board.width / 2);
-        const fromY = Hero.position.y - Math.floor(Board.height / 2);
-        const toY = Hero.position.y + Math.floor(Board.height / 2);
+        Board.area.fromX = Hero.position.x - Math.floor(Board.width / 2);
+        Board.area.toX = Hero.position.x + Math.floor(Board.width / 2);
+        Board.area.fromY = Hero.position.y - Math.floor(Board.height / 2);
+        Board.area.toY = Hero.position.y + Math.floor(Board.height / 2);
         const missingTiles = [];
         const _tiles = {};
-        for (let y = fromY; y <= toY; y++) {
-            for (let x = fromX; x <= toX; x++) {
+        for (let y = Board.area.fromY; y <= Board.area.toY; y++) {
+            for (let x = Board.area.fromX; x <= Board.area.toX; x++) {
                 _tiles[y] = _tiles[y] || {};
                 if ((Board.tiles[y]) && (Board.tiles[y][x])) {
                     _tiles[y][x] = Board.tiles[y][x];
@@ -112,23 +118,23 @@ export default class Board {
         return true;
     }
 
-    static isInMeleeRange(x, y) {
-        if ((x === Hero.position.x - 1) || (x === Hero.position.x) || x === Hero.position.x + 1) {
-            if ((y === Hero.position.y - 1) || (y === Hero.position.y) || y === Hero.position.y + 1) {
-                return true;
-            }
-        }
+    static isInHeroRange(x, y, radius = 1) {
+        const fromX = Hero.position.x - radius;
+        const fromY = Hero.position.y - radius;
+        const toX = Hero.position.x + radius;
+        const toY = Hero.position.y + radius;
 
-        return false
+        return (x >= fromX && x <= toX) && (y >= fromY && y <= toY);
+    }
+
+    static isOnArea(x, y) {
+        return (x >= Board.area.fromX && x <= Board.area.toX) && (y >= Board.area.fromY && y <= Board.area.toY);
     }
 
     static positionLocalToServer(x, y) {
-        const fromX = Hero.position.x - Math.floor(Board.width / 2);
-        const fromY = Hero.position.y - Math.floor(Board.height / 2);
-
         return {
-            x: fromX + x,
-            y: fromY + y,
+            x: Board.area.fromX + x,
+            y: Board.area.fromY + y,
         }
     }
 

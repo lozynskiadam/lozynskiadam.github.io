@@ -110,7 +110,7 @@ export default class Mouse {
 
         if (Mouse.buttons.left.isBlocked) return;
         if (!itemId) return;
-        if (!Board.isInMeleeRange(Mouse.position.serverX, Mouse.position.serverY)) return;
+        if (!Board.isInHeroRange(Mouse.position.serverX, Mouse.position.serverY)) return;
 
         if (itemId === 6) {
             Mouse.buttons.left.isBlocked = true;
@@ -152,7 +152,7 @@ export default class Mouse {
     }
 
     static handleThrow() {
-        if (Board.isInMeleeRange(Mouse.grabbing.from.x, Mouse.grabbing.from.y) === false) {
+        if (Board.isInHeroRange(Mouse.grabbing.from.x, Mouse.grabbing.from.y) === false) {
             return;
         }
         if (Mouse.grabbing.from.x === Mouse.position.serverX && Mouse.grabbing.from.y === Mouse.position.serverY) {
