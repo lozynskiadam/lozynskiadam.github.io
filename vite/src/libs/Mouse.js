@@ -110,6 +110,7 @@ export default class Mouse {
 
         if (Mouse.buttons.left.isBlocked) return;
         if (!itemId) return;
+        if (!Board.isInMeleeRange(Mouse.position.serverX, Mouse.position.serverY)) return;
 
         if (itemId === 6) {
             Mouse.buttons.left.isBlocked = true;
@@ -144,17 +145,28 @@ export default class Mouse {
     }
 
     static onGrabEnd() {
-        if (Mouse.grabbing.from.x !== Mouse.position.serverX || Mouse.grabbing.from.Y !== Mouse.position.serverY) {
-            const itemId = Board.getTileTopItem(Mouse.grabbing.from.x, Mouse.grabbing.from.y);
-            if (itemId === Mouse.grabbing.itemId) {
-                if (!Board.getTileStack(Mouse.position.serverX, Mouse.position.serverY).find((itemId) => Item.get(itemId).isBlockingCreatures)) {
-                    Board.tiles[Mouse.grabbing.from.y][Mouse.grabbing.from.x].pop();
-                    Board.tiles[Mouse.position.serverY][Mouse.position.serverX].push(itemId);
-                }
-            }
-        }
+        Mouse.handleThrow();
         Mouse.grabbing.itemId = null;
         Mouse.grabbing.from = {x: null, y: null};
         Mouse.onPositionChange();
+    }
+
+    static handleThrow() {
+        if (Board.isInMeleeRange(Mouse.grabbing.from.x, Mouse.grabbing.from.y) === false) {
+            return;
+        }
+        if (Mouse.grabbing.from.x === Mouse.position.serverX && Mouse.grabbing.from.y === Mouse.position.serverY) {
+            return;
+        }
+        const itemId = Board.getTileTopItem(Mouse.grabbing.from.x, Mouse.grabbing.from.y);
+        if (itemId !== Mouse.grabbing.itemId) {
+            return;
+        }
+        if (Board.getTileStack(Mouse.position.serverX, Mouse.position.serverY).find((itemId) => Item.get(itemId).isBlockingCreatures)) {
+            return;
+        }
+
+        Board.tiles[Mouse.grabbing.from.y][Mouse.grabbing.from.x].pop();
+        Board.tiles[Mouse.position.serverY][Mouse.position.serverX].push(itemId);
     }
 }

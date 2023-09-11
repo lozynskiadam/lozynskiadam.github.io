@@ -112,6 +112,16 @@ export default class Board {
         return true;
     }
 
+    static isInMeleeRange(x, y) {
+        if ((x === Hero.position.x - 1) || (x === Hero.position.x) || x === Hero.position.x + 1) {
+            if ((y === Hero.position.y - 1) || (y === Hero.position.y) || y === Hero.position.y + 1) {
+                return true;
+            }
+        }
+
+        return false
+    }
+
     static positionLocalToServer(x, y) {
         const fromX = Hero.position.x - Math.floor(Board.width / 2);
         const fromY = Hero.position.y - Math.floor(Board.height / 2);

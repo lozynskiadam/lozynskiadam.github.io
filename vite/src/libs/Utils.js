@@ -5,7 +5,7 @@ export default class Utils {
     }
 
     static roll(max) {
-        return !Utils.rand(max);
+        return Utils.rand(max) === max;
     }
 
     static randomColor() {
