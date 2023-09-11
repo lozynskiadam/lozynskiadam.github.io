@@ -28,9 +28,11 @@ export default class Renderer {
                 }
             });
 
-            if (sx === Hero.position.x && sy === Hero.position.y) {
-                Renderer.drawCreature({sprite: Hero.sprite, offset: Hero.offset}, x, y)
-            }
+            Object.values(Board.creatures).forEach((creature) => {
+                if (sx === creature.position.x && sy === creature.position.y) {
+                    Renderer.drawCreature(creature, x, y)
+                }
+            });
 
             Board.getEffects(sx, sy).forEach((effect) => {
                 Renderer.drawSprite(effect.getFrame(), x, y)
@@ -77,7 +79,7 @@ export default class Renderer {
             }
         }
         Board.ctx.clearRect(0, 0, Board.ctx.canvas.width, Board.ctx.canvas.height);
-        Board.ctx.drawImage(canvas, -Hero.offset.x, -Hero.offset.y);
+        Board.ctx.drawImage(canvas, -Hero.creature.offset.x, -Hero.creature.offset.y);
         Renderer.cropEdges(Board.ctx);
 
         window.requestAnimationFrame(Renderer.render);

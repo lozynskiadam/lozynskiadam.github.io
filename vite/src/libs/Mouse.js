@@ -66,8 +66,8 @@ export default class Mouse {
 
         Mouse.position.clientX = e.clientX;
         Mouse.position.clientY = e.clientY;
-        Mouse.position.x = Math.floor((((e.clientX - rect.left) / (rect.right - rect.left) * Board.ctx.canvas.width) + Hero.offset.x) / TILE_SIZE);
-        Mouse.position.y = Math.floor((((e.clientY - rect.top) / (rect.bottom - rect.top) * Board.ctx.canvas.height) + Hero.offset.y) / TILE_SIZE);
+        Mouse.position.x = Math.floor((((e.clientX - rect.left) / (rect.right - rect.left) * Board.ctx.canvas.width) + Hero.creature.offset.x) / TILE_SIZE);
+        Mouse.position.y = Math.floor((((e.clientY - rect.top) / (rect.bottom - rect.top) * Board.ctx.canvas.height) + Hero.creature.offset.y) / TILE_SIZE);
 
         const serverPosition = Board.positionLocalToServer(Mouse.position.x, Mouse.position.y)
         Mouse.position.serverX = serverPosition.x;
@@ -127,7 +127,7 @@ export default class Mouse {
         if (itemId === 8) {
             Mouse.buttons.left.isBlocked = true;
             Effect.get('ore-hit').run(Mouse.position.serverX, Mouse.position.serverY);
-            Board.tiles[Hero.position.y][Hero.position.x].push(10);
+            Board.tiles[Hero.creature.position.y][Hero.creature.position.x].push(10);
             setTimeout(() => {
                 Mouse.buttons.left.isBlocked = false;
             }, 600);

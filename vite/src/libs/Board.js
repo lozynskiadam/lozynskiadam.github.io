@@ -2,6 +2,7 @@ import {BOARD_HEIGHT, BOARD_WIDTH, TILE_SIZE} from "../config.js";
 import Hero from "./Hero.js";
 import Utils from "./Utils.js";
 import Item from "./Item.js";
+import Creature from "./Creature.js";
 
 export default class Board {
 
@@ -10,6 +11,7 @@ export default class Board {
     static height = null;
     static tiles = {};
     static effects = {};
+    static creatures = {};
     static area = {
         fromX: null,
         fromY: null,
@@ -34,10 +36,17 @@ export default class Board {
     }
 
     static update() {
-        Board.area.fromX = Hero.position.x - Math.floor(Board.width / 2);
-        Board.area.toX = Hero.position.x + Math.floor(Board.width / 2);
-        Board.area.fromY = Hero.position.y - Math.floor(Board.height / 2);
-        Board.area.toY = Hero.position.y + Math.floor(Board.height / 2);
+        Board.area.fromX = Hero.creature.position.x - Math.floor(Board.width / 2);
+        Board.area.toX = Hero.creature.position.x + Math.floor(Board.width / 2);
+        Board.area.fromY = Hero.creature.position.y - Math.floor(Board.height / 2);
+        Board.area.toY = Hero.creature.position.y + Math.floor(Board.height / 2);
+
+        for (const [name, creature] of Object.entries(Board.creatures)) {
+            if (!Board.isOnArea(creature.position.x, creature.position.y)) {
+                delete Board.creatures[name];
+            }
+        }
+
         const missingTiles = [];
         const _tiles = {};
         for (let y = Board.area.fromY; y <= Board.area.toY; y++) {
@@ -92,7 +101,7 @@ export default class Board {
                     stack.push(1)
                 }
 
-                if ((x === Hero.position.x && y === Hero.position.y) === false) {
+                if ((x === Hero.creature.position.x && y === Hero.creature.position.y) === false) {
                     if (Utils.roll(100)) {
                         stack.push(6);
                     } else if (Utils.roll(100)) {
@@ -101,6 +110,10 @@ export default class Board {
                 }
 
                 Board.updateTile(x, y, stack);
+
+                if (Utils.roll(350)) {
+                    new Creature(Utils.randomString(20), {x: x, y: y}, {x: 0, y: 0})
+                }
             }
         }, 100);
     }
@@ -119,10 +132,10 @@ export default class Board {
     }
 
     static isInHeroRange(x, y, radius = 1) {
-        const fromX = Hero.position.x - radius;
-        const fromY = Hero.position.y - radius;
-        const toX = Hero.position.x + radius;
-        const toY = Hero.position.y + radius;
+        const fromX = Hero.creature.position.x - radius;
+        const fromY = Hero.creature.position.y - radius;
+        const toX = Hero.creature.position.x + radius;
+        const toY = Hero.creature.position.y + radius;
 
         return (x >= fromX && x <= toX) && (y >= fromY && y <= toY);
     }

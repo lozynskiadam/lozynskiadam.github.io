@@ -8,6 +8,10 @@ export default class Utils {
         return Utils.rand(max) === max;
     }
 
+    static randomString(length) {
+        return window.btoa(String.fromCharCode(...window.crypto.getRandomValues(new Uint8Array(length * 2)))).replace(/[+/]/g, "").substring(0, length);
+    }
+
     static randomColor() {
         return "#000000".replace(/0/g,function(){return (~~(Math.random()*16)).toString(16);});
     }
