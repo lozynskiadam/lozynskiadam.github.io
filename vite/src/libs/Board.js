@@ -86,7 +86,7 @@ export default class Board {
                     stack.push(2);
                 } else if (Utils.roll(40)) {
                     stack.push(3);
-                } else if (Utils.roll(5)) {
+                } else if (Utils.roll(30)) {
                     stack.push(4);
                 } else {
                     stack.push(1)
