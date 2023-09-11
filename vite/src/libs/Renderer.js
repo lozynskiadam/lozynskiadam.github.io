@@ -1,9 +1,10 @@
+import {TILE_SIZE} from "../config.js";
 import Item from "./Item.js";
 import Mouse from "./Mouse.js";
 import Sprite from "./Sprite.js";
 import Hero from "./Hero.js";
 import Board from "./Board.js";
-import {TILE_SIZE} from "../config.js";
+import Keyboard from "./Keyboard.js";
 
 export default class Renderer {
 
@@ -17,7 +18,7 @@ export default class Renderer {
         }
 
         if (layer === 'objects') {
-            if (Mouse.buttons.right.isDown && Mouse.position.x === x && Mouse.position.y === y) {
+            if (Keyboard.shift.isPressed && Mouse.position.x === x && Mouse.position.y === y) {
                 Renderer.drawSprite(Sprite.get('cursor').getFrame(), x, y)
             }
 

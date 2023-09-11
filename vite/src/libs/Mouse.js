@@ -1,8 +1,9 @@
+import {TILE_SIZE} from "../config.js";
 import Board from "./Board.js";
 import Effect from "./Effect.js";
-import {TILE_SIZE} from "../config.js";
 import Hero from "./Hero.js";
 import Item from "./Item.js";
+import Keyboard from "./Keyboard.js";
 
 export default class Mouse {
 
@@ -85,6 +86,10 @@ export default class Mouse {
         if (Mouse.grabbing.itemId) {
             return;
         }
+        if (Keyboard.shift.isPressed) {
+            Board.ctx.canvas.setAttribute('cursor', 'eye');
+            return;
+        }
         const position = Board.positionLocalToServer(Mouse.position.x, Mouse.position.y);
         const itemId = Board.getTileTopItem(position.x, position.y);
         if (!itemId) {
@@ -102,40 +107,43 @@ export default class Mouse {
     }
 
     static onLeftButtonClick() {
+        if (Keyboard.shift.isPressed) {
+            return;
+        }
         const itemId = Board.getTileTopItem(Mouse.position.serverX, Mouse.position.serverY);
         if (itemId && Item.get(Board.getTileTopItem(Mouse.position.serverX, Mouse.position.serverY)).isMoveable) {
             Mouse.onGrabStart(itemId);
             return;
         }
+    }
 
-        if (Mouse.buttons.left.isBlocked) return;
+    static onRightButtonClick() {
+        const itemId = Board.getTileTopItem(Mouse.position.serverX, Mouse.position.serverY);
+        if (Mouse.buttons.right.isBlocked) return;
         if (!itemId) return;
         if (!Board.isInHeroRange(Mouse.position.serverX, Mouse.position.serverY)) return;
 
         if (itemId === 6) {
-            Mouse.buttons.left.isBlocked = true;
+            Mouse.buttons.right.isBlocked = true;
             Effect.get('yellow-sparkles').run(Mouse.position.serverX, Mouse.position.serverY);
             Board.tiles[Mouse.position.serverY][Mouse.position.serverX].pop();
             Board.tiles[Mouse.position.serverY][Mouse.position.serverX].push(9);
             Mouse.onPositionChange();
             setTimeout(() => {
-                Mouse.buttons.left.isBlocked = false;
+                Mouse.buttons.right.isBlocked = false;
             }, 600);
             return;
         }
 
         if (itemId === 8) {
-            Mouse.buttons.left.isBlocked = true;
+            Mouse.buttons.right.isBlocked = true;
             Effect.get('ore-hit').run(Mouse.position.serverX, Mouse.position.serverY);
             Board.tiles[Hero.creature.position.y][Hero.creature.position.x].push(10);
             setTimeout(() => {
-                Mouse.buttons.left.isBlocked = false;
+                Mouse.buttons.right.isBlocked = false;
             }, 600);
             return;
         }
-    }
-
-    static onRightButtonClick() {
     }
 
     static onGrabStart(itemId) {

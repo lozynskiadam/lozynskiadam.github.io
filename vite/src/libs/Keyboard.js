@@ -1,12 +1,27 @@
 import {bindKey, checkKey} from "@rwh/keystrokes";
+import Mouse from "./Mouse.js";
 
 export default class Keyboard {
+
+    static shift = {
+        isPressed: false
+    };
 
     static init() {
         document.addEventListener("keydown", () => setTimeout(Keyboard.triggerKeyHoldingFunctions));
         window.keyboardLoop = setInterval(Keyboard.triggerKeyHoldingFunctions, 200);
         bindKey(' ', () => window.dispatchEvent(new CustomEvent("randomize-outfit")));
         bindKey('Spacebar', () => window.dispatchEvent(new CustomEvent("randomize-outfit")));
+        bindKey('shift', {
+            onPressed: () => {
+                Keyboard.shift.isPressed = true;
+                Mouse.onPositionChange();
+            },
+            onReleased: () => {
+                Keyboard.shift.isPressed = false;
+                Mouse.onPositionChange();
+            },
+        })
     }
 
     static triggerKeyHoldingFunctions = () => {
