@@ -19,11 +19,11 @@ export default class Mouse {
     static buttons = {
         left: {
             isBlocked: false,
-            isDown: false,
+            isPressed: false,
         },
         right: {
             isBlocked: false,
-            isDown: false,
+            isPressed: false,
         },
     }
 
@@ -39,23 +39,23 @@ export default class Mouse {
         document.addEventListener('mousemove', Mouse.onMove, false);
         document.addEventListener('mousedown', (e) => {
             if (e.which === 1 || e.button === 0) {
-                Mouse.buttons.left.isDown = true;
+                Mouse.buttons.left.isPressed = true;
                 Mouse.onLeftButtonClick();
             }
             if (e.which === 3 || e.button === 2) {
-                Mouse.buttons.right.isDown = true;
+                Mouse.buttons.right.isPressed = true;
                 Mouse.onRightButtonClick();
             }
         });
         document.addEventListener('mouseup', (e) => {
             if (e.which === 1 || e.button === 0) {
-                Mouse.buttons.left.isDown = false;
+                Mouse.buttons.left.isPressed = false;
                 if (Mouse.grabbing.itemId) {
                     Mouse.onGrabEnd();
                 }
             }
             if (e.which === 3 || e.button === 2) {
-                Mouse.buttons.right.isDown = false;
+                Mouse.buttons.right.isPressed = false;
             }
         });
         document.addEventListener('contextmenu', e => e?.cancelable && e.preventDefault());
