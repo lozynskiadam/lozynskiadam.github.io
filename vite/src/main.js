@@ -9,6 +9,7 @@ import Mouse from "./libs/Mouse.js";
 import Hero from "./libs/Hero.js";
 import Board from "./libs/Board.js";
 import Renderer from "./libs/Renderer.js";
+import Movement from "./libs/Movement.js";
 
 const app = async () => {
 
@@ -22,6 +23,7 @@ const app = async () => {
         Keyboard.init();
         Mouse.init();
         Hero.init();
+        Movement.init();
         Board.init();
         Renderer.render();
     }

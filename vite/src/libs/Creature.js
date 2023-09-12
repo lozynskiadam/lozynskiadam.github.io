@@ -1,6 +1,7 @@
 import Board from "./Board.js";
 import Sprite from "./Sprite.js";
 import Utils from "./Utils.js";
+import Hero from "./Hero.js";
 
 export default class Creature {
 
@@ -25,5 +26,9 @@ export default class Creature {
         this.sprite = Sprite.get('outfit').clone()
         this.sprite.dye([Utils.randomColor(), Utils.randomColor(), Utils.randomColor(), Utils.randomColor()]);
         this.sprite.loop('idle-south');
+    }
+
+    isHero() {
+        return this === Hero.creature;
     }
 }

@@ -10,8 +10,6 @@ export default class Keyboard {
     static init() {
         document.addEventListener("keydown", () => setTimeout(Keyboard.triggerKeyHoldingFunctions));
         window.keyboardLoop = setInterval(Keyboard.triggerKeyHoldingFunctions, 200);
-        bindKey(' ', () => window.dispatchEvent(new CustomEvent("randomize-outfit")));
-        bindKey('Spacebar', () => window.dispatchEvent(new CustomEvent("randomize-outfit")));
         bindKey('shift', {
             onPressed: () => {
                 Keyboard.shift.isPressed = true;
