@@ -79,11 +79,57 @@ export default class Renderer {
                 y++;
             }
         }
+        Renderer.renderInfoBox(Renderer.tempCtx);
         Board.ctx.clearRect(0, 0, Board.ctx.canvas.width, Board.ctx.canvas.height);
         Board.ctx.drawImage(canvas, -Hero.creature.offset.x, -Hero.creature.offset.y);
         Renderer.cropEdges(Board.ctx);
 
         window.requestAnimationFrame(Renderer.render);
+    }
+
+    static renderInfoBox(ctx)
+    {
+        if (Keyboard.shift.isPressed) {
+            const posX = Mouse.position.x * TILE_SIZE + ((TILE_SIZE/3)*2);
+            const posY = Mouse.position.y * TILE_SIZE + ((TILE_SIZE/3)*2);
+
+            for (const [name, creature] of Object.entries(Board.creatures)) {
+                if (Mouse.position.serverX === creature.position.x && Mouse.position.serverY === creature.position.y) {
+                    const width = name.length * 5.5 + 8;
+                    ctx.fillStyle = "#1c3d17";
+                    ctx.fillRect(posX, posY, width, 16);
+                    ctx.strokeStyle = "#FFA500";
+                    ctx.strokeRect(posX, posY, width, 16);
+
+                    ctx.font = "normal bold 9px monospace";
+                    ctx.strokeStyle = "#000000";
+                    ctx.strokeText(name, posX + 4, posY + 11);
+                    ctx.strokeText(name, posX + 4, posY + 11);
+                    ctx.fillStyle = "#FFA500";
+                    ctx.fillText(name, posX + 4, posY + 11);
+
+                    return;
+                }
+            }
+
+            const itemId = Board.getTileTopItem(Mouse.position.serverX, Mouse.position.serverY);
+            const item = Item.get(itemId);
+            if (item && item.type === 'object') {
+                const width = item.name.length * 5.5 + 8;
+
+                ctx.fillStyle = "#172459";
+                ctx.fillRect(posX, posY, width, 16);
+                ctx.strokeStyle = "#FFA500";
+                ctx.strokeRect(posX, posY, width, 16);
+
+                ctx.font = "normal bold 9px monospace";
+                ctx.strokeStyle = "#000000";
+                ctx.strokeText(item.name, posX + 4, posY + 11);
+                ctx.strokeText(item.name, posX + 4, posY + 11);
+                ctx.fillStyle = "#FFA500";
+                ctx.fillText(item.name, posX + 4, posY + 11);
+            }
+        }
     }
 
 }
