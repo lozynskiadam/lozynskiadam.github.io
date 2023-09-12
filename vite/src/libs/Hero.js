@@ -8,12 +8,7 @@ export default class Hero {
 
     static creature = null;
 
-    static movement = {
-        queuedMove: null,
-        isMoving: false,
-        currentFrame: 0,
-        timeouts: []
-    };
+    static queuedMove = null;
 
     static init() {
         Hero.creature = new Creature('Nemnes', {x: 100, y: 100}, {x: 0, y: 0});
@@ -21,9 +16,9 @@ export default class Hero {
     }
 
     static walk(direction) {
-        if (Hero.movement.isMoving) {
-            if (Hero.movement.currentFrame > (TILE_SIZE - (TILE_SIZE/3))) {
-                Hero.movement.queuedMove = direction;
+        if (Hero.creature.movement.isMoving) {
+            if (Hero.creature.movement.currentFrame > (TILE_SIZE - (TILE_SIZE/3))) {
+                Hero.queuedMove = direction;
                 return true;
             }
             return false;
@@ -35,38 +30,8 @@ export default class Hero {
             return false;
         }
 
-        Hero.movement.isMoving = true;
-        for (let i = 0; i < TILE_SIZE; i++) {
-            const timeout = setTimeout(() => Hero.handleWalkFrame(direction, targetPosition), (1000 / Hero.creature.speed / TILE_SIZE) * i);
-            Hero.movement.timeouts.push(timeout);
-        }
+        Movement.move(this.creature, targetPosition, direction);
 
         return true;
-    }
-
-    static handleWalkFrame(direction, targetPosition) {
-        Hero.creature.sprite.loop('walk-' + direction);
-        Hero.movement.currentFrame++;
-        Movement.updateOffsetAfterAnimationFrameChange(Hero.creature, direction);
-        if (Hero.movement.currentFrame === (TILE_SIZE / 2)) {
-            Hero.creature.position = targetPosition;
-            window.dispatchEvent(new CustomEvent("hero-position-changed"));
-            Movement.updateOffsetAfterPositionChange(Hero.creature, direction);
-        }
-        if (Hero.movement.currentFrame === TILE_SIZE) {
-            Hero.movement.isMoving = false;
-            Hero.movement.currentFrame = 0;
-            Hero.movement.timeouts.forEach((timeout) => clearTimeout(timeout));
-            Hero.movement.timeouts = [];
-            if (Hero.movement.queuedMove) {
-                direction = Hero.movement.queuedMove;
-                Hero.movement.queuedMove = null;
-                if (!Hero.walk(direction)) {
-                    Hero.creature.sprite.loop('idle-' + direction);
-                }
-            } else {
-                Hero.creature.sprite.loop('idle-' + direction);
-            }
-        }
     }
 }

@@ -2,6 +2,7 @@ import Board from "./Board.js";
 import Sprite from "./Sprite.js";
 import Utils from "./Utils.js";
 import Hero from "./Hero.js";
+import Movement from "./Movement.js";
 
 export default class Creature {
 
@@ -19,6 +20,12 @@ export default class Creature {
 
     speed = 2; // tiles per second
 
+    movement = {
+        isMoving: false,
+        currentFrame: 0,
+        timeouts: []
+    };
+
     constructor(name, position, offset) {
         Board.creatures[name] = this;
         this.position = position;
@@ -30,5 +37,9 @@ export default class Creature {
 
     isHero() {
         return this === Hero.creature;
+    }
+
+    move(direction, position) {
+        Movement.move(this, position, direction)
     }
 }
