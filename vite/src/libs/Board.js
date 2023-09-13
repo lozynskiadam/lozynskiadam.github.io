@@ -1,8 +1,8 @@
 import {BOARD_HEIGHT, BOARD_WIDTH, TILE_SIZE} from "../config.js";
 import Hero from "./Hero.js";
-import Utils from "./Utils.js";
 import Item from "./Item.js";
 import Creature from "./Creature.js";
+import {areEqual, randomString, roll} from "../utils/common.js";
 
 export default class Board {
 
@@ -89,28 +89,28 @@ export default class Board {
             for (const position of missingTilesPositions) {
                 const stack = [];
 
-                if (Utils.roll(40)) {
+                if (roll(40)) {
                     stack.push(2);
-                } else if (Utils.roll(40)) {
+                } else if (roll(40)) {
                     stack.push(3);
-                } else if (Utils.roll(30)) {
+                } else if (roll(30)) {
                     stack.push(4);
                 } else {
                     stack.push(1)
                 }
 
-                if (!Utils.areEqual(position, Hero.creature.position)) {
-                    if (Utils.roll(100)) {
+                if (!areEqual(position, Hero.creature.position)) {
+                    if (roll(100)) {
                         stack.push(6);
-                    } else if (Utils.roll(100)) {
+                    } else if (roll(100)) {
                         stack.push(8);
                     }
                 }
 
                 Board.updateTile(position, stack);
 
-                if (Utils.roll(350)) {
-                    new Creature(Utils.randomString(20), position, {x: 0, y: 0})
+                if (roll(350)) {
+                    new Creature(randomString(20), position, {x: 0, y: 0})
                 }
             }
         }, 100);

@@ -1,8 +1,8 @@
 import Board from "./Board.js";
 import Sprite from "./Sprite.js";
-import Utils from "./Utils.js";
 import Hero from "./Hero.js";
 import Movement from "./Movement.js";
+import {randomColor} from "../utils/common.js";
 
 export default class Creature {
 
@@ -31,7 +31,7 @@ export default class Creature {
         this.position = position;
         this.offset = offset;
         this.sprite = Sprite.get('outfit').clone()
-        this.sprite.dye([Utils.randomColor(), Utils.randomColor(), Utils.randomColor(), Utils.randomColor()]);
+        this.sprite.dye([randomColor(), randomColor(), randomColor(), randomColor()]);
         this.sprite.loop('idle-south');
     }
 

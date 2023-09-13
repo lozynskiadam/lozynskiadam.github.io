@@ -1,4 +1,4 @@
-import Utils from "./Utils.js";
+import {dye, loadImage} from "../utils/common.js";
 
 export default class Sprite {
 
@@ -22,7 +22,7 @@ export default class Sprite {
             const response = await fetch(url);
             const json = await response.json();
             await Promise.all(Object.entries(json).map(async ([id, data]) => {
-                const image = await Utils.loadImage(data.base);
+                const image = await loadImage(data.base);
                 const spriteOptions = {
                     image: image,
                     speed: data.speed || null,
@@ -30,7 +30,7 @@ export default class Sprite {
                 };
 
                 if (data.mask) {
-                    spriteOptions.mask = await Utils.loadImage(data.mask);
+                    spriteOptions.mask = await loadImage(data.mask);
                 }
 
                 new Sprite(id, spriteOptions);
@@ -121,7 +121,7 @@ export default class Sprite {
     }
 
     async dye(colors) {
-        this.#image = await Utils.dye(this.#originImage, this.#mask, colors);
+        this.#image = await dye(this.#originImage, this.#mask, colors);
         this.#lastFrame = null;
     }
 

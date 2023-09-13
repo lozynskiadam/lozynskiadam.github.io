@@ -4,7 +4,7 @@ import Effect from "./Effect.js";
 import Hero from "./Hero.js";
 import Item from "./Item.js";
 import Keyboard from "./Keyboard.js";
-import Utils from "./Utils.js";
+import {areEqual} from "../utils/common.js";
 
 export default class Mouse {
 
@@ -88,10 +88,10 @@ export default class Mouse {
 
         Mouse.positionServer = Board.positionLocalToServer(Mouse.positionClient);
 
-        if (!Utils.areEqual(Mouse.positionClient, old.client)) {
+        if (!areEqual(Mouse.positionClient, old.client)) {
             Mouse.onPositionChange();
         }
-        if (!Utils.areEqual(Mouse.positionServer, old.server)) {
+        if (!areEqual(Mouse.positionServer, old.server)) {
             Mouse.onPositionChange();
         }
     }
@@ -179,7 +179,7 @@ export default class Mouse {
         if (Board.isInHeroRange(Mouse.grabbing.position) === false) {
             return;
         }
-        if (Utils.areEqual(Mouse.grabbing.position, Mouse.positionServer)) {
+        if (areEqual(Mouse.grabbing.position, Mouse.positionServer)) {
             return;
         }
         const itemId = Board.getTileTopItem(Mouse.grabbing.position);
