@@ -4,16 +4,23 @@ import Effect from "./Effect.js";
 import Hero from "./Hero.js";
 import Item from "./Item.js";
 import Keyboard from "./Keyboard.js";
+import Utils from "./Utils.js";
 
 export default class Mouse {
 
-    static position = {
+    static positionWindow = {
         x: null,
         y: null,
-        clientX: null,
-        clientY: null,
-        serverX: null,
-        serverY: null,
+    }
+
+    static positionClient = {
+        x: null,
+        y: null,
+    }
+
+    static positionServer = {
+        x: null,
+        y: null,
     }
 
     static buttons = {
@@ -29,7 +36,7 @@ export default class Mouse {
 
     static grabbing = {
         itemId: null,
-        from: {
+        position: {
             x: null,
             y: null,
         },
@@ -63,22 +70,29 @@ export default class Mouse {
 
     static onMove(e) {
         const rect = Board.ctx.canvas.getBoundingClientRect();
-        const oldPosition = {...Mouse.position};
+        const old = {
+            window: {...Mouse.positionWindow},
+            client: {...Mouse.positionClient},
+            server: {...Mouse.positionServer},
+        };
 
-        Mouse.position.clientX = e.clientX;
-        Mouse.position.clientY = e.clientY;
-        Mouse.position.x = Math.floor((((e.clientX - rect.left) / (rect.right - rect.left) * Board.ctx.canvas.width) + Hero.creature.offset.x) / TILE_SIZE);
-        Mouse.position.y = Math.floor((((e.clientY - rect.top) / (rect.bottom - rect.top) * Board.ctx.canvas.height) + Hero.creature.offset.y) / TILE_SIZE);
+        Mouse.positionWindow = {
+            x: e.clientX,
+            y: e.clientY
+        };
 
-        const serverPosition = Board.positionLocalToServer(Mouse.position.x, Mouse.position.y)
-        Mouse.position.serverX = serverPosition.x;
-        Mouse.position.serverY = serverPosition.y;
+        Mouse.positionClient = {
+            x: Math.floor((((e.clientX - rect.left) / (rect.right - rect.left) * Board.ctx.canvas.width) + Hero.creature.offset.x) / TILE_SIZE),
+            y: Math.floor((((e.clientY - rect.top) / (rect.bottom - rect.top) * Board.ctx.canvas.height) + Hero.creature.offset.y) / TILE_SIZE),
+        };
 
-        if (Mouse.position.x !== oldPosition.x || Mouse.position.y !== oldPosition.y) {
-            Mouse.onPositionChange(oldPosition);
+        Mouse.positionServer = Board.positionLocalToServer(Mouse.positionClient);
+
+        if (!Utils.areEqual(Mouse.positionClient, old.client)) {
+            Mouse.onPositionChange();
         }
-        if (Mouse.position.serverX !== oldPosition.serverX || Mouse.position.serverY !== oldPosition.serverY) {
-            Mouse.onPositionChange(oldPosition);
+        if (!Utils.areEqual(Mouse.positionServer, old.server)) {
+            Mouse.onPositionChange();
         }
     }
 
@@ -90,8 +104,10 @@ export default class Mouse {
             Board.ctx.canvas.setAttribute('cursor', 'eye');
             return;
         }
-        const position = Board.positionLocalToServer(Mouse.position.x, Mouse.position.y);
-        const itemId = Board.getTileTopItem(position.x, position.y);
+
+        Mouse.positionServer = Board.positionLocalToServer(Mouse.positionClient);
+
+        const itemId = Board.getTileTopItem(Mouse.positionServer);
         if (!itemId) {
             Board.ctx.canvas.removeAttribute('cursor');
             return;
@@ -110,24 +126,24 @@ export default class Mouse {
         if (Keyboard.shift.isPressed) {
             return;
         }
-        const itemId = Board.getTileTopItem(Mouse.position.serverX, Mouse.position.serverY);
-        if (itemId && Item.get(Board.getTileTopItem(Mouse.position.serverX, Mouse.position.serverY)).isMoveable) {
+        const itemId = Board.getTileTopItem(Mouse.positionServer);
+        if (itemId && Item.get(itemId).isMoveable) {
             Mouse.onGrabStart(itemId);
             return;
         }
     }
 
     static onRightButtonClick() {
-        const itemId = Board.getTileTopItem(Mouse.position.serverX, Mouse.position.serverY);
+        const itemId = Board.getTileTopItem(Mouse.positionServer);
         if (Mouse.buttons.right.isBlocked) return;
         if (!itemId) return;
-        if (!Board.isInHeroRange(Mouse.position.serverX, Mouse.position.serverY)) return;
+        if (!Board.isInHeroRange(Mouse.positionServer)) return;
 
         if (itemId === 6) {
             Mouse.buttons.right.isBlocked = true;
-            Effect.get('yellow-sparkles').run(Mouse.position.serverX, Mouse.position.serverY);
-            Board.tiles[Mouse.position.serverY][Mouse.position.serverX].pop();
-            Board.tiles[Mouse.position.serverY][Mouse.position.serverX].push(9);
+            Effect.get('yellow-sparkles').run(Mouse.positionServer);
+            Board.tiles[Mouse.positionServer.y][Mouse.positionServer.x].pop();
+            Board.tiles[Mouse.positionServer.y][Mouse.positionServer.x].push(9);
             Mouse.onPositionChange();
             setTimeout(() => {
                 Mouse.buttons.right.isBlocked = false;
@@ -137,7 +153,7 @@ export default class Mouse {
 
         if (itemId === 8) {
             Mouse.buttons.right.isBlocked = true;
-            Effect.get('ore-hit').run(Mouse.position.serverX, Mouse.position.serverY);
+            Effect.get('ore-hit').run(Mouse.positionServer);
             Board.tiles[Hero.creature.position.y][Hero.creature.position.x].push(10);
             setTimeout(() => {
                 Mouse.buttons.right.isBlocked = false;
@@ -148,33 +164,33 @@ export default class Mouse {
 
     static onGrabStart(itemId) {
         Mouse.grabbing.itemId = itemId;
-        Mouse.grabbing.from = {x: Mouse.position.serverX, y: Mouse.position.serverY};
+        Mouse.grabbing.position = {...Mouse.positionServer};
         Board.ctx.canvas.setAttribute('cursor', 'crosshair');
     }
 
     static onGrabEnd() {
         Mouse.handleThrow();
         Mouse.grabbing.itemId = null;
-        Mouse.grabbing.from = {x: null, y: null};
+        Mouse.grabbing.position = {x: null, y: null};
         Mouse.onPositionChange();
     }
 
     static handleThrow() {
-        if (Board.isInHeroRange(Mouse.grabbing.from.x, Mouse.grabbing.from.y) === false) {
+        if (Board.isInHeroRange(Mouse.grabbing.position) === false) {
             return;
         }
-        if (Mouse.grabbing.from.x === Mouse.position.serverX && Mouse.grabbing.from.y === Mouse.position.serverY) {
+        if (Utils.areEqual(Mouse.grabbing.position, Mouse.positionServer)) {
             return;
         }
-        const itemId = Board.getTileTopItem(Mouse.grabbing.from.x, Mouse.grabbing.from.y);
+        const itemId = Board.getTileTopItem(Mouse.grabbing.position);
         if (itemId !== Mouse.grabbing.itemId) {
             return;
         }
-        if (Board.getTileStack(Mouse.position.serverX, Mouse.position.serverY).find((itemId) => Item.get(itemId).isBlockingCreatures)) {
+        if (Board.getTileStack(Mouse.positionServer).find((itemId) => Item.get(itemId).isBlockingCreatures)) {
             return;
         }
 
-        Board.tiles[Mouse.grabbing.from.y][Mouse.grabbing.from.x].pop();
-        Board.tiles[Mouse.position.serverY][Mouse.position.serverX].push(itemId);
+        Board.tiles[Mouse.grabbing.position.y][Mouse.grabbing.position.x].pop();
+        Board.tiles[Mouse.positionServer.y][Mouse.positionServer.x].push(itemId);
     }
 }

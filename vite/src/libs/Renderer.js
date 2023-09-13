@@ -18,7 +18,7 @@ export default class Renderer {
         }
 
         if (layer === 'objects') {
-            if (Keyboard.shift.isPressed && Mouse.position.x === x && Mouse.position.y === y) {
+            if (Keyboard.shift.isPressed && Mouse.positionClient.x === x && Mouse.positionClient.y === y) {
                 Renderer.drawSprite(Sprite.get('cursor').getFrame(), x, y)
             }
 
@@ -92,12 +92,12 @@ export default class Renderer {
         if (Keyboard.shift.isPressed) {
 
             const position = {
-                x: Mouse.position.x * TILE_SIZE + ((TILE_SIZE/3)*2),
-                y: Mouse.position.y * TILE_SIZE + ((TILE_SIZE/3)*2)
+                x: Mouse.positionClient.x * TILE_SIZE + ((TILE_SIZE/3)*2),
+                y: Mouse.positionClient.y * TILE_SIZE + ((TILE_SIZE/3)*2)
             }
 
             for (const [name, creature] of Object.entries(Board.creatures)) {
-                if (Mouse.position.serverX === creature.position.x && Mouse.position.serverY === creature.position.y) {
+                if (Mouse.positionServer.x === creature.position.x && Mouse.positionServer.y === creature.position.y) {
                     const width = name.length * 5.5 + 8;
                     ctx.fillStyle = "#1c3d17";
                     ctx.fillRect(position.x, position.y, width, 16);
@@ -115,7 +115,7 @@ export default class Renderer {
                 }
             }
 
-            const itemId = Board.getTileTopItem(Mouse.position.serverX, Mouse.position.serverY);
+            const itemId = Board.getTileTopItem(Mouse.positionServer);
             const item = Item.get(itemId);
             if (item && item.type === 'object') {
                 const width = item.name.length * 5.5 + 8;

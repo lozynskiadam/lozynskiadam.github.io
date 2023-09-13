@@ -22,12 +22,18 @@ export default class Utils {
         return result ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)] : null;
     };
 
+    static areEqual(...objects) {
+        return objects.length >= 2 && objects.slice(1).every(obj =>
+            Object.keys(objects[0]).length === Object.keys(obj).length &&
+            Object.keys(objects[0]).every(key => objects[0][key] === obj[key])
+        );
+    }
+
     static replaceColors(image, colorMap) {
         Object.keys(colorMap).forEach(key => {
             colorMap[Utils.hexToRGB(key).toString()] = Utils.hexToRGB(colorMap[key])
             delete colorMap[key];
         });
-
 
         const ctx = document.createElement("canvas").getContext("2d");
         ctx.canvas.width = image.width;

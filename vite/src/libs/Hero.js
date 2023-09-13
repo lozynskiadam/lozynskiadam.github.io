@@ -12,7 +12,7 @@ export default class Hero {
 
     static init() {
         Hero.creature = new Creature('Nemnes', {x: 100, y: 100}, {x: 0, y: 0});
-        Effect.get('energy').run(Hero.creature.position.x, Hero.creature.position.y);
+        Effect.get('energy').run(Hero.creature.position);
     }
 
     static walk(direction) {
@@ -25,7 +25,7 @@ export default class Hero {
         }
 
         const targetPosition = Movement.getTargetPosition(Hero.creature, direction);
-        if (!Board.isWalkable(targetPosition.x, targetPosition.y)) {
+        if (!Board.isWalkable(targetPosition)) {
             Hero.creature.sprite.loop('idle-' + direction);
             return false;
         }

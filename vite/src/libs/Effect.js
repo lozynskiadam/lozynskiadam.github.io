@@ -35,19 +35,19 @@ export default class Effect {
         return Effect.#instances[id] ?? null;
     }
 
-    run(x, y) {
-        if (!Board.effects[y]) {
-            Board.effects[y] = {};
+    run(position) {
+        if (!Board.effects[position.y]) {
+            Board.effects[position.y] = {};
         }
-        if (!Board.effects[y][x]) {
-            Board.effects[y][x] = {};
+        if (!Board.effects[position.y][position.x]) {
+            Board.effects[position.y][position.x] = {};
         }
 
         const uuid = ++Effect.#lastUID;
         const sprite = this.#sprite.clone();
-        Board.effects[y][x][uuid] = sprite;
+        Board.effects[position.y][position.x][uuid] = sprite;
         sprite.play().then(() => {
-            delete Board.effects[y][x][uuid];
+            delete Board.effects[position.y][position.x][uuid];
         });
     }
 }

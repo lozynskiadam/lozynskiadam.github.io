@@ -47,7 +47,7 @@ export default class Board {
             }
         }
 
-        const missingTiles = [];
+        const missingTilesPositions = [];
         const _tiles = {};
         for (let y = Board.area.fromY; y <= Board.area.toY; y++) {
             for (let x = Board.area.fromX; x <= Board.area.toX; x++) {
@@ -56,39 +56,37 @@ export default class Board {
                     _tiles[y][x] = Board.tiles[y][x];
                 } else {
                     _tiles[y][x] = [];
-                    missingTiles.push({x: x, y: y});
+                    missingTilesPositions.push({x: x, y: y});
                 }
             }
         }
         Board.tiles = _tiles;
-        Board.requestTiles(missingTiles);
+        Board.requestTiles(missingTilesPositions);
     }
 
-    static getTileStack(x, y) {
-        if (typeof Board.tiles[y] == 'undefined' || typeof Board.tiles[y][x] == 'undefined') {
+    static getTileStack(position) {
+        if (typeof Board.tiles[position.y] == 'undefined' || typeof Board.tiles[position.y][position.x] == 'undefined') {
             return []
         }
 
-        return Board.tiles[y][x];
+        return Board.tiles[position.y][position.x];
     }
 
-    static getTileTopItem(x, y) {
-        const stack = Board.getTileStack(x, y);
+    static getTileTopItem(position) {
+        const stack = Board.getTileStack(position);
 
         return stack[stack.length-1] ?? null;
     }
 
-    static updateTile(x, y, stack) {
-        if ((typeof Board.tiles[y] != 'undefined') && (typeof Board.tiles[y][x] != 'undefined')) {
-            Board.tiles[y][x] = stack;
+    static updateTile(position, stack) {
+        if ((typeof Board.tiles[position.y] != 'undefined') && (typeof Board.tiles[position.y][position.x] != 'undefined')) {
+            Board.tiles[position.y][position.x] = stack;
         }
     }
 
-    static requestTiles(missingTiles) {
+    static requestTiles(missingTilesPositions) {
         setTimeout(() => {
-            for (const tile of missingTiles) {
-                const x = tile.x;
-                const y = tile.y;
+            for (const position of missingTilesPositions) {
                 const stack = [];
 
                 if (Utils.roll(40)) {
@@ -101,7 +99,7 @@ export default class Board {
                     stack.push(1)
                 }
 
-                if ((x === Hero.creature.position.x && y === Hero.creature.position.y) === false) {
+                if (!Utils.areEqual(position, Hero.creature.position)) {
                     if (Utils.roll(100)) {
                         stack.push(6);
                     } else if (Utils.roll(100)) {
@@ -109,17 +107,17 @@ export default class Board {
                     }
                 }
 
-                Board.updateTile(x, y, stack);
+                Board.updateTile(position, stack);
 
                 if (Utils.roll(350)) {
-                    new Creature(Utils.randomString(20), {x: x, y: y}, {x: 0, y: 0})
+                    new Creature(Utils.randomString(20), position, {x: 0, y: 0})
                 }
             }
         }, 100);
     }
 
-    static isWalkable(x, y) {
-        const stack = Board.getTileStack(x, y);
+    static isWalkable(position) {
+        const stack = Board.getTileStack(position);
 
         if (!stack.find((itemId) => Item.get(itemId).type === 'ground')) {
             return false
@@ -131,23 +129,23 @@ export default class Board {
         return true;
     }
 
-    static isInHeroRange(x, y, radius = 1) {
+    static isInHeroRange(position, radius = 1) {
         const fromX = Hero.creature.position.x - radius;
         const fromY = Hero.creature.position.y - radius;
         const toX = Hero.creature.position.x + radius;
         const toY = Hero.creature.position.y + radius;
 
-        return (x >= fromX && x <= toX) && (y >= fromY && y <= toY);
+        return (position.x >= fromX && position.x <= toX) && (position.y >= fromY && position.y <= toY);
     }
 
     static isOnArea(x, y) {
         return (x >= Board.area.fromX && x <= Board.area.toX) && (y >= Board.area.fromY && y <= Board.area.toY);
     }
 
-    static positionLocalToServer(x, y) {
+    static positionLocalToServer(position) {
         return {
-            x: Board.area.fromX + x,
-            y: Board.area.fromY + y,
+            x: Board.area.fromX + position.x,
+            y: Board.area.fromY + position.y,
         }
     }
 
