@@ -2,12 +2,19 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
 body {
   margin: 0;
   padding: 0;
   background: #25131a;
   height: 100vh;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  position: relative;
 
   /* preload cursor images */
   cursor: url(images/cursor-crosshair.png) 11 11, crosshair;

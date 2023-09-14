@@ -36,6 +36,7 @@ export default class Mouse {
     }
 
     static grabbing = {
+        initialised: false,
         itemId: null,
         position: {
             x: null,
@@ -48,22 +49,21 @@ export default class Mouse {
         document.addEventListener('mousedown', (e) => {
             if (e.which === 1 || e.button === 0) {
                 Mouse.buttons.left.isPressed = true;
-                Mouse.onLeftButtonClick();
+                Mouse.onLeftButtonPress();
             }
             if (e.which === 3 || e.button === 2) {
                 Mouse.buttons.right.isPressed = true;
-                Mouse.onRightButtonClick();
+                Mouse.onRightButtonPress();
             }
         });
         document.addEventListener('mouseup', (e) => {
             if (e.which === 1 || e.button === 0) {
                 Mouse.buttons.left.isPressed = false;
-                if (Mouse.grabbing.itemId) {
-                    Mouse.onGrabEnd();
-                }
+                Mouse.onLeftButtonRelease();
             }
             if (e.which === 3 || e.button === 2) {
                 Mouse.buttons.right.isPressed = false;
+                Mouse.onRightButtonRelease();
             }
         });
         document.addEventListener('contextmenu', e => e?.cancelable && e.preventDefault());
@@ -95,6 +95,9 @@ export default class Mouse {
         if (!isSamePosition(Mouse.positionServer, old.positionServer)) {
             Mouse.onPositionChange();
         }
+        if (Mouse.grabbing.initialised && !Mouse.grabbing.itemId) {
+            Mouse.onGrabStart();
+        }
     }
 
     static onPositionChange() {
@@ -123,21 +126,34 @@ export default class Mouse {
         }
     }
 
-    static onLeftButtonClick() {
+    static onLeftButtonPress() {
         if (Keyboard.shift.isPressed) {
             return;
         }
 
         const itemId = Board.getTileTopItem(Mouse.positionServer);
         if (itemId && Item.get(itemId).isMoveable) {
-            Mouse.onGrabStart(itemId);
+            Mouse.grabbing.itemId = null;
+            Mouse.grabbing.position = {x: null, y: null};
+            Mouse.grabbing.initialised = true;
             return;
         }
-
-        Movement.mapClick();
     }
 
-    static onRightButtonClick() {
+    static onLeftButtonRelease() {
+        if (Mouse.grabbing.initialised && Mouse.grabbing.itemId) {
+            Mouse.onGrabEnd();
+        } else {
+            Mouse.grabbing.initialised = false;
+            Mouse.grabbing.itemId = null;
+            Mouse.grabbing.position = {x: null, y: null};
+            if (Board.isWalkable(Mouse.positionServer)) {
+                Movement.mapClick();
+            }
+        }
+    }
+
+    static onRightButtonPress() {
         const itemId = Board.getTileTopItem(Mouse.positionServer);
         if (Mouse.buttons.right.isBlocked) return;
         if (!itemId) return;
@@ -166,14 +182,23 @@ export default class Mouse {
         }
     }
 
-    static onGrabStart(itemId) {
-        Mouse.grabbing.itemId = itemId;
+    static onRightButtonRelease()
+    {
+        const item = Item.get(Board.getTileTopItem(Mouse.positionServer));
+        if (item.type === 'object' && !isPositionInRange(Hero.creature.position, Mouse.positionServer)) {
+            Movement.mapClick(true);
+        }
+    }
+
+    static onGrabStart() {
+        Mouse.grabbing.itemId = Board.getTileTopItem(Mouse.positionServer);
         Mouse.grabbing.position = {...Mouse.positionServer};
         Board.ctx.canvas.setAttribute('cursor', 'crosshair');
     }
 
     static onGrabEnd() {
         Mouse.handleThrow();
+        Mouse.grabbing.initialised = false;
         Mouse.grabbing.itemId = null;
         Mouse.grabbing.position = {x: null, y: null};
         Mouse.onPositionChange();

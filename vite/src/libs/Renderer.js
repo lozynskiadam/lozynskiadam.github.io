@@ -32,7 +32,7 @@ export default class Renderer {
                 Renderer.drawSprite(positionClient, Sprite.get('cursor'))
             }
 
-            if (Movement.targetPosition && isSamePosition(positionServer, Movement.targetPosition)) {
+            if (Movement.targetPosition && !Movement.targetUse && isSamePosition(positionServer, Movement.targetPosition)) {
                 Renderer.drawSprite(positionClient, Sprite.get('cursor'))
             }
 

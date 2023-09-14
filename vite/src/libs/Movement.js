@@ -107,14 +107,16 @@ export default class Movement {
         map[direction]();
     }
 
-    static mapClick() {
+    static mapClick(use = false) {
         Movement.targetPosition = {...Mouse.positionServer};
+        Movement.targetUse = use;
         Movement.mapClickStep();
     }
 
     static mapClickStep() {
         if (!Movement.targetPosition || isSamePosition(Movement.targetPosition, Hero.creature.position)) {
             Movement.targetPosition = null;
+            Movement.targetUse = null;
             Hero.creature.sprite.loop('idle-south');
             return;
         }
@@ -126,7 +128,11 @@ export default class Movement {
         for (let y = Board.area.fromY; y <= Board.area.toY; y++) {
             const row = [];
             for (let x = Board.area.fromX; x <= Board.area.toX; x++) {
-                row.push(Number(Board.isWalkable({x: x, y: y})));
+                let isWalkable = Board.isWalkable({x: x, y: y});
+                if (!isWalkable && Movement.targetUse) {
+                    isWalkable = true;
+                }
+                row.push(Number(isWalkable));
             }
             grid.push(row);
         }
@@ -141,6 +147,13 @@ export default class Movement {
             (path) => {
                 if (path === null) {
                     console.log("Path was not found.");
+                    return;
+                }
+                if (Movement.targetUse && path.length === 2) {
+                    console.log('Using object...');
+                    Movement.targetPosition = null;
+                    Movement.targetUse = null;
+                    Hero.creature.sprite.loop('idle-south');
                     return;
                 }
                 Hero.walk(Movement.getDirection(startPosition, path[1]));
