@@ -3,6 +3,7 @@ import Hero from "./Hero.js";
 import Board from "./Board.js";
 import * as EasyStar from "easystarjs";
 import Mouse from "./Mouse.js";
+import {isSamePosition} from "../utils/position.js";
 
 export default class Movement {
 
@@ -15,6 +16,7 @@ export default class Movement {
         window.addEventListener("move-south", () => {Movement.targetPosition = null; Hero.walk('south')});
         window.addEventListener("move-west", () => {Movement.targetPosition = null; Hero.walk('west')});
         window.addEventListener("move-east", () => {Movement.targetPosition = null; Hero.walk('east')});
+        window.addEventListener("map-click-step-done", Movement.mapClickStep);
     }
 
     static move(creature, position, direction) {
@@ -47,6 +49,10 @@ export default class Movement {
                 direction = Hero.queuedMove;
                 Hero.queuedMove = null;
                 if (Hero.walk(direction)) return;
+            }
+            if (Movement.targetPosition) {
+                window.dispatchEvent(new CustomEvent("map-click-step-done"));
+                return
             }
             creature.sprite.loop('idle-' + direction);
         }
@@ -103,6 +109,15 @@ export default class Movement {
 
     static mapClick() {
         Movement.targetPosition = {...Mouse.positionServer};
+        Movement.mapClickStep();
+    }
+
+    static mapClickStep() {
+        if (!Movement.targetPosition || isSamePosition(Movement.targetPosition, Hero.creature.position)) {
+            Movement.targetPosition = null;
+            Hero.creature.sprite.loop('idle-south');
+            return;
+        }
 
         const grid = [];
         const startPosition = Board.positionServerToClient(Hero.creature.position);
