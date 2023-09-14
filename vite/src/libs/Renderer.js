@@ -6,6 +6,7 @@ import Sprite from "./Sprite.js";
 import Hero from "./Hero.js";
 import Board from "./Board.js";
 import Keyboard from "./Keyboard.js";
+import Movement from "./Movement.js";
 
 export default class Renderer {
 
@@ -28,6 +29,10 @@ export default class Renderer {
             });
 
             if (Keyboard.shift.isPressed && isSamePosition(positionClient, Mouse.positionClient)) {
+                Renderer.drawSprite(positionClient, Sprite.get('cursor'))
+            }
+
+            if (Movement.targetPosition && isSamePosition(positionServer, Movement.targetPosition)) {
                 Renderer.drawSprite(positionClient, Sprite.get('cursor'))
             }
 

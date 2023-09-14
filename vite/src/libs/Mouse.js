@@ -5,6 +5,7 @@ import Effect from "./Effect.js";
 import Hero from "./Hero.js";
 import Item from "./Item.js";
 import Keyboard from "./Keyboard.js";
+import Movement from "./Movement.js";
 
 export default class Mouse {
 
@@ -86,7 +87,7 @@ export default class Mouse {
             y: Math.floor((((e.clientY - rect.top) / (rect.bottom - rect.top) * Board.ctx.canvas.height) + Hero.creature.offset.y) / TILE_SIZE),
         };
 
-        Mouse.positionServer = Board.positionLocalToServer(Mouse.positionClient);
+        Mouse.positionServer = Board.positionClientToServer(Mouse.positionClient);
 
         if (!isSamePosition(Mouse.positionClient, old.positionClient)) {
             Mouse.onPositionChange();
@@ -105,7 +106,7 @@ export default class Mouse {
             return;
         }
 
-        Mouse.positionServer = Board.positionLocalToServer(Mouse.positionClient);
+        Mouse.positionServer = Board.positionClientToServer(Mouse.positionClient);
 
         const itemId = Board.getTileTopItem(Mouse.positionServer);
         if (!itemId) {
@@ -126,11 +127,14 @@ export default class Mouse {
         if (Keyboard.shift.isPressed) {
             return;
         }
+
         const itemId = Board.getTileTopItem(Mouse.positionServer);
         if (itemId && Item.get(itemId).isMoveable) {
             Mouse.onGrabStart(itemId);
             return;
         }
+
+        Movement.mapClick();
     }
 
     static onRightButtonClick() {

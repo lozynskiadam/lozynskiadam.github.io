@@ -8,10 +8,13 @@ body {
   background: #25131a;
   height: 100vh;
   overflow: hidden;
+
+  /* preload cursor images */
   cursor: url(images/cursor-crosshair.png) 11 11, crosshair;
   cursor: url(images/cursor-pick.png), pointer;
   cursor: url(images/cursor-chest.png), pointer;
   cursor: url(images/cursor-eye.png), help;
+  cursor: url(images/cursor.png), default;
 }
 
 #app {

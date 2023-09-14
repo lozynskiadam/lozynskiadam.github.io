@@ -1,13 +1,20 @@
 import {TILE_SIZE} from "../config.js";
 import Hero from "./Hero.js";
+import Board from "./Board.js";
+import * as EasyStar from "easystarjs";
+import Mouse from "./Mouse.js";
 
 export default class Movement {
 
+    static easyStar = null;
+    static targetPosition = null;
+
     static init() {
-        window.addEventListener("move-north", () => Hero.walk('north'));
-        window.addEventListener("move-south", () => Hero.walk('south'));
-        window.addEventListener("move-west", () => Hero.walk('west'));
-        window.addEventListener("move-east", () => Hero.walk('east'));
+        Movement.easyStar = new EasyStar.js()
+        window.addEventListener("move-north", () => {Movement.targetPosition = null; Hero.walk('north')});
+        window.addEventListener("move-south", () => {Movement.targetPosition = null; Hero.walk('south')});
+        window.addEventListener("move-west", () => {Movement.targetPosition = null; Hero.walk('west')});
+        window.addEventListener("move-east", () => {Movement.targetPosition = null; Hero.walk('east')});
     }
 
     static move(creature, position, direction) {
@@ -45,6 +52,21 @@ export default class Movement {
         }
     }
 
+    static getDirection(position1, position2) {
+        if (position1.x < position2.x) {
+            return 'east';
+        }
+        if (position1.x > position2.x) {
+            return 'west';
+        }
+        if (position1.y > position2.y) {
+            return 'north';
+        }
+        if (position1.y < position2.y) {
+            return 'south';
+        }
+    }
+
     static getTargetPosition(creature, direction) {
         const map = {
             'north': { x: 0, y: -1 },
@@ -79,4 +101,38 @@ export default class Movement {
         map[direction]();
     }
 
+    static mapClick() {
+        Movement.targetPosition = {...Mouse.positionServer};
+
+        const grid = [];
+        const startPosition = Board.positionServerToClient(Hero.creature.position);
+        const endPosition = Board.positionServerToClient(Movement.targetPosition);
+
+        for (let y = Board.area.fromY; y <= Board.area.toY; y++) {
+            const row = [];
+            for (let x = Board.area.fromX; x <= Board.area.toX; x++) {
+                row.push(Number(Board.isWalkable({x: x, y: y})));
+            }
+            grid.push(row);
+        }
+
+        Movement.easyStar.setGrid(grid);
+        Movement.easyStar.setAcceptableTiles([1]);
+        Movement.easyStar.findPath(
+            startPosition.x,
+            startPosition.y,
+            endPosition.x,
+            endPosition.y,
+            (path) => {
+                if (path === null) {
+                    console.log("Path was not found.");
+                    return;
+                }
+                Hero.walk(Movement.getDirection(startPosition, path[1]));
+            }
+        );
+        Movement.easyStar.calculate();
+
+        return grid;
+    }
 }

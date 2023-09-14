@@ -134,10 +134,17 @@ export default class Board {
         return (position.x >= Board.area.fromX && position.x <= Board.area.toX) && (position.y >= Board.area.fromY && position.y <= Board.area.toY);
     }
 
-    static positionLocalToServer(position) {
+    static positionClientToServer(position) {
         return {
-            x: Board.area.fromX + position.x,
-            y: Board.area.fromY + position.y,
+            x: position.x + Board.area.fromX,
+            y: position.y + Board.area.fromY,
+        }
+    }
+
+    static positionServerToClient(position) {
+        return {
+            x: position.x - Board.area.fromX,
+            y: position.y - Board.area.fromY,
         }
     }
 
