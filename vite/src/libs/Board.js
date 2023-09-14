@@ -1,8 +1,9 @@
 import {BOARD_HEIGHT, BOARD_WIDTH, TILE_SIZE} from "../config.js";
+import {randomString, roll} from "../utils/common.js";
+import {isSamePosition} from "../utils/position.js";
 import Hero from "./Hero.js";
 import Item from "./Item.js";
 import Creature from "./Creature.js";
-import {areEqual, randomString, roll} from "../utils/common.js";
 
 export default class Board {
 
@@ -42,7 +43,7 @@ export default class Board {
         Board.area.toY = Hero.creature.position.y + Math.floor(Board.height / 2);
 
         for (const [name, creature] of Object.entries(Board.creatures)) {
-            if (!Board.isOnArea(creature.position.x, creature.position.y)) {
+            if (!Board.isOnArea(creature.position)) {
                 delete Board.creatures[name];
             }
         }
@@ -99,7 +100,7 @@ export default class Board {
                     stack.push(1)
                 }
 
-                if (!areEqual(position, Hero.creature.position)) {
+                if (!isSamePosition(position, Hero.creature.position)) {
                     if (roll(100)) {
                         stack.push(6);
                     } else if (roll(100)) {
@@ -129,17 +130,8 @@ export default class Board {
         return true;
     }
 
-    static isInHeroRange(position, radius = 1) {
-        const fromX = Hero.creature.position.x - radius;
-        const fromY = Hero.creature.position.y - radius;
-        const toX = Hero.creature.position.x + radius;
-        const toY = Hero.creature.position.y + radius;
-
-        return (position.x >= fromX && position.x <= toX) && (position.y >= fromY && position.y <= toY);
-    }
-
-    static isOnArea(x, y) {
-        return (x >= Board.area.fromX && x <= Board.area.toX) && (y >= Board.area.fromY && y <= Board.area.toY);
+    static isOnArea(position) {
+        return (position.x >= Board.area.fromX && position.x <= Board.area.toX) && (position.y >= Board.area.fromY && position.y <= Board.area.toY);
     }
 
     static positionLocalToServer(position) {
@@ -149,9 +141,9 @@ export default class Board {
         }
     }
 
-    static getEffects(x, y) {
-        if (Board.effects && Board.effects[y] && Board.effects[y][x]) {
-            return Object.values(this.effects[y][x]);
+    static getVisibleEffectsSprites(position) {
+        if (Board.effects && Board.effects[position.y] && Board.effects[position.y][position.x]) {
+            return Object.values(this.effects[position.y][position.x]);
         }
 
         return [];

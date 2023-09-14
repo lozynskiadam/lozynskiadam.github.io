@@ -1,4 +1,5 @@
 import {TILE_SIZE} from "../config.js";
+import {isSamePosition} from "../utils/position.js";
 import Item from "./Item.js";
 import Mouse from "./Mouse.js";
 import Sprite from "./Sprite.js";
@@ -8,49 +9,51 @@ import Keyboard from "./Keyboard.js";
 
 export default class Renderer {
 
-    static renderTile(x, y, sx, sy, layer, tile) {
+    static renderTile(positionClient, positionServer, layer, tile) {
         if (layer === 'ground') {
             tile.forEach((itemId) => {
                 if (Item.get(itemId).type === 'ground') {
-                    Renderer.drawSprite(Item.get(itemId).sprite.getFrame(), x, y);
+                    Renderer.drawSprite(positionClient, Item.get(itemId).sprite);
                 }
             });
         }
 
         if (layer === 'objects') {
-            if (Keyboard.shift.isPressed && Mouse.positionClient.x === x && Mouse.positionClient.y === y) {
-                Renderer.drawSprite(Sprite.get('cursor').getFrame(), x, y)
-            }
 
             tile.forEach((itemId) => {
                 const item = Item.get(itemId);
                 if (item.type === 'object') {
-                    Renderer.drawSprite(item.sprite.getFrame(), x, y)
+                    Renderer.drawSprite(positionClient, item.sprite)
                 }
             });
+
+            if (Keyboard.shift.isPressed && isSamePosition(positionClient, Mouse.positionClient)) {
+                Renderer.drawSprite(positionClient, Sprite.get('cursor'))
+            }
 
             Object.values(Board.creatures).forEach((creature) => {
-                if (sx === creature.position.x && sy === creature.position.y) {
-                    Renderer.drawCreature(creature, x, y)
+                if (isSamePosition(positionServer, creature.position)) {
+                    Renderer.drawCreature(positionClient, creature)
                 }
             });
 
-            Board.getEffects(sx, sy).forEach((effect) => {
-                Renderer.drawSprite(effect.getFrame(), x, y)
+            Board.getVisibleEffectsSprites(positionServer).forEach((sprite) => {
+                Renderer.drawSprite(positionClient, sprite)
             });
         }
     }
 
-    static drawSprite(image, x, y) {
-        let top = (y * TILE_SIZE) + (TILE_SIZE - image.height);
-        let left = (x * TILE_SIZE) + (Math.ceil(TILE_SIZE / 2) - Math.ceil(image.width / 2));
+    static drawSprite(position, sprite) {
+        const image = sprite.getFrame();
+        const top = (position.y * TILE_SIZE) + (TILE_SIZE - image.height);
+        const left = (position.x * TILE_SIZE) + (Math.ceil(TILE_SIZE / 2) - Math.ceil(image.width / 2));
         Renderer.tempCtx.drawImage(image, left, top);
     }
 
-    static drawCreature(creature, x, y) {
-        let image = creature.sprite.getFrame();
-        let top = (y * TILE_SIZE) + (TILE_SIZE - image.height) + creature.offset.y;
-        let left = (x * TILE_SIZE) + (Math.ceil(TILE_SIZE / 2) - Math.ceil(image.width / 2)) + creature.offset.x;
+    static drawCreature(position, creature) {
+        const image = creature.sprite.getFrame();
+        const top = (position.y * TILE_SIZE) + (TILE_SIZE - image.height) + creature.offset.y;
+        const left = (position.x * TILE_SIZE) + (Math.ceil(TILE_SIZE / 2) - Math.ceil(image.width / 2)) + creature.offset.x;
         Renderer.tempCtx.drawImage(image, left, top);
     }
 
@@ -73,7 +76,9 @@ export default class Renderer {
             for (let [sy, row] of Object.entries(Board.tiles)) {
                 let x = 0;
                 for (let [sx, tile] of Object.entries(row)) {
-                    Renderer.renderTile(x, y, Number(sx), Number(sy), layer, tile);
+                    const positionClient = {x: x, y: y};
+                    const positionServer = {x: Number(sx), y: Number(sy)};
+                    Renderer.renderTile(positionClient, positionServer, layer, tile);
                     x++;
                 }
                 y++;

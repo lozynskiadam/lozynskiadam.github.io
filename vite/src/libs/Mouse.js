@@ -1,10 +1,10 @@
 import {TILE_SIZE} from "../config.js";
+import {isPositionInRange, isSamePosition} from "../utils/position.js";
 import Board from "./Board.js";
 import Effect from "./Effect.js";
 import Hero from "./Hero.js";
 import Item from "./Item.js";
 import Keyboard from "./Keyboard.js";
-import {areEqual} from "../utils/common.js";
 
 export default class Mouse {
 
@@ -71,9 +71,9 @@ export default class Mouse {
     static onMove(e) {
         const rect = Board.ctx.canvas.getBoundingClientRect();
         const old = {
-            window: {...Mouse.positionWindow},
-            client: {...Mouse.positionClient},
-            server: {...Mouse.positionServer},
+            positionWindow: {...Mouse.positionWindow},
+            positionClient: {...Mouse.positionClient},
+            positionServer: {...Mouse.positionServer},
         };
 
         Mouse.positionWindow = {
@@ -88,10 +88,10 @@ export default class Mouse {
 
         Mouse.positionServer = Board.positionLocalToServer(Mouse.positionClient);
 
-        if (!areEqual(Mouse.positionClient, old.client)) {
+        if (!isSamePosition(Mouse.positionClient, old.positionClient)) {
             Mouse.onPositionChange();
         }
-        if (!areEqual(Mouse.positionServer, old.server)) {
+        if (!isSamePosition(Mouse.positionServer, old.positionServer)) {
             Mouse.onPositionChange();
         }
     }
@@ -137,7 +137,7 @@ export default class Mouse {
         const itemId = Board.getTileTopItem(Mouse.positionServer);
         if (Mouse.buttons.right.isBlocked) return;
         if (!itemId) return;
-        if (!Board.isInHeroRange(Mouse.positionServer)) return;
+        if (!isPositionInRange(Hero.creature.position, Mouse.positionServer)) return;
 
         if (itemId === 6) {
             Mouse.buttons.right.isBlocked = true;
@@ -176,10 +176,10 @@ export default class Mouse {
     }
 
     static handleThrow() {
-        if (Board.isInHeroRange(Mouse.grabbing.position) === false) {
+        if (isPositionInRange(Hero.creature.position, Mouse.grabbing.position) === false) {
             return;
         }
-        if (areEqual(Mouse.grabbing.position, Mouse.positionServer)) {
+        if (isSamePosition(Mouse.grabbing.position, Mouse.positionServer)) {
             return;
         }
         const itemId = Board.getTileTopItem(Mouse.grabbing.position);
