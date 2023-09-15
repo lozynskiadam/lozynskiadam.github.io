@@ -32,10 +32,6 @@ export default class Renderer {
                 Renderer.drawSprite(positionClient, Sprite.get('cursor'))
             }
 
-            if (Movement.targetPosition && !Movement.targetUse && isSamePosition(positionServer, Movement.targetPosition)) {
-                Renderer.drawSprite(positionClient, Sprite.get('cursor'))
-            }
-
             Object.values(Board.creatures).forEach((creature) => {
                 if (isSamePosition(positionServer, creature.position)) {
                     Renderer.drawCreature(positionClient, creature)
@@ -90,11 +86,25 @@ export default class Renderer {
             }
         }
         Renderer.renderInfoBox(Renderer.tempCtx);
+        Renderer.renderClickActions(Renderer.tempCtx);
         Board.ctx.clearRect(0, 0, Board.ctx.canvas.width, Board.ctx.canvas.height);
         Board.ctx.drawImage(canvas, -Hero.creature.offset.x, -Hero.creature.offset.y);
         Renderer.cropEdges(Board.ctx);
 
         window.requestAnimationFrame(Renderer.render);
+    }
+
+    static renderClickActions(ctx)
+    {
+        if (!Mouse.pointerEffects) {
+            return;
+        }
+
+        ctx.drawImage(
+            Mouse.pointerEffects.sprite.getFrame(),
+            Mouse.pointerEffects.position.x + Hero.creature.offset.x - 16,
+            Mouse.pointerEffects.position.y + Hero.creature.offset.y - 16,
+        );
     }
 
     static renderInfoBox(ctx)

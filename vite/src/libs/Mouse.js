@@ -6,10 +6,16 @@ import Hero from "./Hero.js";
 import Item from "./Item.js";
 import Keyboard from "./Keyboard.js";
 import Movement from "./Movement.js";
+import Sprite from "./Sprite.js";
 
 export default class Mouse {
 
     static positionWindow = {
+        x: null,
+        y: null,
+    }
+
+    static positionCanvas = {
         x: null,
         y: null,
     }
@@ -44,9 +50,18 @@ export default class Mouse {
         },
     }
 
+    static pointerEffects = null;
+
     static init() {
-        document.addEventListener('mousemove', Mouse.onMove, false);
+        document.addEventListener('mousemove', (e) => {
+            Mouse.recalcMousePosition(e);
+            if (Mouse.grabbing.initialised && !Mouse.grabbing.itemId) {
+                Mouse.onGrabStart();
+            }
+        }, false);
+
         document.addEventListener('mousedown', (e) => {
+            Mouse.recalcMousePosition(e);
             if (e.which === 1 || e.button === 0) {
                 Mouse.buttons.left.isPressed = true;
                 Mouse.onLeftButtonPress();
@@ -55,8 +70,10 @@ export default class Mouse {
                 Mouse.buttons.right.isPressed = true;
                 Mouse.onRightButtonPress();
             }
-        });
+        }, false);
+
         document.addEventListener('mouseup', (e) => {
+            Mouse.recalcMousePosition(e);
             if (e.which === 1 || e.button === 0) {
                 Mouse.buttons.left.isPressed = false;
                 Mouse.onLeftButtonRelease();
@@ -65,11 +82,12 @@ export default class Mouse {
                 Mouse.buttons.right.isPressed = false;
                 Mouse.onRightButtonRelease();
             }
-        });
+        }, false);
+
         document.addEventListener('contextmenu', e => e?.cancelable && e.preventDefault());
     }
 
-    static onMove(e) {
+    static recalcMousePosition(e) {
         const rect = Board.ctx.canvas.getBoundingClientRect();
         const old = {
             positionWindow: {...Mouse.positionWindow},
@@ -82,9 +100,14 @@ export default class Mouse {
             y: e.clientY
         };
 
+        Mouse.positionCanvas = {
+            x: ((e.clientX - rect.left) / (rect.right - rect.left) * Board.ctx.canvas.width),
+            y: ((e.clientY - rect.top) / (rect.bottom - rect.top) * Board.ctx.canvas.height),
+        };
+
         Mouse.positionClient = {
-            x: Math.floor((((e.clientX - rect.left) / (rect.right - rect.left) * Board.ctx.canvas.width) + Hero.creature.offset.x) / TILE_SIZE),
-            y: Math.floor((((e.clientY - rect.top) / (rect.bottom - rect.top) * Board.ctx.canvas.height) + Hero.creature.offset.y) / TILE_SIZE),
+            x: Math.floor((Mouse.positionCanvas.x + Hero.creature.offset.x) / TILE_SIZE),
+            y: Math.floor((Mouse.positionCanvas.y + Hero.creature.offset.y) / TILE_SIZE),
         };
 
         Mouse.positionServer = Board.positionClientToServer(Mouse.positionClient);
@@ -94,9 +117,6 @@ export default class Mouse {
         }
         if (!isSamePosition(Mouse.positionServer, old.positionServer)) {
             Mouse.onPositionChange();
-        }
-        if (Mouse.grabbing.initialised && !Mouse.grabbing.itemId) {
-            Mouse.onGrabStart();
         }
     }
 
@@ -144,12 +164,17 @@ export default class Mouse {
         if (Mouse.grabbing.initialised && Mouse.grabbing.itemId) {
             Mouse.onGrabEnd();
         } else {
+            const pointerEffectSprite = Sprite.get('effect-energy').clone();
+            pointerEffectSprite.play().then(() => Mouse.pointerEffects = null);
+            Mouse.pointerEffects = {
+                sprite: pointerEffectSprite,
+                position: {...Mouse.positionCanvas},
+            }
+
             Mouse.grabbing.initialised = false;
             Mouse.grabbing.itemId = null;
             Mouse.grabbing.position = {x: null, y: null};
-            if (Board.isWalkable(Mouse.positionServer)) {
-                Movement.mapClick();
-            }
+            Movement.setTargetPath(Mouse.positionServer);
         }
     }
 
@@ -186,7 +211,7 @@ export default class Mouse {
     {
         const item = Item.get(Board.getTileTopItem(Mouse.positionServer));
         if (item.type === 'object' && !isPositionInRange(Hero.creature.position, Mouse.positionServer)) {
-            Movement.mapClick(true);
+            Movement.setTargetPath(Mouse.positionServer, true);
         }
     }
 
