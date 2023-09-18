@@ -54,7 +54,7 @@ export default class Mouse {
         document.addEventListener('mousemove', (e) => {
             Mouse.recalcMousePosition(e);
             if (Mouse.grabbing.initialised && !Mouse.grabbing.itemId) {
-                Mouse.onGrabStart();
+                Mouse.grabItemFrom({...Mouse.positionServer});
             }
         }, false);
 
@@ -159,7 +159,7 @@ export default class Mouse {
 
     static onLeftButtonRelease() {
         if (Mouse.grabbing.initialised && Mouse.grabbing.itemId) {
-            Mouse.onGrabEnd();
+            Mouse.releaseItemOn({...Mouse.positionServer});
         } else {
             const pointerEffectSprite = Sprite.get('pointer-cross-yellow').clone();
             const pointerEffect = {
@@ -223,39 +223,6 @@ export default class Mouse {
         }
     }
 
-    static onGrabStart() {
-        Mouse.grabbing.itemId = Board.getTileTopItem(Mouse.positionServer);
-        Mouse.grabbing.position = {...Mouse.positionServer};
-        Board.ctx.canvas.setAttribute('cursor', 'crosshair');
-    }
-
-    static onGrabEnd() {
-        Mouse.handleThrow();
-        Mouse.grabbing.initialised = false;
-        Mouse.grabbing.itemId = null;
-        Mouse.grabbing.position = {x: null, y: null};
-        Mouse.onPositionChange();
-    }
-
-    static handleThrow() {
-        if (isPositionInRange($hero.position, Mouse.grabbing.position) === false) {
-            return;
-        }
-        if (isSamePosition(Mouse.grabbing.position, Mouse.positionServer)) {
-            return;
-        }
-        const itemId = Board.getTileTopItem(Mouse.grabbing.position);
-        if (itemId !== Mouse.grabbing.itemId) {
-            return;
-        }
-        if (Board.getTileStack(Mouse.positionServer).find((itemId) => Item.get(itemId).isBlockingCreatures)) {
-            return;
-        }
-
-        Board.tiles[Mouse.grabbing.position.y][Mouse.grabbing.position.x].pop();
-        Board.tiles[Mouse.positionServer.y][Mouse.positionServer.x].push(itemId);
-    }
-
     static use(position, itemId) {
         if (Board.getTileTopItem(position) !== itemId) return;
         if (!isPositionInRange($hero.position, position)) return;
@@ -275,5 +242,43 @@ export default class Mouse {
         if (itemId === 9) {
             Effect.get('yellow-sparkles').run($hero.position);
         }
+    }
+
+    static grabItemFrom(position) {
+        Mouse.grabbing.itemId = Board.getTileTopItem(position);
+        Mouse.grabbing.position = position;
+        Board.ctx.canvas.setAttribute('cursor', 'crosshair');
+    }
+
+    static releaseItemOn(position) {
+        const positionFrom = {...Mouse.grabbing.position};
+        const positionTo = {...position};
+        const itemId = Mouse.grabbing.itemId;
+
+        Mouse.grabbing.initialised = false;
+        Mouse.grabbing.itemId = null;
+        Mouse.grabbing.position = {x: null, y: null};
+        Mouse.onPositionChange();
+
+        if (isSamePosition(positionFrom, Mouse.positionServer)) {
+            return;
+        }
+        if (itemId !== Board.getTileTopItem(positionFrom)) {
+            return;
+        }
+        if (!isPositionInRange($hero.position, positionFrom)) {
+            Movement.setPath(positionFrom, 'move', {
+                itemId: itemId,
+                positionFrom: positionFrom,
+                positionTo: positionTo,
+            })
+            return;
+        }
+        if (Board.getTileStack(positionTo).find((itemId) => Item.get(itemId).isBlockingCreatures)) {
+            return;
+        }
+
+        Board.tiles[positionFrom.y][positionFrom.x].pop();
+        Board.tiles[positionTo.y][positionTo.x].push(itemId);
     }
 }

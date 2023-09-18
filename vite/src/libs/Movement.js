@@ -1,7 +1,7 @@
 import {TILE_SIZE} from "../config.js";
 import Board from "./Board.js";
 import * as EasyStar from "easystarjs";
-import {isSamePosition} from "../utils/position.js";
+import {isPositionInRange, isSamePosition} from "../utils/position.js";
 import Mouse from "./Mouse.js";
 import {$hero} from "../utils/globals.js";
 
@@ -190,9 +190,18 @@ export default class Movement {
                 console.log("Path was not found.");
                 return;
             }
-            if (Movement.path.action === 'use' && path.length === 2) {
+            if (Movement.path.action === 'use' && (path.length === 2 || isPositionInRange($hero.position, Movement.path.destination))) {
                 $hero.sprite.loop('idle-south');
                 Mouse.use(Movement.path.destination, Movement.path.actionData.itemId);
+                Movement.clearPath();
+                return;
+            }
+            if (Movement.path.action === 'move' && (path.length === 2 || isPositionInRange($hero.position, Movement.path.destination))) {
+                $hero.sprite.loop('idle-south');
+                if (Movement.path.actionData.itemId === Board.getTileTopItem(Movement.path.actionData.positionFrom)) {
+                    Mouse.grabItemFrom(Movement.path.actionData.positionFrom);
+                    Mouse.releaseItemOn(Movement.path.actionData.positionTo);
+                }
                 Movement.clearPath();
                 return;
             }
