@@ -156,5 +156,47 @@
                 {"x": 0, "y": 128, "w": 32, "h": 32}
             ]
         }
+    },
+    "pointer-cross-yellow": {
+        "base": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPwAAAASAgMAAAACi1sGAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAMUExURQAAAAAAAM/PAP//AJOuLWIAAAABdFJOUwBA5thmAAAAAWJLR0QAiAUdSAAAAQxJREFUOMutlDFOwzAUhv8nte6agQzFQ6/yeoMMzdQ1CwzxzAJX8JQTsDB1aYcOhCvkEI8bsLhSES8gUholBcn8ipzPkn/lf892gHHlwDTP9H0ODKQ6QXbBSit9bhnX1SPo6Rw8cFPoEj/inWbIKcC8OQ9XKYQOSoatGuAu0XU84E055ZnQM9VsxQrVyw72MDIHzFJ9V4Pl6ocX3rEJJsB5508gtEehiScae7DcbAXcrxvY15qpXssP8CVrqQWS4cRf/p0AbuNhDqEPPG+NyXiv233QDsG+M+hF+oAJLoq2Oiw02uyo8ND04TeRxPlj80f37x/271MR56dTzPn9Vsz96RoScX9PDfnD/+MDUoi4B1L/gWMAAAAASUVORK5CYII=",
+        "speed": 30,
+        "states": {
+            "default": [
+                {"x": 0, "y": 0, "w": 18, "h": 18},
+                {"x": 18, "y": 0, "w": 18, "h": 18},
+                {"x": 36, "y": 0, "w": 18, "h": 18},
+                {"x": 54, "y": 0, "w": 18, "h": 18},
+                {"x": 72, "y": 0, "w": 18, "h": 18},
+                {"x": 90, "y": 0, "w": 18, "h": 18},
+                {"x": 108, "y": 0, "w": 18, "h": 18},
+                {"x": 126, "y": 0, "w": 18, "h": 18},
+                {"x": 144, "y": 0, "w": 18, "h": 18},
+                {"x": 162, "y": 0, "w": 18, "h": 18},
+                {"x": 180, "y": 0, "w": 18, "h": 18},
+                {"x": 198, "y": 0, "w": 18, "h": 18},
+                {"x": 216, "y": 0, "w": 18, "h": 18}
+            ]
+        }
+    },
+    "pointer-cross-red": {
+        "base": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPwAAAASAgMAAAACi1sGAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAMUExURQAAAAAAAM8AAP8AAGvPrxoAAAABdFJOUwBA5thmAAAAAWJLR0QAiAUdSAAAAQxJREFUOMutlDFOwzAUhv8nte6agQzFQ6/yeoMMzdQ1CwzxzAJX8JQTsDB1aYcOhCvkEI8bsLhSES8gUholBcn8ipzPkn/lf892gHHlwDTP9H0ODKQ6QXbBSit9bhnX1SPo6Rw8cFPoEj/inWbIKcC8OQ9XKYQOSoatGuAu0XU84E055ZnQM9VsxQrVyw72MDIHzFJ9V4Pl6ocX3rEJJsB5508gtEehiScae7DcbAXcrxvY15qpXssP8CVrqQWS4cRf/p0AbuNhDqEPPG+NyXiv233QDsG+M+hF+oAJLoq2Oiw02uyo8ND04TeRxPlj80f37x/271MR56dTzPn9Vsz96RoScX9PDfnD/+MDUoi4B1L/gWMAAAAASUVORK5CYII=",
+        "speed": 30,
+        "states": {
+            "default": [
+                {"x": 0, "y": 0, "w": 18, "h": 18},
+                {"x": 18, "y": 0, "w": 18, "h": 18},
+                {"x": 36, "y": 0, "w": 18, "h": 18},
+                {"x": 54, "y": 0, "w": 18, "h": 18},
+                {"x": 72, "y": 0, "w": 18, "h": 18},
+                {"x": 90, "y": 0, "w": 18, "h": 18},
+                {"x": 108, "y": 0, "w": 18, "h": 18},
+                {"x": 126, "y": 0, "w": 18, "h": 18},
+                {"x": 144, "y": 0, "w": 18, "h": 18},
+                {"x": 162, "y": 0, "w": 18, "h": 18},
+                {"x": 180, "y": 0, "w": 18, "h": 18},
+                {"x": 198, "y": 0, "w": 18, "h": 18},
+                {"x": 216, "y": 0, "w": 18, "h": 18}
+            ]
+        }
     }
 }

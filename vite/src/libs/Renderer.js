@@ -85,7 +85,7 @@ export default class Renderer {
             }
         }
         Renderer.renderInfoBox(Renderer.tempCtx);
-        Renderer.renderPointerEffects(Renderer.tempCtx);
+        Renderer.renderPointerEffect(Renderer.tempCtx);
         Board.ctx.clearRect(0, 0, Board.ctx.canvas.width, Board.ctx.canvas.height);
         Board.ctx.drawImage(canvas, -Hero.creature.offset.x, -Hero.creature.offset.y);
         Renderer.cropEdges(Board.ctx);
@@ -93,11 +93,11 @@ export default class Renderer {
         window.requestAnimationFrame(Renderer.render);
     }
 
-    static renderPointerEffects(ctx) {
-        if (!Mouse.pointerEffects) return;
+    static renderPointerEffect(ctx) {
+        if (!Mouse.pointerEffect) return;
 
-        const image = Mouse.pointerEffects.sprite.getFrame();
-        const position = Mouse.pointerEffects.position;
+        const image = Mouse.pointerEffect.sprite.getFrame();
+        const position = Mouse.pointerEffect.position;
         const offset = Hero.creature.offset;
         ctx.drawImage(image, position.x + offset.x - (image.width / 2), position.y + offset.y - (image.height / 2));
     }

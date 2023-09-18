@@ -38,6 +38,12 @@ canvas {
   cursor: url(images/cursor.png), default;
 }
 
+@media screen and (max-width: 800px) {
+  canvas {
+    transform: scale(1.5);
+  }
+}
+
 canvas[cursor="crosshair"] {
   cursor: url(images/cursor-crosshair.png) 11 11, crosshair;
 }
