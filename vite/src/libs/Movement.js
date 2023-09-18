@@ -1,11 +1,13 @@
 import {TILE_SIZE} from "../config.js";
-import Hero from "./Hero.js";
 import Board from "./Board.js";
 import * as EasyStar from "easystarjs";
 import {isSamePosition} from "../utils/position.js";
 import Mouse from "./Mouse.js";
+import {$hero} from "../utils/globals.js";
 
 export default class Movement {
+
+    static queuedMove = null;
 
     static easyStar = null;
 
@@ -15,20 +17,40 @@ export default class Movement {
         Movement.easyStar = new EasyStar.js()
         window.addEventListener("move-north", () => {
             Movement.clearPath();
-            Hero.walk('north')
+            Movement.walk('north')
         });
         window.addEventListener("move-south", () => {
             Movement.clearPath();
-            Hero.walk('south')
+            Movement.walk('south')
         });
         window.addEventListener("move-west", () => {
             Movement.clearPath();
-            Hero.walk('west')
+            Movement.walk('west')
         });
         window.addEventListener("move-east", () => {
             Movement.clearPath();
-            Hero.walk('east')
+            Movement.walk('east')
         });
+    }
+
+    static walk(direction) {
+        if ($hero.movement.isMoving) {
+            if ($hero.movement.currentFrame > (TILE_SIZE - (TILE_SIZE/3))) {
+                Movement.queuedMove = direction;
+                return true;
+            }
+            return false;
+        }
+
+        const targetPosition = Movement.getTargetPosition($hero, direction);
+        if (!Board.isWalkable(targetPosition)) {
+            $hero.sprite.loop('idle-' + direction);
+            return false;
+        }
+
+        Movement.move($hero, targetPosition, direction);
+
+        return true;
     }
 
     static move(creature, position, direction) {
@@ -57,10 +79,10 @@ export default class Movement {
             creature.movement.currentFrame = 0;
             creature.movement.timeouts.forEach((timeout) => clearTimeout(timeout));
             creature.movement.timeouts = [];
-            if (creature.isHero() && Hero.queuedMove) {
-                direction = Hero.queuedMove;
-                Hero.queuedMove = null;
-                if (Hero.walk(direction)) return;
+            if (creature.isHero() && Movement.queuedMove) {
+                direction = Movement.queuedMove;
+                Movement.queuedMove = null;
+                if (Movement.walk(direction)) return;
             }
             if (Movement.path) {
                 if (isSamePosition(Movement.path.destination, position)) {
@@ -133,20 +155,20 @@ export default class Movement {
             action: action,
             actionData: actionData
         }
-        if (!Hero.creature.movement.isMoving) {
+        if (!$hero.movement.isMoving) {
             Movement.makePathStep();
         }
     }
 
     static makePathStep() {
-        if (!Movement.path || isSamePosition(Movement.path.destination, Hero.creature.position)) {
+        if (!Movement.path || isSamePosition(Movement.path.destination, $hero.position)) {
             Movement.path = null;
-            Hero.creature.sprite.loop('idle-south');
+            $hero.sprite.loop('idle-south');
             return;
         }
 
         const grid = [];
-        const startPosition = Board.positionServerToClient(Hero.creature.position);
+        const startPosition = Board.positionServerToClient($hero.position);
         const endPosition = Board.positionServerToClient(Movement.path.destination);
 
         // prepare collisions grid
@@ -169,12 +191,12 @@ export default class Movement {
                 return;
             }
             if (Movement.path.action === 'use' && path.length === 2) {
-                Hero.creature.sprite.loop('idle-south');
+                $hero.sprite.loop('idle-south');
                 Mouse.use(Movement.path.destination, Movement.path.actionData.itemId);
                 Movement.clearPath();
                 return;
             }
-            if (!Hero.walk(Movement.getDirection(startPosition, path[1]))) {
+            if (!Movement.walk(Movement.getDirection(startPosition, path[1]))) {
                 Movement.clearPath();
             }
         });

@@ -3,9 +3,9 @@ import {isSamePosition} from "../utils/position.js";
 import Item from "./Item.js";
 import Mouse from "./Mouse.js";
 import Sprite from "./Sprite.js";
-import Hero from "./Hero.js";
 import Board from "./Board.js";
 import Keyboard from "./Keyboard.js";
+import {$hero} from "../utils/globals.js";
 
 export default class Renderer {
 
@@ -87,7 +87,7 @@ export default class Renderer {
         Renderer.renderInfoBox(Renderer.tempCtx);
         Renderer.renderPointerEffect(Renderer.tempCtx);
         Board.ctx.clearRect(0, 0, Board.ctx.canvas.width, Board.ctx.canvas.height);
-        Board.ctx.drawImage(canvas, -Hero.creature.offset.x, -Hero.creature.offset.y);
+        Board.ctx.drawImage(canvas, -$hero.offset.x, -$hero.offset.y);
         Renderer.cropEdges(Board.ctx);
 
         window.requestAnimationFrame(Renderer.render);
@@ -98,7 +98,7 @@ export default class Renderer {
 
         const image = Mouse.pointerEffect.sprite.getFrame();
         const position = Mouse.pointerEffect.position;
-        const offset = Hero.creature.offset;
+        const offset = $hero.offset;
         ctx.drawImage(image, position.x + offset.x - (image.width / 2), position.y + offset.y - (image.height / 2));
     }
 

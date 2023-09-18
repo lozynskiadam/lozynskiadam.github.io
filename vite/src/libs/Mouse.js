@@ -2,11 +2,11 @@ import {TILE_SIZE} from "../config.js";
 import {isPositionInRange, isSamePosition} from "../utils/position.js";
 import Board from "./Board.js";
 import Effect from "./Effect.js";
-import Hero from "./Hero.js";
 import Item from "./Item.js";
 import Keyboard from "./Keyboard.js";
 import Movement from "./Movement.js";
 import Sprite from "./Sprite.js";
+import {$hero} from "../utils/globals.js";
 
 export default class Mouse {
 
@@ -104,8 +104,8 @@ export default class Mouse {
         };
 
         Mouse.positionClient = {
-            x: Math.floor((Mouse.positionCanvas.x + Hero.creature.offset.x) / TILE_SIZE),
-            y: Math.floor((Mouse.positionCanvas.y + Hero.creature.offset.y) / TILE_SIZE),
+            x: Math.floor((Mouse.positionCanvas.x + $hero.offset.x) / TILE_SIZE),
+            y: Math.floor((Mouse.positionCanvas.y + $hero.offset.y) / TILE_SIZE),
         };
 
         Mouse.positionServer = Board.positionClientToServer(Mouse.positionClient);
@@ -184,7 +184,7 @@ export default class Mouse {
         const position = {...Mouse.positionServer};
         const itemId = Board.getTileTopItem(position);
         if (!itemId) return;
-        if (!isPositionInRange(Hero.creature.position, position)) return;
+        if (!isPositionInRange($hero.position, position)) return;
 
         if (Item.get(itemId).type === 'object') {
             const pointerEffectSprite = Sprite.get('pointer-cross-red').clone();
@@ -205,7 +205,7 @@ export default class Mouse {
     static onRightButtonRelease()
     {
         const item = Item.get(Board.getTileTopItem(Mouse.positionServer));
-        if (item.type === 'object' && !isPositionInRange(Hero.creature.position, Mouse.positionServer)) {
+        if (item.type === 'object' && !isPositionInRange($hero.position, Mouse.positionServer)) {
             const pointerEffectSprite = Sprite.get('pointer-cross-red').clone();
             const pointerEffect = {
                 sprite: pointerEffectSprite,
@@ -238,7 +238,7 @@ export default class Mouse {
     }
 
     static handleThrow() {
-        if (isPositionInRange(Hero.creature.position, Mouse.grabbing.position) === false) {
+        if (isPositionInRange($hero.position, Mouse.grabbing.position) === false) {
             return;
         }
         if (isSamePosition(Mouse.grabbing.position, Mouse.positionServer)) {
@@ -258,10 +258,10 @@ export default class Mouse {
 
     static use(position, itemId) {
         if (Board.getTileTopItem(position) !== itemId) return;
-        if (!isPositionInRange(Hero.creature.position, position)) return;
+        if (!isPositionInRange($hero.position, position)) return;
 
         if (itemId === 6) {
-            Effect.get('yellow-sparkles').run(position);
+            Effect.get('ore-hit').run(position);
             Board.tiles[position.y][position.x].pop();
             Board.tiles[position.y][position.x].push(9);
             Mouse.onPositionChange();
@@ -270,6 +270,10 @@ export default class Mouse {
         if (itemId === 8) {
             Effect.get('ore-hit').run(position);
             Board.tiles[position.y][position.x].push(10);
+        }
+
+        if (itemId === 9) {
+            Effect.get('yellow-sparkles').run($hero.position);
         }
     }
 }

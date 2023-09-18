@@ -1,8 +1,8 @@
 import Board from "./Board.js";
 import Sprite from "./Sprite.js";
-import Hero from "./Hero.js";
 import Movement from "./Movement.js";
 import {randomColor} from "../utils/common.js";
+import {$hero} from "../utils/globals.js";
 
 export default class Creature {
 
@@ -36,7 +36,7 @@ export default class Creature {
     }
 
     isHero() {
-        return this === Hero.creature;
+        return this === $hero;
     }
 
     move(direction, position) {

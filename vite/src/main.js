@@ -6,10 +6,11 @@ import Item from "./libs/Item.js";
 import Effect from "./libs/Effect.js";
 import Keyboard from "./libs/Keyboard.js";
 import Mouse from "./libs/Mouse.js";
-import Hero from "./libs/Hero.js";
 import Board from "./libs/Board.js";
 import Renderer from "./libs/Renderer.js";
 import Movement from "./libs/Movement.js";
+import Creature from "./libs/Creature.js";
+import {$hero, setHero} from "./utils/globals.js";
 
 const app = async () => {
 
@@ -22,10 +23,11 @@ const app = async () => {
     async function init() {
         Keyboard.init();
         Mouse.init();
-        Hero.init();
+        setHero(new Creature('Nemnes', {x: 100, y: 100}, {x: 0, y: 0}));
         Movement.init();
         Board.init();
         Renderer.render();
+        Effect.get('energy').run($hero.position);
     }
 
     await load();

@@ -1,9 +1,9 @@
 import {BOARD_HEIGHT, BOARD_WIDTH, TILE_SIZE} from "../config.js";
 import {randomString, roll} from "../utils/common.js";
 import {isSamePosition} from "../utils/position.js";
-import Hero from "./Hero.js";
 import Item from "./Item.js";
 import Creature from "./Creature.js";
+import {$hero} from "../utils/globals.js";
 
 export default class Board {
 
@@ -37,10 +37,10 @@ export default class Board {
     }
 
     static update() {
-        Board.area.fromX = Hero.creature.position.x - Math.floor(Board.width / 2);
-        Board.area.toX = Hero.creature.position.x + Math.floor(Board.width / 2);
-        Board.area.fromY = Hero.creature.position.y - Math.floor(Board.height / 2);
-        Board.area.toY = Hero.creature.position.y + Math.floor(Board.height / 2);
+        Board.area.fromX = $hero.position.x - Math.floor(Board.width / 2);
+        Board.area.toX = $hero.position.x + Math.floor(Board.width / 2);
+        Board.area.fromY = $hero.position.y - Math.floor(Board.height / 2);
+        Board.area.toY = $hero.position.y + Math.floor(Board.height / 2);
 
         for (const [name, creature] of Object.entries(Board.creatures)) {
             if (!Board.isOnArea(creature.position)) {
@@ -100,7 +100,7 @@ export default class Board {
                     stack.push(1)
                 }
 
-                if (!isSamePosition(position, Hero.creature.position)) {
+                if (!isSamePosition(position, $hero.position)) {
                     if (roll(100)) {
                         stack.push(6);
                     } else if (roll(100)) {
