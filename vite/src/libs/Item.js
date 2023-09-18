@@ -9,7 +9,7 @@ export default class Item {
     sprite = null;
     type = null;
     isBlockingCreatures = null;
-    isMoveable = null;
+    isMovable = null;
 
     static async load(url) {
         try {
@@ -39,6 +39,6 @@ export default class Item {
         this.sprite.loop();
         this.type = data.type;
         this.isBlockingCreatures = data.isBlockingCreatures;
-        this.isMoveable = data.isMoveable;
+        this.isMovable = data.isMovable;
     }
 }

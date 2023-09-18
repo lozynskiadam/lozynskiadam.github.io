@@ -5,7 +5,7 @@
     "sprite": "floor-1",
     "type": "ground",
     "isBlockingCreatures": false,
-    "isMoveable": false
+    "isMovable": false
   },
   {
     "id": 2,
@@ -13,7 +13,7 @@
     "sprite": "floor-2",
     "type": "ground",
     "isBlockingCreatures": false,
-    "isMoveable": false
+    "isMovable": false
   },
   {
     "id": 3,
@@ -21,7 +21,7 @@
     "sprite": "floor-3",
     "type": "ground",
     "isBlockingCreatures": false,
-    "isMoveable": false
+    "isMovable": false
   },
   {
     "id": 4,
@@ -29,7 +29,7 @@
     "sprite": "floor-4",
     "type": "ground",
     "isBlockingCreatures": false,
-    "isMoveable": false
+    "isMovable": false
   },
   {
     "id": 5,
@@ -37,7 +37,7 @@
     "sprite": "barrel",
     "type": "object",
     "isBlockingCreatures": true,
-    "isMoveable": false
+    "isMovable": false
   },
   {
     "id": 6,
@@ -45,7 +45,7 @@
     "sprite": "chest",
     "type": "object",
     "isBlockingCreatures": true,
-    "isMoveable": false
+    "isMovable": false
   },
   {
     "id": 7,
@@ -53,7 +53,7 @@
     "sprite": "wall",
     "type": "object",
     "isBlockingCreatures": true,
-    "isMoveable": false
+    "isMovable": false
   },
   {
     "id": 8,
@@ -61,7 +61,7 @@
     "sprite": "ore-vein",
     "type": "object",
     "isBlockingCreatures": true,
-    "isMoveable": false
+    "isMovable": false
   },
   {
     "id": 9,
@@ -69,7 +69,7 @@
     "sprite": "potion",
     "type": "object",
     "isBlockingCreatures": false,
-    "isMoveable": true
+    "isMovable": true
   },
   {
     "id": 10,
@@ -77,6 +77,6 @@
     "sprite": "ore",
     "type": "object",
     "isBlockingCreatures": false,
-    "isMoveable": true
+    "isMovable": true
   }
 ]

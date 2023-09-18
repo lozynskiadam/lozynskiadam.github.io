@@ -6,7 +6,6 @@ import Sprite from "./Sprite.js";
 import Hero from "./Hero.js";
 import Board from "./Board.js";
 import Keyboard from "./Keyboard.js";
-import Movement from "./Movement.js";
 
 export default class Renderer {
 
@@ -86,7 +85,7 @@ export default class Renderer {
             }
         }
         Renderer.renderInfoBox(Renderer.tempCtx);
-        Renderer.renderClickActions(Renderer.tempCtx);
+        Renderer.renderPointerEffects(Renderer.tempCtx);
         Board.ctx.clearRect(0, 0, Board.ctx.canvas.width, Board.ctx.canvas.height);
         Board.ctx.drawImage(canvas, -Hero.creature.offset.x, -Hero.creature.offset.y);
         Renderer.cropEdges(Board.ctx);
@@ -94,26 +93,21 @@ export default class Renderer {
         window.requestAnimationFrame(Renderer.render);
     }
 
-    static renderClickActions(ctx)
-    {
-        if (!Mouse.pointerEffects) {
-            return;
-        }
+    static renderPointerEffects(ctx) {
+        if (!Mouse.pointerEffects) return;
 
-        ctx.drawImage(
-            Mouse.pointerEffects.sprite.getFrame(),
-            Mouse.pointerEffects.position.x + Hero.creature.offset.x - 16,
-            Mouse.pointerEffects.position.y + Hero.creature.offset.y - 16,
-        );
+        const image = Mouse.pointerEffects.sprite.getFrame();
+        const position = Mouse.pointerEffects.position;
+        const offset = Hero.creature.offset;
+        ctx.drawImage(image, position.x + offset.x - (image.width / 2), position.y + offset.y - (image.height / 2));
     }
 
-    static renderInfoBox(ctx)
-    {
+    static renderInfoBox(ctx) {
         if (Keyboard.shift.isPressed) {
 
             const position = {
-                x: Mouse.positionClient.x * TILE_SIZE + ((TILE_SIZE/3)*2),
-                y: Mouse.positionClient.y * TILE_SIZE + ((TILE_SIZE/3)*2)
+                x: Mouse.positionClient.x * TILE_SIZE + ((TILE_SIZE / 3) * 2),
+                y: Mouse.positionClient.y * TILE_SIZE + ((TILE_SIZE / 3) * 2)
             }
 
             for (const [name, creature] of Object.entries(Board.creatures)) {

@@ -32,11 +32,9 @@ export default class Mouse {
 
     static buttons = {
         left: {
-            isBlocked: false,
             isPressed: false,
         },
         right: {
-            isBlocked: false,
             isPressed: false,
         },
     }
@@ -152,11 +150,10 @@ export default class Mouse {
         }
 
         const itemId = Board.getTileTopItem(Mouse.positionServer);
-        if (itemId && Item.get(itemId).isMoveable) {
+        if (itemId && Item.get(itemId).isMovable) {
             Mouse.grabbing.itemId = null;
             Mouse.grabbing.position = {x: null, y: null};
             Mouse.grabbing.initialised = true;
-            return;
         }
     }
 
@@ -165,53 +162,39 @@ export default class Mouse {
             Mouse.onGrabEnd();
         } else {
             const pointerEffectSprite = Sprite.get('effect-energy').clone();
-            pointerEffectSprite.play().then(() => Mouse.pointerEffects = null);
-            Mouse.pointerEffects = {
+            const pointerEffects = {
                 sprite: pointerEffectSprite,
                 position: {...Mouse.positionCanvas},
             }
+            pointerEffectSprite.play().then(() => {
+                if (Mouse.pointerEffects === pointerEffects) {
+                    Mouse.pointerEffects = null
+                }
+            });
+            Mouse.pointerEffects = pointerEffects;
 
             Mouse.grabbing.initialised = false;
             Mouse.grabbing.itemId = null;
             Mouse.grabbing.position = {x: null, y: null};
-            Movement.setTargetPath(Mouse.positionServer);
+            Movement.setPath(Mouse.positionServer, 'walk');
         }
     }
 
     static onRightButtonPress() {
-        const itemId = Board.getTileTopItem(Mouse.positionServer);
-        if (Mouse.buttons.right.isBlocked) return;
+        const position = {...Mouse.positionServer};
+        const itemId = Board.getTileTopItem(position);
         if (!itemId) return;
-        if (!isPositionInRange(Hero.creature.position, Mouse.positionServer)) return;
-
-        if (itemId === 6) {
-            Mouse.buttons.right.isBlocked = true;
-            Effect.get('yellow-sparkles').run(Mouse.positionServer);
-            Board.tiles[Mouse.positionServer.y][Mouse.positionServer.x].pop();
-            Board.tiles[Mouse.positionServer.y][Mouse.positionServer.x].push(9);
-            Mouse.onPositionChange();
-            setTimeout(() => {
-                Mouse.buttons.right.isBlocked = false;
-            }, 600);
-            return;
-        }
-
-        if (itemId === 8) {
-            Mouse.buttons.right.isBlocked = true;
-            Effect.get('ore-hit').run(Mouse.positionServer);
-            Board.tiles[Hero.creature.position.y][Hero.creature.position.x].push(10);
-            setTimeout(() => {
-                Mouse.buttons.right.isBlocked = false;
-            }, 600);
-            return;
-        }
+        if (!isPositionInRange(Hero.creature.position, position)) return;
+        Mouse.use(Mouse.positionServer, itemId);
     }
 
     static onRightButtonRelease()
     {
         const item = Item.get(Board.getTileTopItem(Mouse.positionServer));
         if (item.type === 'object' && !isPositionInRange(Hero.creature.position, Mouse.positionServer)) {
-            Movement.setTargetPath(Mouse.positionServer, true);
+            Movement.setPath(Mouse.positionServer, 'use', {
+                itemId: item.id
+            });
         }
     }
 
@@ -246,5 +229,22 @@ export default class Mouse {
 
         Board.tiles[Mouse.grabbing.position.y][Mouse.grabbing.position.x].pop();
         Board.tiles[Mouse.positionServer.y][Mouse.positionServer.x].push(itemId);
+    }
+
+    static use(position, itemId) {
+        if (Board.getTileTopItem(position) !== itemId) return;
+        if (!isPositionInRange(Hero.creature.position, position)) return;
+
+        if (itemId === 6) {
+            Effect.get('yellow-sparkles').run(position);
+            Board.tiles[position.y][position.x].pop();
+            Board.tiles[position.y][position.x].push(9);
+            Mouse.onPositionChange();
+        }
+
+        if (itemId === 8) {
+            Effect.get('ore-hit').run(position);
+            Board.tiles[position.y][position.x].push(10);
+        }
     }
 }

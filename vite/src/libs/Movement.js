@@ -3,29 +3,30 @@ import Hero from "./Hero.js";
 import Board from "./Board.js";
 import * as EasyStar from "easystarjs";
 import {isSamePosition} from "../utils/position.js";
+import Mouse from "./Mouse.js";
 
 export default class Movement {
 
     static easyStar = null;
 
-    static targetPath = null;
+    static path = null;
 
     static init() {
         Movement.easyStar = new EasyStar.js()
         window.addEventListener("move-north", () => {
-            Movement.clearTargetPath();
+            Movement.clearPath();
             Hero.walk('north')
         });
         window.addEventListener("move-south", () => {
-            Movement.clearTargetPath();
+            Movement.clearPath();
             Hero.walk('south')
         });
         window.addEventListener("move-west", () => {
-            Movement.clearTargetPath();
+            Movement.clearPath();
             Hero.walk('west')
         });
         window.addEventListener("move-east", () => {
-            Movement.clearTargetPath();
+            Movement.clearPath();
             Hero.walk('east')
         });
     }
@@ -61,11 +62,11 @@ export default class Movement {
                 Hero.queuedMove = null;
                 if (Hero.walk(direction)) return;
             }
-            if (Movement.targetPath) {
-                if (isSamePosition(Movement.targetPath.positionTarget, position)) {
-                    Movement.targetPath = null;
+            if (Movement.path) {
+                if (isSamePosition(Movement.path.destination, position)) {
+                    Movement.clearPath();
                 } else {
-                    Movement.makeTargetPathStep();
+                    Movement.makePathStep();
                     return
                 }
             }
@@ -90,10 +91,10 @@ export default class Movement {
 
     static getTargetPosition(creature, direction) {
         const map = {
-            'north': { x: 0, y: -1 },
-            'south': { x: 0, y: 1 },
-            'west': { x: -1, y: 0 },
-            'east': { x: 1, y: 0 }
+            'north': {x: 0, y: -1},
+            'south': {x: 0, y: 1},
+            'west': {x: -1, y: 0},
+            'east': {x: 1, y: 0}
         };
 
         return {
@@ -122,66 +123,61 @@ export default class Movement {
         map[direction]();
     }
 
-    static clearTargetPath() {
-        Movement.targetPath = null;
+    static clearPath() {
+        Movement.path = null;
     }
 
-    static setTargetPath(position, useTarget = false) {
-        Movement.targetPath = {
-            positionTarget: {...position},
-            useTarget: useTarget,
+    static setPath(destination, action, actionData = null) {
+        Movement.path = {
+            destination: {...destination},
+            action: action,
+            actionData: actionData
         }
         if (!Hero.creature.movement.isMoving) {
-            Movement.makeTargetPathStep();
+            Movement.makePathStep();
         }
     }
 
-    static makeTargetPathStep() {
-        if (!Movement.targetPath || isSamePosition(Movement.targetPath.positionTarget, Hero.creature.position)) {
-            Movement.targetPath = null;
+    static makePathStep() {
+        if (!Movement.path || isSamePosition(Movement.path.destination, Hero.creature.position)) {
+            Movement.path = null;
             Hero.creature.sprite.loop('idle-south');
             return;
         }
 
         const grid = [];
         const startPosition = Board.positionServerToClient(Hero.creature.position);
-        const endPosition = Board.positionServerToClient(Movement.targetPath.positionTarget);
+        const endPosition = Board.positionServerToClient(Movement.path.destination);
 
+        // prepare collisions grid
         for (let y = Board.area.fromY; y <= Board.area.toY; y++) {
             const row = [];
             for (let x = Board.area.fromX; x <= Board.area.toX; x++) {
                 const position = {x: x, y: y};
-                let isWalkable = isSamePosition(Movement.targetPath.positionTarget, position) ? true : Board.isWalkable(position);
+                let isWalkable = isSamePosition(Movement.path.destination, position) ? true : Board.isWalkable(position);
                 row.push(Number(isWalkable));
             }
             grid.push(row);
         }
 
+        // find path
         Movement.easyStar.setGrid(grid);
         Movement.easyStar.setAcceptableTiles([1]);
-        Movement.easyStar.findPath(
-            startPosition.x,
-            startPosition.y,
-            endPosition.x,
-            endPosition.y,
-            (path) => {
-                if (path === null) {
-                    console.log("Path was not found.");
-                    return;
-                }
-                if (Movement.targetPath.useTarget && path.length === 2) {
-                    console.log('Using object...');
-                    Movement.targetPath = null;
-                    Hero.creature.sprite.loop('idle-south');
-                    return;
-                }
-                if (!Hero.walk(Movement.getDirection(startPosition, path[1]))) {
-                    Movement.targetPath = null;
-                }
+        Movement.easyStar.findPath(startPosition.x, startPosition.y, endPosition.x, endPosition.y, (path) => {
+            if (path === null) {
+                console.log("Path was not found.");
+                return;
             }
-        );
+            if (Movement.path.action === 'use' && path.length === 2) {
+                Hero.creature.sprite.loop('idle-south');
+                Mouse.use(Movement.path.destination, Movement.path.actionData.itemId);
+                Movement.clearPath();
+                return;
+            }
+            if (!Hero.walk(Movement.getDirection(startPosition, path[1]))) {
+                Movement.clearPath();
+            }
+        });
         Movement.easyStar.calculate();
-
-        return grid;
     }
 }
