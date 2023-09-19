@@ -2,81 +2,101 @@
   {
     "id": 1,
     "name": "floor",
-    "sprite": "floor-1",
     "type": "ground",
+    "sprite": "floor-1",
+    "isUsable": false,
+    "isMovable": false,
     "isBlockingCreatures": false,
-    "isMovable": false
+    "isBlockingItems": false
   },
   {
     "id": 2,
     "name": "floor",
-    "sprite": "floor-2",
     "type": "ground",
+    "sprite": "floor-2",
+    "isUsable": false,
+    "isMovable": false,
     "isBlockingCreatures": false,
-    "isMovable": false
+    "isBlockingItems": false
   },
   {
     "id": 3,
     "name": "floor",
-    "sprite": "floor-3",
     "type": "ground",
+    "sprite": "floor-3",
+    "isUsable": false,
+    "isMovable": false,
     "isBlockingCreatures": false,
-    "isMovable": false
+    "isBlockingItems": false
   },
   {
     "id": 4,
     "name": "floor",
-    "sprite": "floor-4",
     "type": "ground",
+    "sprite": "floor-4",
+    "isUsable": false,
+    "isMovable": false,
     "isBlockingCreatures": false,
-    "isMovable": false
+    "isBlockingItems": false
   },
   {
     "id": 5,
     "name": "barrel",
-    "sprite": "barrel",
     "type": "object",
+    "sprite": "barrel",
+    "isUsable": false,
+    "isMovable": false,
     "isBlockingCreatures": true,
-    "isMovable": false
+    "isBlockingItems": false
   },
   {
     "id": 6,
     "name": "chest",
-    "sprite": "chest",
     "type": "object",
+    "sprite": "chest",
+    "isUsable": true,
+    "isMovable": false,
     "isBlockingCreatures": true,
-    "isMovable": false
+    "isBlockingItems": true
   },
   {
     "id": 7,
     "name": "wall",
-    "sprite": "wall",
     "type": "object",
+    "sprite": "wall",
+    "isUsable": false,
+    "isMovable": false,
     "isBlockingCreatures": true,
-    "isMovable": false
+    "isBlockingItems": true
   },
   {
     "id": 8,
     "name": "ore vein",
-    "sprite": "ore-vein",
     "type": "object",
+    "sprite": "ore-vein",
+    "isUsable": true,
+    "isMovable": false,
     "isBlockingCreatures": true,
-    "isMovable": false
+    "isBlockingItems": true
   },
   {
     "id": 9,
     "name": "potion",
-    "sprite": "potion",
     "type": "object",
+    "sprite": "potion",
+    "isUsable": true,
+    "isMovable": true,
     "isBlockingCreatures": false,
-    "isMovable": true
+    "isBlockingItems": false
   },
   {
     "id": 10,
     "name": "ore",
-    "sprite": "ore",
     "type": "object",
+    "sprite": "ore",
+    "isUsable": false,
+    "isMovable": true,
     "isBlockingCreatures": false,
-    "isMovable": true
+    "isBlockingItems": false
   }
 ]

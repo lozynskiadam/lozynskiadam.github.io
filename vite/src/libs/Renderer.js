@@ -84,7 +84,6 @@ export default class Renderer {
                 y++;
             }
         }
-        Renderer.renderInfoBox(Renderer.tempCtx);
         Renderer.renderPointerEffect(Renderer.tempCtx);
         Board.ctx.clearRect(0, 0, Board.ctx.canvas.width, Board.ctx.canvas.height);
         Board.ctx.drawImage(canvas, -$hero.offset.x, -$hero.offset.y);
@@ -101,52 +100,4 @@ export default class Renderer {
         const offset = $hero.offset;
         ctx.drawImage(image, position.x + offset.x - (image.width / 2), position.y + offset.y - (image.height / 2));
     }
-
-    static renderInfoBox(ctx) {
-        if (Keyboard.shift.isPressed) {
-
-            const position = {
-                x: Mouse.positionClient.x * TILE_SIZE + ((TILE_SIZE / 3) * 2),
-                y: Mouse.positionClient.y * TILE_SIZE + ((TILE_SIZE / 3) * 2)
-            }
-
-            for (const [name, creature] of Object.entries(Board.creatures)) {
-                if (Mouse.positionServer.x === creature.position.x && Mouse.positionServer.y === creature.position.y) {
-                    const width = name.length * 5.5 + 8;
-                    ctx.fillStyle = "#1c3d17";
-                    ctx.fillRect(position.x, position.y, width, 16);
-                    ctx.strokeStyle = "#FFA500";
-                    ctx.strokeRect(position.x, position.y, width, 16);
-
-                    ctx.font = "normal bold 9px monospace";
-                    ctx.strokeStyle = "#000000";
-                    ctx.strokeText(name, position.x + 4, position.y + 11);
-                    ctx.strokeText(name, position.x + 4, position.y + 11);
-                    ctx.fillStyle = "#FFA500";
-                    ctx.fillText(name, position.x + 4, position.y + 11);
-
-                    return;
-                }
-            }
-
-            const itemId = Board.getTileTopItem(Mouse.positionServer);
-            const item = Item.get(itemId);
-            if (item && item.type === 'object') {
-                const width = item.name.length * 5.5 + 8;
-
-                ctx.fillStyle = "#172459";
-                ctx.fillRect(position.x, position.y, width, 16);
-                ctx.strokeStyle = "#FFA500";
-                ctx.strokeRect(position.x, position.y, width, 16);
-
-                ctx.font = "normal bold 9px monospace";
-                ctx.strokeStyle = "#000000";
-                ctx.strokeText(item.name, position.x + 4, position.y + 11);
-                ctx.strokeText(item.name, position.x + 4, position.y + 11);
-                ctx.fillStyle = "#FFA500";
-                ctx.fillText(item.name, position.x + 4, position.y + 11);
-            }
-        }
-    }
-
 }

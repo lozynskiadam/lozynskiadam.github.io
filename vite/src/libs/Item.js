@@ -6,19 +6,19 @@ export default class Item {
 
     id = null;
     name = null;
-    sprite = null;
     type = null;
-    isBlockingCreatures = null;
+    sprite = null;
+    isUsable = null;
     isMovable = null;
+    isBlockingCreatures = null;
+    isBlockingItems = null;
 
     static async load(url) {
         try {
             const response = await fetch(url);
             const json = await response.json();
             return new Promise((resolve) => {
-                Object.values(json).forEach((data) => {
-                    new Item(data.id, data)
-                });
+                Object.values(json).forEach((data) => new Item(data.id, data));
                 resolve();
             });
         } catch (error) {
@@ -35,10 +35,13 @@ export default class Item {
 
         this.id = data.id;
         this.name = data.name;
+        this.type = data.type;
+        this.isUsable = data.isUsable;
+        this.isMovable = data.isMovable;
+        this.isBlockingCreatures = data.isBlockingCreatures;
+        this.isBlockingItems = data.isBlockingItems;
+
         this.sprite = Sprite.get(data.sprite);
         this.sprite.loop();
-        this.type = data.type;
-        this.isBlockingCreatures = data.isBlockingCreatures;
-        this.isMovable = data.isMovable;
     }
 }

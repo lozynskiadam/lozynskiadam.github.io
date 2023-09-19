@@ -10,15 +10,11 @@ export default class Board {
     static ctx = null;
     static width = null;
     static height = null;
+    static firstTilePosition = {};
+    static lastTilePosition = {};
     static tiles = {};
     static effects = {};
     static creatures = {};
-    static area = {
-        fromX: null,
-        fromY: null,
-        toX: null,
-        toY: null,
-    }
 
     static init() {
         const canvas = document.createElement('canvas');
@@ -37,10 +33,14 @@ export default class Board {
     }
 
     static update() {
-        Board.area.fromX = $hero.position.x - Math.floor(Board.width / 2);
-        Board.area.toX = $hero.position.x + Math.floor(Board.width / 2);
-        Board.area.fromY = $hero.position.y - Math.floor(Board.height / 2);
-        Board.area.toY = $hero.position.y + Math.floor(Board.height / 2);
+        Board.firstTilePosition = {
+            x: $hero.position.x - Math.floor(Board.width / 2),
+            y: $hero.position.y - Math.floor(Board.height / 2),
+        };
+        Board.lastTilePosition = {
+            x: $hero.position.x + Math.floor(Board.width / 2),
+            y: $hero.position.y + Math.floor(Board.height / 2),
+        };
 
         for (const [name, creature] of Object.entries(Board.creatures)) {
             if (!Board.isOnArea(creature.position)) {
@@ -50,8 +50,8 @@ export default class Board {
 
         const missingTilesPositions = [];
         const _tiles = {};
-        for (let y = Board.area.fromY; y <= Board.area.toY; y++) {
-            for (let x = Board.area.fromX; x <= Board.area.toX; x++) {
+        for (let y = Board.firstTilePosition.y; y <= Board.lastTilePosition.y; y++) {
+            for (let x = Board.firstTilePosition.x; x <= Board.lastTilePosition.x; x++) {
                 _tiles[y] = _tiles[y] || {};
                 if ((Board.tiles[y]) && (Board.tiles[y][x])) {
                     _tiles[y][x] = Board.tiles[y][x];
@@ -76,7 +76,7 @@ export default class Board {
     static getTileTopItem(position) {
         const stack = Board.getTileStack(position);
 
-        return stack[stack.length-1] ?? null;
+        return stack[stack.length - 1] ?? null;
     }
 
     static updateTile(position, stack) {
@@ -105,6 +105,10 @@ export default class Board {
                         stack.push(6);
                     } else if (roll(100)) {
                         stack.push(8);
+                    } else if (roll(100)) {
+                        stack.push(5);
+                    } else if (roll(100)) {
+                        stack.push(7);
                     }
                 }
 
@@ -131,20 +135,20 @@ export default class Board {
     }
 
     static isOnArea(position) {
-        return (position.x >= Board.area.fromX && position.x <= Board.area.toX) && (position.y >= Board.area.fromY && position.y <= Board.area.toY);
+        return (position.x >= Board.firstTilePosition.x && position.x <= Board.lastTilePosition.x) && (position.y >= Board.firstTilePosition.y && position.y <= Board.lastTilePosition.y);
     }
 
     static positionClientToServer(position) {
         return {
-            x: position.x + Board.area.fromX,
-            y: position.y + Board.area.fromY,
+            x: position.x + Board.firstTilePosition.x,
+            y: position.y + Board.firstTilePosition.y,
         }
     }
 
     static positionServerToClient(position) {
         return {
-            x: position.x - Board.area.fromX,
-            y: position.y - Board.area.fromY,
+            x: position.x - Board.firstTilePosition.x,
+            y: position.y - Board.firstTilePosition.y,
         }
     }
 

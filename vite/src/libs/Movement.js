@@ -172,9 +172,9 @@ export default class Movement {
         const endPosition = Board.positionServerToClient(Movement.path.destination);
 
         // prepare collisions grid
-        for (let y = Board.area.fromY; y <= Board.area.toY; y++) {
+        for (let y = Board.firstTilePosition.y; y <= Board.lastTilePosition.y; y++) {
             const row = [];
-            for (let x = Board.area.fromX; x <= Board.area.toX; x++) {
+            for (let x = Board.firstTilePosition.x; x <= Board.lastTilePosition.x; x++) {
                 const position = {x: x, y: y};
                 let isWalkable = isSamePosition(Movement.path.destination, position) ? true : Board.isWalkable(position);
                 row.push(Number(isWalkable));

@@ -186,7 +186,7 @@ export default class Mouse {
         if (!itemId) return;
         if (!isPositionInRange($hero.position, position)) return;
 
-        if (Item.get(itemId).type === 'object') {
+        if (Item.get(itemId).isUsable) {
             const pointerEffectSprite = Sprite.get('pointer-cross-red').clone();
             const pointerEffect = {
                 sprite: pointerEffectSprite,
@@ -205,7 +205,7 @@ export default class Mouse {
     static onRightButtonRelease()
     {
         const item = Item.get(Board.getTileTopItem(Mouse.positionServer));
-        if (item.type === 'object' && !isPositionInRange($hero.position, Mouse.positionServer)) {
+        if (item.isUsable && !isPositionInRange($hero.position, Mouse.positionServer)) {
             const pointerEffectSprite = Sprite.get('pointer-cross-red').clone();
             const pointerEffect = {
                 sprite: pointerEffectSprite,
@@ -274,7 +274,7 @@ export default class Mouse {
             })
             return;
         }
-        if (Board.getTileStack(positionTo).find((itemId) => Item.get(itemId).isBlockingCreatures)) {
+        if (Board.getTileStack(positionTo).find((itemId) => Item.get(itemId).isBlockingItems)) {
             return;
         }
 
