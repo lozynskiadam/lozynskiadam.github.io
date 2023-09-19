@@ -19,40 +19,42 @@ export default class Renderer {
         }
 
         if (layer === 'objects') {
+            let altitude = 0;
 
             tile.forEach((itemId) => {
                 const item = Item.get(itemId);
                 if (item.type === 'object') {
-                    Renderer.drawSprite(positionClient, item.sprite)
+                    Renderer.drawSprite(positionClient, item.sprite, altitude);
                 }
+                altitude += item.altitude;
             });
 
             if (Keyboard.shift.isPressed && isSamePosition(positionClient, Mouse.positionClient)) {
-                Renderer.drawSprite(positionClient, Sprite.get('cursor'))
+                Renderer.drawSprite(positionClient, Sprite.get('cursor'));
             }
 
             Object.values(Board.creatures).forEach((creature) => {
                 if (isSamePosition(positionServer, creature.position)) {
-                    Renderer.drawCreature(positionClient, creature)
+                    Renderer.drawCreature(positionClient, creature, altitude);
                 }
             });
 
             Board.getVisibleEffectsSprites(positionServer).forEach((sprite) => {
-                Renderer.drawSprite(positionClient, sprite)
+                Renderer.drawSprite(positionClient, sprite, altitude);
             });
         }
     }
 
-    static drawSprite(position, sprite) {
+    static drawSprite(position, sprite, altitude = 0) {
         const image = sprite.getFrame();
-        const top = (position.y * TILE_SIZE) + (TILE_SIZE - image.height);
+        const top = (position.y * TILE_SIZE) + (TILE_SIZE - image.height) - altitude;
         const left = (position.x * TILE_SIZE) + (Math.ceil(TILE_SIZE / 2) - Math.ceil(image.width / 2));
         Renderer.tempCtx.drawImage(image, left, top);
     }
 
-    static drawCreature(position, creature) {
+    static drawCreature(position, creature, altitude = 0) {
         const image = creature.sprite.getFrame();
-        const top = (position.y * TILE_SIZE) + (TILE_SIZE - image.height) + creature.offset.y;
+        const top = (position.y * TILE_SIZE) + (TILE_SIZE - image.height) + creature.offset.y - altitude;
         const left = (position.x * TILE_SIZE) + (Math.ceil(TILE_SIZE / 2) - Math.ceil(image.width / 2)) + creature.offset.x;
         Renderer.tempCtx.drawImage(image, left, top);
     }

@@ -7,6 +7,7 @@ export default class Item {
     id = null;
     name = null;
     type = null;
+    altitude = null;
     sprite = null;
     isUsable = null;
     isMovable = null;
@@ -36,6 +37,7 @@ export default class Item {
         this.id = data.id;
         this.name = data.name;
         this.type = data.type;
+        this.altitude = data.altitude;
         this.isUsable = data.isUsable;
         this.isMovable = data.isMovable;
         this.isBlockingCreatures = data.isBlockingCreatures;
