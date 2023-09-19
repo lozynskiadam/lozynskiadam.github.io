@@ -54,7 +54,7 @@ export default class Renderer {
 
     static drawCreature(position, creature, altitude = 0) {
         const image = creature.sprite.getFrame();
-        const top = (position.y * TILE_SIZE) + (TILE_SIZE - image.height) + creature.offset.y - altitude;
+        const top = (position.y * TILE_SIZE) + (TILE_SIZE - image.height) - Math.ceil(TILE_SIZE / 8) + creature.offset.y - altitude;
         const left = (position.x * TILE_SIZE) + (Math.ceil(TILE_SIZE / 2) - Math.ceil(image.width / 2)) + creature.offset.x;
         Renderer.tempCtx.drawImage(image, left, top);
     }
