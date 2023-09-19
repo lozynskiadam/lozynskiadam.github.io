@@ -48,7 +48,7 @@
     "name": "barrel",
     "type": "object",
     "sprite": "barrel",
-    "altitude": 18,
+    "altitude": 16,
     "isUsable": false,
     "isMovable": true,
     "isBlockingCreatures": false,
