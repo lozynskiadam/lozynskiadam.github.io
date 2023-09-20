@@ -11,6 +11,7 @@ import Renderer from "./libs/Renderer.js";
 import Movement from "./libs/Movement.js";
 import Creature from "./libs/Creature.js";
 import {$hero, setHero} from "./utils/globals.js";
+import Connector from "./libs/Connector.js";
 
 const app = async () => {
 
@@ -18,12 +19,16 @@ const app = async () => {
         await Sprite.load(SPRITES_PATH);
         await Item.load(ITEMS_PATH);
         await Effect.load(EFFECTS_PATH);
+
+        // await Connector.connect().catch((error) => {
+        //     console.log(error);
+        // });
     }
 
-    async function init() {
+    async function enter(hero) {
+        setHero(hero);
         Keyboard.init();
         Mouse.init();
-        setHero(new Creature('Nemnes', {x: 100, y: 100}, {x: 0, y: 0}));
         Movement.init();
         Board.init();
         Renderer.render();
@@ -31,7 +36,7 @@ const app = async () => {
     }
 
     await load();
-    await init();
+    await enter(new Creature('Nemnes', {x: 100, y: 100}, {x: 0, y: 0}));
 }
 
 app();
