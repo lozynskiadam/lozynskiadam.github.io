@@ -1,11 +1,12 @@
 import {TILE_SIZE} from "../config.js";
 import {isPositionInRange, isSamePosition} from "../utils/position.js";
+import Board from "./Board.js";
 import Effect from "./Effect.js";
 import Item from "./Item.js";
 import Keyboard from "./Keyboard.js";
 import Movement from "./Movement.js";
 import Sprite from "./Sprite.js";
-import {$board, $hero} from "../utils/globals.js";
+import {$hero} from "../utils/globals.js";
 
 export default class Mouse {
 
@@ -85,7 +86,7 @@ export default class Mouse {
     }
 
     static recalcMousePosition(e) {
-        const rect = $board.ctx.canvas.getBoundingClientRect();
+        const rect = Board.ctx.canvas.getBoundingClientRect();
         const old = {
             positionWindow: {...Mouse.positionWindow},
             positionClient: {...Mouse.positionClient},
@@ -98,8 +99,8 @@ export default class Mouse {
         };
 
         Mouse.positionCanvas = {
-            x: ((e.clientX - rect.left) / (rect.right - rect.left) * $board.ctx.canvas.width),
-            y: ((e.clientY - rect.top) / (rect.bottom - rect.top) * $board.ctx.canvas.height),
+            x: ((e.clientX - rect.left) / (rect.right - rect.left) * Board.ctx.canvas.width),
+            y: ((e.clientY - rect.top) / (rect.bottom - rect.top) * Board.ctx.canvas.height),
         };
 
         Mouse.positionClient = {
@@ -107,7 +108,7 @@ export default class Mouse {
             y: Math.floor((Mouse.positionCanvas.y + $hero.offset.y) / TILE_SIZE),
         };
 
-        Mouse.positionServer = $board.positionClientToServer(Mouse.positionClient);
+        Mouse.positionServer = Board.positionClientToServer(Mouse.positionClient);
 
         if (!isSamePosition(Mouse.positionClient, old.positionClient)) {
             Mouse.onPositionChange();
@@ -122,24 +123,24 @@ export default class Mouse {
             return;
         }
         if (Keyboard.shift.isPressed) {
-            $board.ctx.canvas.setAttribute('cursor', 'eye');
+            Board.ctx.canvas.setAttribute('cursor', 'eye');
             return;
         }
 
-        Mouse.positionServer = $board.positionClientToServer(Mouse.positionClient);
+        Mouse.positionServer = Board.positionClientToServer(Mouse.positionClient);
 
-        const itemId = $board.getTileTopItem(Mouse.positionServer);
+        const itemId = Board.getTileTopItem(Mouse.positionServer);
         if (!itemId) {
-            $board.ctx.canvas.removeAttribute('cursor');
+            Board.ctx.canvas.removeAttribute('cursor');
             return;
         }
 
         if (itemId === 6) {
-            $board.ctx.canvas.setAttribute('cursor', 'chest');
+            Board.ctx.canvas.setAttribute('cursor', 'chest');
         } else if (itemId === 8) {
-            $board.ctx.canvas.setAttribute('cursor', 'pick');
+            Board.ctx.canvas.setAttribute('cursor', 'pick');
         } else {
-            $board.ctx.canvas.removeAttribute('cursor');
+            Board.ctx.canvas.removeAttribute('cursor');
         }
     }
 
@@ -148,7 +149,7 @@ export default class Mouse {
             return;
         }
 
-        const itemId = $board.getTileTopItem(Mouse.positionServer);
+        const itemId = Board.getTileTopItem(Mouse.positionServer);
         if (itemId && Item.get(itemId).isMovable) {
             Mouse.grabbing.itemId = null;
             Mouse.grabbing.position = {x: null, y: null};
@@ -181,7 +182,7 @@ export default class Mouse {
 
     static onRightButtonPress() {
         const position = {...Mouse.positionServer};
-        const itemId = $board.getTileTopItem(position);
+        const itemId = Board.getTileTopItem(position);
         if (!itemId) return;
         if (!isPositionInRange($hero.position, position)) return;
 
@@ -203,7 +204,7 @@ export default class Mouse {
 
     static onRightButtonRelease()
     {
-        const item = Item.get($board.getTileTopItem(Mouse.positionServer));
+        const item = Item.get(Board.getTileTopItem(Mouse.positionServer));
         if (item.isUsable && !isPositionInRange($hero.position, Mouse.positionServer)) {
             const pointerEffectSprite = Sprite.get('pointer-cross-red').clone();
             const pointerEffect = {
@@ -223,19 +224,19 @@ export default class Mouse {
     }
 
     static use(position, itemId) {
-        if ($board.getTileTopItem(position) !== itemId) return;
+        if (Board.getTileTopItem(position) !== itemId) return;
         if (!isPositionInRange($hero.position, position)) return;
 
         if (itemId === 6) {
             Effect.get('ore-hit').run(position);
-            $board.tiles[position.y][position.x].pop();
-            $board.tiles[position.y][position.x].push(9);
+            Board.tiles[position.y][position.x].pop();
+            Board.tiles[position.y][position.x].push(9);
             Mouse.onPositionChange();
         }
 
         if (itemId === 8) {
             Effect.get('ore-hit').run(position);
-            $board.tiles[position.y][position.x].push(10);
+            Board.tiles[position.y][position.x].push(10);
         }
 
         if (itemId === 9) {
@@ -244,9 +245,9 @@ export default class Mouse {
     }
 
     static grabItemFrom(position) {
-        Mouse.grabbing.itemId = $board.getTileTopItem(position);
+        Mouse.grabbing.itemId = Board.getTileTopItem(position);
         Mouse.grabbing.position = position;
-        $board.ctx.canvas.setAttribute('cursor', 'crosshair');
+        Board.ctx.canvas.setAttribute('cursor', 'crosshair');
     }
 
     static releaseItemOn(position) {
@@ -262,7 +263,7 @@ export default class Mouse {
         if (isSamePosition(positionFrom, Mouse.positionServer)) {
             return;
         }
-        if (itemId !== $board.getTileTopItem(positionFrom)) {
+        if (itemId !== Board.getTileTopItem(positionFrom)) {
             return;
         }
         if (!isPositionInRange($hero.position, positionFrom)) {
@@ -273,11 +274,11 @@ export default class Mouse {
             })
             return;
         }
-        if ($board.getTileStack(positionTo).find((itemId) => Item.get(itemId).isBlockingItems)) {
+        if (Board.getTileStack(positionTo).find((itemId) => Item.get(itemId).isBlockingItems)) {
             return;
         }
 
-        $board.tiles[positionFrom.y][positionFrom.x].pop();
-        $board.tiles[positionTo.y][positionTo.x].push(itemId);
+        Board.tiles[positionFrom.y][positionFrom.x].pop();
+        Board.tiles[positionTo.y][positionTo.x].push(itemId);
     }
 }

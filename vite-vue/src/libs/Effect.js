@@ -1,5 +1,6 @@
 import Sprite from "./Sprite.js";
-import {$board} from "../utils/globals.js";
+import Board from "./Board.js";
+import {EFFECTS_PATH} from "../config.js";
 
 export default class Effect {
 
@@ -9,9 +10,9 @@ export default class Effect {
     #id = null;
     #sprite = null;
 
-    static async load(url) {
+    static async load() {
         try {
-            const response = await fetch(url);
+            const response = await fetch(EFFECTS_PATH);
             const json = await response.json();
             return new Promise((resolve) => {
                 Object.values(json).forEach((data) => {
@@ -36,18 +37,18 @@ export default class Effect {
     }
 
     run(position) {
-        if (!$board.effects[position.y]) {
-            $board.effects[position.y] = {};
+        if (!Board.effects[position.y]) {
+            Board.effects[position.y] = {};
         }
-        if (!$board.effects[position.y][position.x]) {
-            $board.effects[position.y][position.x] = {};
+        if (!Board.effects[position.y][position.x]) {
+            Board.effects[position.y][position.x] = {};
         }
 
         const uuid = ++Effect.#lastUID;
         const sprite = this.#sprite.clone();
-        $board.effects[position.y][position.x][uuid] = sprite;
+        Board.effects[position.y][position.x][uuid] = sprite;
         sprite.play().then(() => {
-            delete $board.effects[position.y][position.x][uuid];
+            delete Board.effects[position.y][position.x][uuid];
         });
     }
 }

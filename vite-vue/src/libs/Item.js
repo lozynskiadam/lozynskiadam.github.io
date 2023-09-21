@@ -1,4 +1,5 @@
 import Sprite from "./Sprite.js";
+import {ITEMS_PATH} from "../config.js";
 
 export default class Item {
 
@@ -14,9 +15,9 @@ export default class Item {
     isBlockingCreatures = null;
     isBlockingItems = null;
 
-    static async load(url) {
+    static async load() {
         try {
-            const response = await fetch(url);
+            const response = await fetch(ITEMS_PATH);
             const json = await response.json();
             return new Promise((resolve) => {
                 Object.values(json).forEach((data) => new Item(data.id, data));
