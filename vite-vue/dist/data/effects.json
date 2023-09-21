@@ -1,0 +1,14 @@
+[
+    {
+        "id": "energy",
+        "sprite": "effect-energy"
+    },
+    {
+        "id": "ore-hit",
+        "sprite": "effect-ore-hit"
+    },
+    {
+        "id": "yellow-sparkles",
+        "sprite": "effect-yellow-sparkles"
+    }
+]
