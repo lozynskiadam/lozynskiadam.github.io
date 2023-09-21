@@ -1,9 +1,8 @@
 import {TILE_SIZE} from "../config.js";
-import Board from "./Board.js";
 import * as EasyStar from "easystarjs";
 import {isPositionInRange, isSamePosition} from "../utils/position.js";
 import Mouse from "./Mouse.js";
-import {$hero} from "../utils/globals.js";
+import {$board, $hero} from "../utils/globals.js";
 
 export default class Movement {
 
@@ -43,7 +42,7 @@ export default class Movement {
         }
 
         const targetPosition = Movement.getTargetPosition($hero, direction);
-        if (!Board.isWalkable(targetPosition)) {
+        if (!$board.isWalkable(targetPosition)) {
             $hero.sprite.loop('idle-' + direction);
             return false;
         }
@@ -168,15 +167,15 @@ export default class Movement {
         }
 
         const grid = [];
-        const startPosition = Board.positionServerToClient($hero.position);
-        const endPosition = Board.positionServerToClient(Movement.path.destination);
+        const startPosition = $board.positionServerToClient($hero.position);
+        const endPosition = $board.positionServerToClient(Movement.path.destination);
 
         // prepare collisions grid
-        for (let y = Board.firstTilePosition.y; y <= Board.lastTilePosition.y; y++) {
+        for (let y = $board.firstTilePosition.y; y <= $board.lastTilePosition.y; y++) {
             const row = [];
-            for (let x = Board.firstTilePosition.x; x <= Board.lastTilePosition.x; x++) {
+            for (let x = $board.firstTilePosition.x; x <= $board.lastTilePosition.x; x++) {
                 const position = {x: x, y: y};
-                let isWalkable = isSamePosition(Movement.path.destination, position) ? true : Board.isWalkable(position);
+                let isWalkable = isSamePosition(Movement.path.destination, position) ? true : $board.isWalkable(position);
                 row.push(Number(isWalkable));
             }
             grid.push(row);
@@ -198,7 +197,7 @@ export default class Movement {
             }
             if (Movement.path.action === 'move' && (path.length === 2 || isPositionInRange($hero.position, Movement.path.destination))) {
                 $hero.sprite.loop('idle-south');
-                if (Movement.path.actionData.itemId === Board.getTileTopItem(Movement.path.actionData.positionFrom)) {
+                if (Movement.path.actionData.itemId === $board.getTileTopItem(Movement.path.actionData.positionFrom)) {
                     Mouse.grabItemFrom(Movement.path.actionData.positionFrom);
                     Mouse.releaseItemOn(Movement.path.actionData.positionTo);
                 }

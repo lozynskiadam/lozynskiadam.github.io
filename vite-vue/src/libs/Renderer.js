@@ -3,9 +3,8 @@ import {isSamePosition} from "../utils/position.js";
 import Item from "./Item.js";
 import Mouse from "./Mouse.js";
 import Sprite from "./Sprite.js";
-import Board from "./Board.js";
 import Keyboard from "./Keyboard.js";
-import {$hero} from "../utils/globals.js";
+import {$board, $hero} from "../utils/globals.js";
 
 export default class Renderer {
 
@@ -33,13 +32,13 @@ export default class Renderer {
                 Renderer.drawSprite(positionClient, Sprite.get('cursor'));
             }
 
-            Object.values(Board.creatures).forEach((creature) => {
+            Object.values($board.creatures).forEach((creature) => {
                 if (isSamePosition(positionServer, creature.position)) {
                     Renderer.drawCreature(positionClient, creature, altitude);
                 }
             });
 
-            Board.getVisibleEffectsSprites(positionServer).forEach((sprite) => {
+            $board.getVisibleEffectsSprites(positionServer).forEach((sprite) => {
                 Renderer.drawSprite(positionClient, sprite, altitude);
             });
         }
@@ -68,14 +67,14 @@ export default class Renderer {
 
     static render() {
         const canvas = document.createElement('canvas');
-        canvas.width = Board.ctx.canvas.width;
-        canvas.height = Board.ctx.canvas.height;
+        canvas.width = $board.ctx.canvas.width;
+        canvas.height = $board.ctx.canvas.height;
         Renderer.tempCtx = canvas.getContext('2d');
         Renderer.tempCtx.fillStyle = '#25131a';
         Renderer.tempCtx.fillRect(0, 0, Renderer.tempCtx.canvas.width, Renderer.tempCtx.canvas.height);
         for (let layer of ['ground', 'objects']) {
             let y = 0;
-            for (let [sy, row] of Object.entries(Board.tiles)) {
+            for (let [sy, row] of Object.entries($board.tiles)) {
                 let x = 0;
                 for (let [sx, tile] of Object.entries(row)) {
                     const positionClient = {x: x, y: y};
@@ -87,9 +86,9 @@ export default class Renderer {
             }
         }
         Renderer.renderPointerEffect(Renderer.tempCtx);
-        Board.ctx.clearRect(0, 0, Board.ctx.canvas.width, Board.ctx.canvas.height);
-        Board.ctx.drawImage(canvas, -$hero.offset.x, -$hero.offset.y);
-        Renderer.cropEdges(Board.ctx);
+        $board.ctx.clearRect(0, 0, $board.ctx.canvas.width, $board.ctx.canvas.height);
+        $board.ctx.drawImage(canvas, -$hero.offset.x, -$hero.offset.y);
+        Renderer.cropEdges($board.ctx);
 
         window.requestAnimationFrame(Renderer.render);
     }

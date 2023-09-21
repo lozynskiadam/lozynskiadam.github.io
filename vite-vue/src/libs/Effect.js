@@ -1,5 +1,5 @@
 import Sprite from "./Sprite.js";
-import Board from "./Board.js";
+import {$board} from "../utils/globals.js";
 
 export default class Effect {
 
@@ -36,18 +36,18 @@ export default class Effect {
     }
 
     run(position) {
-        if (!Board.effects[position.y]) {
-            Board.effects[position.y] = {};
+        if (!$board.effects[position.y]) {
+            $board.effects[position.y] = {};
         }
-        if (!Board.effects[position.y][position.x]) {
-            Board.effects[position.y][position.x] = {};
+        if (!$board.effects[position.y][position.x]) {
+            $board.effects[position.y][position.x] = {};
         }
 
         const uuid = ++Effect.#lastUID;
         const sprite = this.#sprite.clone();
-        Board.effects[position.y][position.x][uuid] = sprite;
+        $board.effects[position.y][position.x][uuid] = sprite;
         sprite.play().then(() => {
-            delete Board.effects[position.y][position.x][uuid];
+            delete $board.effects[position.y][position.x][uuid];
         });
     }
 }

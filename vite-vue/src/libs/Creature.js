@@ -1,8 +1,7 @@
-import Board from "./Board.js";
 import Sprite from "./Sprite.js";
 import Movement from "./Movement.js";
 import {randomColor} from "../utils/common.js";
-import {$hero} from "../utils/globals.js";
+import {$board, $hero} from "../utils/globals.js";
 
 export default class Creature {
 
@@ -27,7 +26,7 @@ export default class Creature {
     };
 
     constructor(name, position, offset) {
-        Board.creatures[name] = this;
+        $board.creatures[name] = this;
         this.position = position;
         this.offset = offset;
         this.sprite = Sprite.get('outfit').clone()
