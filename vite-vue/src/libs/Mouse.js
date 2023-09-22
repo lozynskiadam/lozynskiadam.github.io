@@ -6,7 +6,7 @@ import Item from "./Item.js";
 import Keyboard from "./Keyboard.js";
 import Movement from "./Movement.js";
 import Sprite from "./Sprite.js";
-import {$hero} from "../utils/globals.js";
+import {$app, $hero} from "../utils/globals.js";
 
 export default class Mouse {
 
@@ -62,11 +62,11 @@ export default class Mouse {
             Mouse.recalcMousePosition(e);
             if (e.which === 1 || e.button === 0) {
                 Mouse.buttons.left.isPressed = true;
-                Mouse.onLeftButtonPress();
+                Mouse.onLeftButtonPress(e);
             }
             if (e.which === 3 || e.button === 2) {
                 Mouse.buttons.right.isPressed = true;
-                Mouse.onRightButtonPress();
+                Mouse.onRightButtonPress(e);
             }
         }, false);
 
@@ -74,11 +74,11 @@ export default class Mouse {
             Mouse.recalcMousePosition(e);
             if (e.which === 1 || e.button === 0) {
                 Mouse.buttons.left.isPressed = false;
-                Mouse.onLeftButtonRelease();
+                Mouse.onLeftButtonRelease(e);
             }
             if (e.which === 3 || e.button === 2) {
                 Mouse.buttons.right.isPressed = false;
-                Mouse.onRightButtonRelease();
+                Mouse.onRightButtonRelease(e);
             }
         }, false);
 
@@ -123,7 +123,7 @@ export default class Mouse {
             return;
         }
         if (Keyboard.shift.isPressed) {
-            Board.ctx.canvas.setAttribute('cursor', 'eye');
+            $app.setAttribute('cursor', 'eye');
             return;
         }
 
@@ -131,16 +131,16 @@ export default class Mouse {
 
         const itemId = Board.getTileTopItem(Mouse.positionServer);
         if (!itemId) {
-            Board.ctx.canvas.removeAttribute('cursor');
+            $app.removeAttribute('cursor');
             return;
         }
 
         if (itemId === 6) {
-            Board.ctx.canvas.setAttribute('cursor', 'chest');
+            $app.setAttribute('cursor', 'chest');
         } else if (itemId === 8) {
-            Board.ctx.canvas.setAttribute('cursor', 'pick');
+            $app.setAttribute('cursor', 'pick');
         } else {
-            Board.ctx.canvas.removeAttribute('cursor');
+            $app.removeAttribute('cursor');
         }
     }
 
@@ -157,9 +157,28 @@ export default class Mouse {
         }
     }
 
-    static onLeftButtonRelease() {
+    static onLeftButtonRelease(e) {
         if (Mouse.grabbing.initialised && Mouse.grabbing.itemId) {
-            Mouse.releaseItemOn({...Mouse.positionServer});
+            if (e.target.id === "board") {
+                Mouse.releaseItemOn({...Mouse.positionServer});
+            } else if (e.target.classList && e.target.classList.contains('slot')) {
+                window.dispatchEvent(new CustomEvent('update-inventory-item', {
+                    detail: {
+                        slot: e.target.getAttribute('data-slot-index'),
+                        item: Item.get(Mouse.grabbing.itemId)
+                    }
+                }));
+
+                Mouse.grabbing.initialised = false;
+                Mouse.grabbing.itemId = null;
+                Mouse.grabbing.position = {x: null, y: null};
+                Mouse.onPositionChange();
+            } else {
+                Mouse.grabbing.initialised = false;
+                Mouse.grabbing.itemId = null;
+                Mouse.grabbing.position = {x: null, y: null};
+                Mouse.onPositionChange();
+            }
         } else {
             const pointerEffectSprite = Sprite.get('pointer-cross-yellow').clone();
             const pointerEffect = {
@@ -247,7 +266,7 @@ export default class Mouse {
     static grabItemFrom(position) {
         Mouse.grabbing.itemId = Board.getTileTopItem(position);
         Mouse.grabbing.position = position;
-        Board.ctx.canvas.setAttribute('cursor', 'crosshair');
+        $app.setAttribute('cursor', 'crosshair');
     }
 
     static releaseItemOn(position) {

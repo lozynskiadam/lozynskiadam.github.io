@@ -1,9 +1,9 @@
 <template>
-
+  <Inventory v-if="loaded"/>
 </template>
 
 <script>
-import {$hero, setHero} from "./utils/globals.js";
+import {$hero, globals} from "./utils/globals.js";
 import Sprite from "./libs/Sprite.js";
 import Item from "./libs/Item.js";
 import Effect from "./libs/Effect.js";
@@ -13,18 +13,26 @@ import Movement from "./libs/Movement.js";
 import Renderer from "./libs/Renderer.js";
 import Creature from "./libs/Creature.js";
 import Board from "./libs/Board.js";
+import Inventory from "./components/Inventory.vue";
 
 export default {
+  components: {Inventory},
+  data() {
+    return {
+      loaded: false
+    }
+  },
   methods: {
 
     async load() {
       await Sprite.load();
       await Item.load();
       await Effect.load();
+      this.loaded = true;
     },
 
     async enter(hero) {
-      setHero(hero);
+      globals().setHero(hero);
       Keyboard.init();
       Mouse.init();
       Movement.init();
