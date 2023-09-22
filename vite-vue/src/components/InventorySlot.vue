@@ -27,22 +27,20 @@ export default {
 </script>
 
 <style>
-#app[cursor="crosshair"] {
-  .slot:hover {
-    border: 2px solid #ffffff;
-  }
-}
-
 .slot {
   width: 50px;
   height: 50px;
   background: #555;
   border: 2px solid #222;
   margin: 2px;
+}
 
-  canvas {
-    width: 100%;
-    pointer-events: none;
-  }
+#app[cursor="crosshair"] .slot:hover {
+  border: 2px solid #ffffff;
+}
+
+.slot canvas {
+  width: 100%;
+  pointer-events: none;
 }
 </style>

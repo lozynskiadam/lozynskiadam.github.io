@@ -41,10 +41,10 @@ export default {
   background: #000;
   z-index: 5;
   color: #ffffff;
+}
 
-  .container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, 50px);
-  }
+#inventory .container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 50px);
 }
 </style>
