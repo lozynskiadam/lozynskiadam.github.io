@@ -16,7 +16,18 @@ export default {
   components: {InventorySlot},
   data() {
     return {
-      slots: [null, null, null, null]
+      slots: [
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+      ]
     }
   },
   methods: {
@@ -35,16 +46,19 @@ export default {
 <style>
 #inventory {
   position: absolute;
-  width: 204px;
   right: 50px;
   top: 50px;
-  background: #000;
+  background: #161c23;
   z-index: 5;
   color: #ffffff;
+  padding: 12px;
+  border: 3px ridge #111518;
 }
 
 #inventory .container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, 50px);
+  grid-template-columns: repeat(8, 1fr);
+  grid-column-gap: 4px;
+  grid-row-gap: 4px;
 }
 </style>

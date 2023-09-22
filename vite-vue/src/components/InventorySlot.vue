@@ -28,11 +28,11 @@ export default {
 
 <style>
 .slot {
-  width: 50px;
-  height: 50px;
-  background: #555;
-  border: 2px solid #222;
-  margin: 2px;
+  width: 39px;
+  height: 39px;
+  background: #111518;
+  border: 2px ridge #242732;
+  border-radius: 2px;
 }
 
 #app[cursor="crosshair"] .slot:hover {
