@@ -35,4 +35,5 @@ export default class Connector {
     static emit(event, params) {
         Connector.websocket.send(JSON.stringify({event: event, params: params}));
     }
+
 }

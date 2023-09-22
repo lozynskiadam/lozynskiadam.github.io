@@ -14,6 +14,7 @@ import Renderer from "./libs/Renderer.js";
 import Creature from "./libs/Creature.js";
 import Board from "./libs/Board.js";
 import Inventory from "./components/Inventory.vue";
+import Connector from "./libs/Connector.js";
 
 export default {
   components: {Inventory},
@@ -28,6 +29,8 @@ export default {
       await Sprite.load();
       await Item.load();
       await Effect.load();
+      Connector.connect('');
+
       this.loaded = true;
     },
 
@@ -44,7 +47,7 @@ export default {
   },
   async mounted() {
     await this.load();
-    await this.enter(new Creature('Nemnes', {x: 100, y: 100}, {x: 0, y: 0}));
+    await this.enter(new Creature('Nemnes', {x: 100, y: 100}));
   }
 }
 </script>

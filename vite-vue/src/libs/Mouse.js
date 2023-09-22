@@ -7,6 +7,7 @@ import Keyboard from "./Keyboard.js";
 import Movement from "./Movement.js";
 import Sprite from "./Sprite.js";
 import {$app, $hero} from "../utils/globals.js";
+import ServerEvent from "./ServerEvent.js";
 
 export default class Mouse {
 
@@ -217,7 +218,7 @@ export default class Mouse {
                 }
             });
             Mouse.pointerEffect = pointerEffect;
-            Mouse.use(Mouse.positionServer, itemId);
+            ServerEvent.use(Mouse.positionServer, itemId);
         }
     }
 
@@ -242,27 +243,6 @@ export default class Mouse {
         }
     }
 
-    static use(position, itemId) {
-        if (Board.getTileTopItem(position) !== itemId) return;
-        if (!isPositionInRange($hero.position, position)) return;
-
-        if (itemId === 6) {
-            Effect.get('ore-hit').run(position);
-            Board.tiles[position.y][position.x].pop();
-            Board.tiles[position.y][position.x].push(9);
-            Mouse.onPositionChange();
-        }
-
-        if (itemId === 8) {
-            Effect.get('ore-hit').run(position);
-            Board.tiles[position.y][position.x].push(10);
-        }
-
-        if (itemId === 9) {
-            Effect.get('yellow-sparkles').run($hero.position);
-        }
-    }
-
     static grabItemFrom(position) {
         Mouse.grabbing.itemId = Board.getTileTopItem(position);
         Mouse.grabbing.position = position;
@@ -279,25 +259,20 @@ export default class Mouse {
         Mouse.grabbing.position = {x: null, y: null};
         Mouse.onPositionChange();
 
-        if (isSamePosition(positionFrom, Mouse.positionServer)) {
-            return;
-        }
-        if (itemId !== Board.getTileTopItem(positionFrom)) {
-            return;
-        }
-        if (!isPositionInRange($hero.position, positionFrom)) {
+        if (isPositionInRange($hero.position, positionFrom)) {
+            ServerEvent.moveItem(positionFrom, positionTo, itemId);
+        } else {
+            if (isSamePosition(positionFrom, positionTo)) {
+                return;
+            }
+            if (itemId !== Board.getTileTopItem(positionFrom)) {
+                return;
+            }
             Movement.setPath(positionFrom, 'move', {
                 itemId: itemId,
                 positionFrom: positionFrom,
                 positionTo: positionTo,
             })
-            return;
         }
-        if (Board.getTileStack(positionTo).find((itemId) => Item.get(itemId).isBlockingItems)) {
-            return;
-        }
-
-        Board.tiles[positionFrom.y][positionFrom.x].pop();
-        Board.tiles[positionTo.y][positionTo.x].push(itemId);
     }
 }

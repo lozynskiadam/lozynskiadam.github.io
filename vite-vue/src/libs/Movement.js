@@ -4,6 +4,7 @@ import * as EasyStar from "easystarjs";
 import {isPositionInRange, isSamePosition} from "../utils/position.js";
 import Mouse from "./Mouse.js";
 import {$hero} from "../utils/globals.js";
+import ServerEvent from "./ServerEvent.js";
 
 export default class Movement {
 
@@ -192,7 +193,7 @@ export default class Movement {
             }
             if (Movement.path.action === 'use' && (path.length === 2 || isPositionInRange($hero.position, Movement.path.destination))) {
                 $hero.sprite.loop('idle-south');
-                Mouse.use(Movement.path.destination, Movement.path.actionData.itemId);
+                ServerEvent.use(Movement.path.destination, Movement.path.actionData.itemId);
                 Movement.clearPath();
                 return;
             }

@@ -55,7 +55,7 @@ body {
 }
 
 @media screen and (max-width: 800px) {
-  canvas {
+  #app > canvas {
     transform: scale(1.5);
   }
 }

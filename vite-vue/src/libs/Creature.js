@@ -26,10 +26,10 @@ export default class Creature {
         timeouts: []
     };
 
-    constructor(name, position, offset) {
+    constructor(name, position) {
         Board.creatures[name] = this;
         this.position = position;
-        this.offset = offset;
+        this.offset = {x: 0, y: 0};
         this.sprite = Sprite.get('outfit').clone()
         this.sprite.dye([randomColor(), randomColor(), randomColor(), randomColor()]);
         this.sprite.loop('idle-south');

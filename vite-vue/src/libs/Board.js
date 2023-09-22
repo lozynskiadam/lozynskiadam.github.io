@@ -1,9 +1,10 @@
 import {BOARD_HEIGHT, BOARD_WIDTH, TILE_SIZE} from "../config.js";
-import {randomString, roll} from "../utils/common.js";
-import {isSamePosition} from "../utils/position.js";
 import Item from "./Item.js";
-import Creature from "./Creature.js";
 import {$hero} from "../utils/globals.js";
+import ServerEvent from "./ServerEvent.js";
+import Effect from "./Effect.js";
+import Creature from "./Creature.js";
+import {randomString} from "../utils/common.js";
 
 export default class Board {
 
@@ -29,6 +30,15 @@ export default class Board {
         Board.update();
         window.addEventListener("hero-position-changed", () => {
             Board.update()
+        });
+        window.addEventListener("update-tile", (event) => {
+            Board.updateTile(event.detail.position, event.detail.stack);
+        });
+        window.addEventListener("run-effect", (event) => {
+            Effect.get(event.detail.effect).run(event.detail.position);
+        });
+        window.addEventListener("add-creature", (event) => {
+            new Creature(event.detail.name, event.detail.position)
         });
     }
 
@@ -62,7 +72,7 @@ export default class Board {
             }
         }
         Board.tiles = _tiles;
-        Board.requestTiles(missingTilesPositions);
+        ServerEvent.requestTiles(missingTilesPositions);
     }
 
     static getTileStack(position) {
@@ -83,42 +93,6 @@ export default class Board {
         if ((typeof Board.tiles[position.y] != 'undefined') && (typeof Board.tiles[position.y][position.x] != 'undefined')) {
             Board.tiles[position.y][position.x] = stack;
         }
-    }
-
-    static requestTiles(missingTilesPositions) {
-        setTimeout(() => {
-            for (const position of missingTilesPositions) {
-                const stack = [];
-
-                if (roll(40)) {
-                    stack.push(2);
-                } else if (roll(40)) {
-                    stack.push(3);
-                } else if (roll(30)) {
-                    stack.push(4);
-                } else {
-                    stack.push(1)
-                }
-
-                if (!isSamePosition(position, $hero.position)) {
-                    if (roll(100)) {
-                        stack.push(6);
-                    } else if (roll(100)) {
-                        stack.push(8);
-                    } else if (roll(100)) {
-                        stack.push(5);
-                    } else if (roll(100)) {
-                        stack.push(7);
-                    }
-                }
-
-                Board.updateTile(position, stack);
-
-                if (roll(350)) {
-                    new Creature(randomString(20), position, {x: 0, y: 0})
-                }
-            }
-        }, 100);
     }
 
     static isWalkable(position) {
