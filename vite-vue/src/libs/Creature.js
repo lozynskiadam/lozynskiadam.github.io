@@ -18,7 +18,7 @@ export default class Creature {
 
     sprite = null;
 
-    speed = 2; // tiles per second
+    speed = 25; // 1 = 0.1 sqm/s
 
     movement = {
         isMoving: false,
