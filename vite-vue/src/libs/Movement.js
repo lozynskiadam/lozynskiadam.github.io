@@ -61,7 +61,10 @@ export default class Movement {
         creature.offset = {x: 0, y: 0};
         creature.movement.isMoving = true;
         for (let i = 0; i < TILE_SIZE; i++) {
-            const timeout = setTimeout(() => Movement.handleMovingFrame(creature, position, direction), (10000 / creature.speed / TILE_SIZE) * i);
+            const timeout = setTimeout(() => {
+                Movement.handleMovingFrame(creature, position, direction)
+                Mouse.updateCursorAndServerPosition();
+            }, (10000 / creature.speed / TILE_SIZE) * i);
             creature.movement.timeouts.push(timeout);
         }
     }
@@ -201,7 +204,16 @@ export default class Movement {
                 $hero.sprite.loop('idle-south');
                 if (Movement.path.actionData.itemId === Board.getTileTopItem(Movement.path.actionData.positionFrom)) {
                     Mouse.grabItemFrom(Movement.path.actionData.positionFrom);
-                    Mouse.releaseItemOn(Movement.path.actionData.positionTo);
+                    Mouse.releaseItemOnPosition(Movement.path.actionData.positionTo);
+                }
+                Movement.clearPath();
+                return;
+            }
+            if (Movement.path.action === 'pick-up' && (path.length === 2 || isPositionInRange($hero.position, Movement.path.destination))) {
+                $hero.sprite.loop('idle-south');
+                if (Movement.path.actionData.itemId === Board.getTileTopItem(Movement.path.actionData.positionFrom)) {
+                    Mouse.grabItemFrom(Movement.path.actionData.positionFrom);
+                    Mouse.releaseItemOnInventory(Movement.path.actionData.slot);
                 }
                 Movement.clearPath();
                 return;

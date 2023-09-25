@@ -13,11 +13,11 @@ export default class Keyboard {
         bindKey('shift', {
             onPressed: () => {
                 Keyboard.shift.isPressed = true;
-                Mouse.onPositionChange();
+                Mouse.updateCursorAndServerPosition();
             },
             onReleased: () => {
                 Keyboard.shift.isPressed = false;
-                Mouse.onPositionChange();
+                Mouse.updateCursorAndServerPosition();
             },
         })
     }

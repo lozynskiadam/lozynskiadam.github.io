@@ -12,6 +12,7 @@ export default class Item {
     sprite = null;
     isUsable = null;
     isMovable = null;
+    isPickupable = null;
     isBlockingCreatures = null;
     isBlockingItems = null;
 
@@ -41,6 +42,7 @@ export default class Item {
         this.altitude = data.altitude;
         this.isUsable = data.isUsable;
         this.isMovable = data.isMovable;
+        this.isPickupable = data.isPickupable;
         this.isBlockingCreatures = data.isBlockingCreatures;
         this.isBlockingItems = data.isBlockingItems;
 

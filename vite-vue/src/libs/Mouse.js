@@ -1,7 +1,6 @@
 import {TILE_SIZE} from "../config.js";
 import {isPositionInRange, isSamePosition} from "../utils/position.js";
 import Board from "./Board.js";
-import Effect from "./Effect.js";
 import Item from "./Item.js";
 import Keyboard from "./Keyboard.js";
 import Movement from "./Movement.js";
@@ -109,17 +108,15 @@ export default class Mouse {
             y: Math.floor((Mouse.positionCanvas.y + $hero.offset.y) / TILE_SIZE),
         };
 
-        Mouse.positionServer = Board.positionClientToServer(Mouse.positionClient);
-
-        if (!isSamePosition(Mouse.positionClient, old.positionClient)) {
-            Mouse.onPositionChange();
-        }
-        if (!isSamePosition(Mouse.positionServer, old.positionServer)) {
-            Mouse.onPositionChange();
+        if (!isSamePosition(Mouse.positionClient, old.positionClient) || !isSamePosition(Mouse.positionServer, old.positionServer)) {
+            Mouse.updateCursorAndServerPosition();
+        } else {
+            Mouse.positionServer = Board.positionClientToServer(Mouse.positionClient);
         }
     }
 
-    static onPositionChange() {
+    static updateCursorAndServerPosition() {
+        Mouse.positionServer = Board.positionClientToServer(Mouse.positionClient);
         if (Mouse.grabbing.itemId) {
             return;
         }
@@ -128,15 +125,10 @@ export default class Mouse {
             return;
         }
 
-        Mouse.positionServer = Board.positionClientToServer(Mouse.positionClient);
-
         const itemId = Board.getTileTopItem(Mouse.positionServer);
         if (!itemId) {
             $app.removeAttribute('cursor');
-            return;
-        }
-
-        if (itemId === 6) {
+        } else if (itemId === 6) {
             $app.setAttribute('cursor', 'chest');
         } else if (itemId === 8) {
             $app.setAttribute('cursor', 'pick');
@@ -161,24 +153,14 @@ export default class Mouse {
     static onLeftButtonRelease(e) {
         if (Mouse.grabbing.initialised && Mouse.grabbing.itemId) {
             if (e.target.id === "board") {
-                Mouse.releaseItemOn({...Mouse.positionServer});
+                Mouse.releaseItemOnPosition({...Mouse.positionServer});
             } else if (e.target.classList && e.target.classList.contains('slot')) {
-                window.dispatchEvent(new CustomEvent('update-inventory-item', {
-                    detail: {
-                        slot: e.target.getAttribute('data-slot-index'),
-                        item: Item.get(Mouse.grabbing.itemId)
-                    }
-                }));
-
-                Mouse.grabbing.initialised = false;
-                Mouse.grabbing.itemId = null;
-                Mouse.grabbing.position = {x: null, y: null};
-                Mouse.onPositionChange();
+                Mouse.releaseItemOnInventory(e.target.getAttribute('data-slot-index'), {...Mouse.positionServer});
             } else {
                 Mouse.grabbing.initialised = false;
                 Mouse.grabbing.itemId = null;
                 Mouse.grabbing.position = {x: null, y: null};
-                Mouse.onPositionChange();
+                Mouse.updateCursorAndServerPosition();
             }
         } else {
             const pointerEffectSprite = Sprite.get('pointer-cross-yellow').clone();
@@ -222,8 +204,7 @@ export default class Mouse {
         }
     }
 
-    static onRightButtonRelease()
-    {
+    static onRightButtonRelease() {
         const item = Item.get(Board.getTileTopItem(Mouse.positionServer));
         if (item.isUsable && !isPositionInRange($hero.position, Mouse.positionServer)) {
             const pointerEffectSprite = Sprite.get('pointer-cross-red').clone();
@@ -249,7 +230,7 @@ export default class Mouse {
         $app.setAttribute('cursor', 'crosshair');
     }
 
-    static releaseItemOn(position) {
+    static releaseItemOnPosition(position) {
         const positionFrom = {...Mouse.grabbing.position};
         const positionTo = {...position};
         const itemId = Mouse.grabbing.itemId;
@@ -257,11 +238,9 @@ export default class Mouse {
         Mouse.grabbing.initialised = false;
         Mouse.grabbing.itemId = null;
         Mouse.grabbing.position = {x: null, y: null};
-        Mouse.onPositionChange();
+        Mouse.updateCursorAndServerPosition();
 
-        if (isPositionInRange($hero.position, positionFrom)) {
-            ServerEvent.moveItem(positionFrom, positionTo, itemId);
-        } else {
+        if (!isPositionInRange($hero.position, positionFrom)) {
             if (isSamePosition(positionFrom, positionTo)) {
                 return;
             }
@@ -273,6 +252,37 @@ export default class Mouse {
                 positionFrom: positionFrom,
                 positionTo: positionTo,
             })
+            return;
         }
+
+        ServerEvent.moveItem(positionFrom, positionTo, itemId);
+    }
+
+    static releaseItemOnInventory(slot) {
+        const positionFrom = {...Mouse.grabbing.position};
+        const itemId = Mouse.grabbing.itemId;
+
+        Mouse.grabbing.initialised = false;
+        Mouse.grabbing.itemId = null;
+        Mouse.grabbing.position = {x: null, y: null};
+        Mouse.updateCursorAndServerPosition();
+
+        if (!Item.get(itemId).isPickupable) {
+            return;
+        }
+
+        if (!isPositionInRange($hero.position, positionFrom)) {
+            if (itemId !== Board.getTileTopItem(positionFrom)) {
+                return;
+            }
+            Movement.setPath(positionFrom, 'pick-up', {
+                itemId: itemId,
+                positionFrom: positionFrom,
+                slot: slot,
+            })
+            return;
+        }
+
+        ServerEvent.pickUp(itemId, positionFrom, slot);
     }
 }

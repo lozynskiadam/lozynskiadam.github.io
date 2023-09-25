@@ -4,8 +4,38 @@ import Item from "./Item.js";
 import {$hero} from "../utils/globals.js";
 import {randomString, roll} from "../utils/common.js";
 import Connector from "./Connector.js";
+import Mouse from "./Mouse.js";
 
 export default class ServerEvent {
+
+    static canPickUp(itemId, position, slot) {
+        if (itemId !== Board.getTileTopItem(position)) return false;
+        if (!isPositionInRange($hero.position, position)) return false;
+
+        return true;
+    }
+
+    static pickUp(itemId, position, slot) {
+        if (!ServerEvent.canPickUp(itemId, position, slot)) return;
+
+        // Connector.emit('pick-up', {
+        //     itemId: itemId,
+        //     position: position,
+        //     slot: slot,
+        // })
+        // \/ simulate response
+        setTimeout(() => {
+            const stack = Board.getTileStack(position);
+            stack.pop();
+
+            window.dispatchEvent(new CustomEvent('update-inventory-item', {
+                detail: {
+                    slot: slot,
+                    item: Item.get(itemId)
+                }
+            }));
+        }, 100);
+    }
 
     static canMoveItem(positionFrom, positionTo, itemId) {
         if (isSamePosition(positionFrom, positionTo)) return false;
@@ -70,6 +100,8 @@ export default class ServerEvent {
             if (itemId === 9) {
                 window.dispatchEvent(new CustomEvent('run-effect', {detail: {position: $hero.position, effect: 'yellow-sparkles'}}));
             }
+
+            Mouse.updateCursorAndServerPosition();
         }, 100);
     }
 

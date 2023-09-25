@@ -44,6 +44,10 @@ export default {
 </script>
 
 <style>
+#app[cursor="crosshair"] #inventory {
+  cursor: url(../images/cursor-crosshair.png) 11 11, crosshair;
+}
+
 #inventory {
   position: absolute;
   right: 50px;
@@ -53,6 +57,7 @@ export default {
   color: #ffffff;
   padding: 12px;
   border: 3px ridge #111518;
+  cursor: url(../images/cursor.png), default;
 }
 
 #inventory .container {
