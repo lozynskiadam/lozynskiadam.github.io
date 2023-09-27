@@ -63,7 +63,6 @@ export default class Movement {
         for (let i = 0; i < TILE_SIZE; i++) {
             const timeout = setTimeout(() => {
                 Movement.handleMovingFrame(creature, position, direction)
-                Mouse.updateCursorAndServerPosition();
             }, (10000 / creature.speed / TILE_SIZE) * i);
             creature.movement.timeouts.push(timeout);
         }
