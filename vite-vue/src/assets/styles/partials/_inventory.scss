@@ -1,0 +1,69 @@
+.bookmark-inventory {
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: 40px;
+  height: 40px;
+  z-index: 2;
+  font-family: "Hind Vadodara", serif;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #ffd03f;
+  background: #111518;
+  border: 2px solid #000;
+  cursor: url(../images/cursor.png), default;
+}
+
+#inventory {
+  position: absolute;
+  right: 50px;
+  top: 50px;
+  z-index: 3;
+  color: #ffffff;
+  cursor: url(../images/cursor.png), default;
+  border: 2px inset #242732;
+  background: linear-gradient(45deg, #242732 0%, #111518 100%);
+  border-radius: 5px;
+
+  .inventory-header {
+    padding: 0.25rem 1rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border-radius: 5px 5px 0 0;
+  }
+
+  .inventory-container {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-column-gap: 4px;
+    grid-row-gap: 4px;
+    padding: 12px;
+    background: linear-gradient(135deg, #1a2128 0%, #131920 100%);
+    border: 2px outset #111518;
+    border-radius: 0 0 5px 5px;
+
+    .slot {
+      width: 39px;
+      height: 39px;
+      background: #111518;
+      border: 2px ridge #272f38;
+      border-radius: 3px;
+
+      canvas {
+        width: 100%;
+        pointer-events: none;
+      }
+    }
+  }
+}
+
+#app[cursor="crosshair"] {
+
+  #inventory {
+    cursor: url(../images/cursor-crosshair.png) 11 11, crosshair;
+
+    .slot:hover {
+      border: 2px solid #ffffff;
+    }
+  }
+}

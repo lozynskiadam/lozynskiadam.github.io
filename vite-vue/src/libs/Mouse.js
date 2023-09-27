@@ -163,6 +163,10 @@ export default class Mouse {
                 Mouse.updateCursorAndServerPosition();
             }
         } else {
+            if (e.target.id !== "board") {
+                return;
+            }
+
             const pointerEffectSprite = Sprite.get('pointer-cross-yellow').clone();
             const pointerEffect = {
                 sprite: pointerEffectSprite,

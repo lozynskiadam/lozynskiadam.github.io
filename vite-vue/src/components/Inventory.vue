@@ -1,6 +1,9 @@
 <template>
+  <button class="bookmark-inventory" @click="visible = !visible">Inv</button>
   <div v-if="visible" id="inventory">
-    Inventory
+    <div class="inventory-header">
+      Inventory
+    </div>
     <div class="inventory-container">
       <template v-for="(item, index) in slots" :key="item">
         <InventorySlot :item="item" :index="index"></InventorySlot>
@@ -47,28 +50,3 @@ export default {
   }
 }
 </script>
-
-<style>
-#app[cursor="crosshair"] #inventory {
-  cursor: url(../images/cursor-crosshair.png) 11 11, crosshair;
-}
-
-#inventory {
-  position: absolute;
-  right: 50px;
-  top: 50px;
-  z-index: 5;
-  color: #ffffff;
-  cursor: url(../images/cursor.png), default;
-}
-
-#inventory .inventory-container {
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  grid-column-gap: 4px;
-  grid-row-gap: 4px;
-  padding: 12px;
-  background: #161c23;
-  border: 3px ridge #111518;
-}
-</style>
