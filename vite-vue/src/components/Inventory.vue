@@ -1,6 +1,7 @@
 <template>
-  <div id="inventory">
-    <div class="container">
+  <div v-if="visible" id="inventory">
+    Inventory
+    <div class="inventory-container">
       <template v-for="(item, index) in slots" :key="item">
         <InventorySlot :item="item" :index="index"></InventorySlot>
       </template>
@@ -16,6 +17,7 @@ export default {
   components: {InventorySlot},
   data() {
     return {
+      visible: false,
       slots: [
         null, null, null, null, null, null, null, null,
         null, null, null, null, null, null, null, null,
@@ -39,6 +41,9 @@ export default {
     window.addEventListener("update-inventory-item", (event) => {
       this.update(event.detail.slot, event.detail.item);
     });
+    window.addEventListener("inventory-toggle", () => {
+      this.visible = !this.visible;
+    });
   }
 }
 </script>
@@ -52,18 +57,18 @@ export default {
   position: absolute;
   right: 50px;
   top: 50px;
-  background: #161c23;
   z-index: 5;
   color: #ffffff;
-  padding: 12px;
-  border: 3px ridge #111518;
   cursor: url(../images/cursor.png), default;
 }
 
-#inventory .container {
+#inventory .inventory-container {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-column-gap: 4px;
   grid-row-gap: 4px;
+  padding: 12px;
+  background: #161c23;
+  border: 3px ridge #111518;
 }
 </style>

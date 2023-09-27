@@ -1,5 +1,6 @@
 import {bindKey, checkKey} from "@rwh/keystrokes";
 import Mouse from "./Mouse.js";
+import Item from "./Item.js";
 
 export default class Keyboard {
 
@@ -19,7 +20,10 @@ export default class Keyboard {
                 Keyboard.shift.isPressed = false;
                 Mouse.updateCursorAndServerPosition();
             },
-        })
+        });
+        bindKey('i', () => {
+            window.dispatchEvent(new CustomEvent('inventory-toggle'));
+        });
     }
 
     static triggerKeyHoldingFunctions = () => {
