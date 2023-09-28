@@ -3,8 +3,8 @@
   align-items: center;
   justify-content: center;
   position: fixed;
-  right: 0;
-  top: 0;
+  right: 10px;
+  top: 10px;
   width: 40px;
   height: 40px;
   background: transparent;
@@ -50,7 +50,7 @@
       width: 39px;
       height: 39px;
       background: #111518;
-      border: 2px ridge #272f38;
+      border: 2px inset #242732;
       border-radius: 3px;
 
       canvas {
@@ -80,7 +80,7 @@
   #inventory {
     left: 10px;
     right: 10px;
-    top: 50px;
+    top: 60px;
     width: auto;
   }
 }
