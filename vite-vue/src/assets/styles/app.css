@@ -65,25 +65,28 @@ body {
   }
 }
 .bookmark-inventory {
+  display: none;
+  align-items: center;
+  justify-content: center;
   position: fixed;
   right: 0;
   top: 0;
   width: 40px;
   height: 40px;
+  background: transparent;
+  border: 0;
   z-index: 2;
-  font-family: "Hind Vadodara", serif;
-  font-weight: bold;
-  text-transform: uppercase;
-  color: #ffd03f;
-  background: #111518;
-  border: 2px solid #000;
-  cursor: url(../images/cursor.png), default;
+  opacity: 0.5;
+}
+.bookmark-inventory.active {
+  opacity: 1;
 }
 
 #inventory {
   position: absolute;
   right: 50px;
   top: 50px;
+  width: 372px;
   z-index: 3;
   color: #ffffff;
   cursor: url(../images/cursor.png), default;
@@ -99,7 +102,7 @@ body {
 }
 #inventory .inventory-container {
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(39px, 1fr));
   grid-column-gap: 4px;
   grid-row-gap: 4px;
   padding: 12px;
@@ -124,6 +127,19 @@ body {
 }
 #app[cursor=crosshair] #inventory .slot:hover {
   border: 2px solid #ffffff;
+}
+
+@media screen and (max-width: 800px) {
+  .bookmark-inventory {
+    display: flex;
+  }
+
+  #inventory {
+    left: 10px;
+    right: 10px;
+    top: 50px;
+    width: auto;
+  }
 }
 
 /*# sourceMappingURL=app.css.map */

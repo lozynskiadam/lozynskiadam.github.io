@@ -1,5 +1,7 @@
 <template>
-  <button class="bookmark-inventory" @click="visible = !visible">Inv</button>
+  <button class="bookmark-inventory" @click="visible = !visible" :class="{'active': visible}">
+    <img src="../assets/images/backpack.png" alt="Inv"/>
+  </button>
   <div v-if="visible" id="inventory">
     <div class="inventory-header">
       Inventory
