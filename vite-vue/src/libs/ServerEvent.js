@@ -28,11 +28,8 @@ export default class ServerEvent {
             const stack = Board.getTileStack(position);
             stack.pop();
 
-            window.dispatchEvent(new CustomEvent('update-inventory-item', {
-                detail: {
-                    slot: slot,
-                    item: Item.get(itemId)
-                }
+            window.dispatchEvent(new CustomEvent('update-inventory-slot', {
+                detail: {slot: slot, itemId: itemId, quantity: 1}
             }));
         }, 100);
     }
@@ -92,9 +89,9 @@ export default class ServerEvent {
 
             if (itemId === 8) {
                 const stack = Board.getTileStack(position);
-                stack.push(10);
                 window.dispatchEvent(new CustomEvent('update-tile', {detail: {position: position, stack: stack}}));
                 window.dispatchEvent(new CustomEvent('run-effect', {detail: {position: position, effect: 'ore-hit'}}));
+                window.dispatchEvent(new CustomEvent('update-inventory-slot', {detail: {slot: 0, itemId: 10, quantity: 1}}));
             }
 
             if (itemId === 9) {

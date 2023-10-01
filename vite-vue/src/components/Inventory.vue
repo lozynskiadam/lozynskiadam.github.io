@@ -7,8 +7,8 @@
       Inventory
     </div>
     <div class="inventory-container">
-      <template v-for="(item, index) in slots" :key="item">
-        <InventorySlot :item="item" :index="index"></InventorySlot>
+      <template v-for="(slot, index) in slots" :key="slot?.item">
+        <InventorySlot :item="slot?.item" :quantity="slot?.quantity" :index="index"></InventorySlot>
       </template>
     </div>
   </div>
@@ -16,6 +16,7 @@
 
 <script>
 import InventorySlot from "./InventorySlot.vue";
+import Item from "../libs/Item.js";
 
 export default {
   name: 'Inventory',
@@ -38,13 +39,16 @@ export default {
     }
   },
   methods: {
-    update(slot, item) {
-      this.slots[slot] = item;
+    update(slot, itemId, quantity) {
+      this.slots[slot] = {
+        item: Item.get(itemId),
+        quantity: quantity,
+      };
     }
   },
   mounted() {
-    window.addEventListener("update-inventory-item", (event) => {
-      this.update(event.detail.slot, event.detail.item);
+    window.addEventListener("update-inventory-slot", (event) => {
+      this.update(event.detail.slot, event.detail.itemId, event.detail.quantity);
     });
     window.addEventListener("inventory-toggle", () => {
       this.visible = !this.visible;

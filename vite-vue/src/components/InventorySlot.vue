@@ -1,5 +1,7 @@
 <template>
-  <div class="slot" :data-slot-index="index"></div>
+  <div class="slot" :data-slot-index="index">
+    <div class="quantity">{{ quantity }}</div>
+  </div>
 </template>
 
 <script>
@@ -9,7 +11,8 @@ export default {
   name: 'InventorySlot',
   props: {
     index: Number,
-    item: Item
+    item: Item,
+    quantity: Number
   },
   data() {
     return {
