@@ -95,10 +95,10 @@ export default class Renderer {
     }
 
     static renderPointerEffect(ctx) {
-        if (!Mouse.pointerEffect) return;
+        if (!Mouse.effect) return;
 
-        const image = Mouse.pointerEffect.sprite.getFrame();
-        const position = Mouse.pointerEffect.position;
+        const image = Mouse.effect.sprite.getFrame();
+        const position = Mouse.effect.position;
         const offset = $hero.offset;
         ctx.drawImage(image, position.x + offset.x - (image.width / 2), position.y + offset.y - (image.height / 2));
     }

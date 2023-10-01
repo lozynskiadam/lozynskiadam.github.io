@@ -1,3 +1,7 @@
+export const isPosition = function (object) {
+    return object.hasOwnProperty('x') && object.hasOwnProperty('y');
+}
+
 export const isPositionInRange = function (position1, position2, radius = 1) {
     const fromX = position1.x - radius;
     const fromY = position1.y - radius;

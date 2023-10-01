@@ -1,5 +1,5 @@
 import {TILE_SIZE} from "../config.js";
-import {isPositionInRange, isSamePosition} from "../utils/position.js";
+import {isPosition, isPositionInRange, isSamePosition} from "../utils/position.js";
 import Board from "./Board.js";
 import Item from "./Item.js";
 import Keyboard from "./Keyboard.js";
@@ -10,37 +10,19 @@ import ServerEvent from "./ServerEvent.js";
 
 export default class Mouse {
 
-    static positionWindow = {
-        x: null,
-        y: null,
-    }
+    static positionWindow = {x: null, y: null}
 
-    static positionCanvas = {
-        x: null,
-        y: null,
-    }
+    static positionCanvas = {x: null, y: null}
 
-    static positionClient = {
-        x: null,
-        y: null,
-    }
+    static positionClient = {x: null, y: null}
 
-    static positionServer = {
-        x: null,
-        y: null,
-    }
+    static positionServer = {x: null, y: null}
 
-    static buttons = {
-        left: {
-            isPressed: false,
-        },
-        right: {
-            isPressed: false,
-        },
-    }
+    static isLeftButtonPressed = false;
+
+    static isRightButtonPressed = false;
 
     static grabbing = {
-        initialised: false,
         itemId: null,
         position: {
             x: null,
@@ -48,24 +30,24 @@ export default class Mouse {
         },
     }
 
-    static pointerEffect = null;
+    static effect = null;
 
     static init() {
         document.addEventListener('mousemove', (e) => {
             Mouse.recalcMousePosition(e);
-            if (Mouse.grabbing.initialised && !Mouse.grabbing.itemId) {
-                Mouse.grabItemFrom({...Mouse.positionServer});
+            if (Mouse.isLeftButtonPressed && !Mouse.grabbing.itemId) {
+                Mouse.grabItem({...Mouse.positionServer});
             }
         }, false);
 
         document.addEventListener('mousedown', (e) => {
             Mouse.recalcMousePosition(e);
             if (e.which === 1 || e.button === 0) {
-                Mouse.buttons.left.isPressed = true;
+                Mouse.isLeftButtonPressed = true;
                 Mouse.onLeftButtonPress(e);
             }
             if (e.which === 3 || e.button === 2) {
-                Mouse.buttons.right.isPressed = true;
+                Mouse.isRightButtonPressed = true;
                 Mouse.onRightButtonPress(e);
             }
         }, false);
@@ -73,11 +55,11 @@ export default class Mouse {
         document.addEventListener('mouseup', (e) => {
             Mouse.recalcMousePosition(e);
             if (e.which === 1 || e.button === 0) {
-                Mouse.buttons.left.isPressed = false;
+                Mouse.isLeftButtonPressed = false;
                 Mouse.onLeftButtonRelease(e);
             }
             if (e.which === 3 || e.button === 2) {
-                Mouse.buttons.right.isPressed = false;
+                Mouse.isRightButtonPressed = false;
                 Mouse.onRightButtonRelease(e);
             }
         }, false);
@@ -137,26 +119,18 @@ export default class Mouse {
         }
     }
 
-    static onLeftButtonPress() {
-        if (Keyboard.shift.isPressed) {
-            return;
-        }
+    static onLeftButtonPress(e) {
 
-        const itemId = Board.getTileTopItem(Mouse.positionServer);
-        if (itemId && Item.get(itemId).isMovable) {
-            Mouse.cleanGrab();
-            Mouse.grabbing.initialised = true;
-        }
     }
 
     static onLeftButtonRelease(e) {
 
         // release grab
-        if (Mouse.grabbing.initialised && Mouse.grabbing.itemId) {
+        if (Mouse.grabbing.itemId) {
             if (e.target.id === "board") {
-                Mouse.releaseItemOnPosition({...Mouse.positionServer});
+                Mouse.releaseItem({...Mouse.positionServer});
             } else if (e.target.classList && e.target.classList.contains('slot')) {
-                Mouse.releaseItemOnInventory(e.target.getAttribute('data-slot-index'), {...Mouse.positionServer});
+                Mouse.releaseItem(e.target.getAttribute('data-slot-index'), {...Mouse.positionServer});
             } else {
                 Mouse.cleanGrab();
                 Mouse.updateCursorAndServerPosition();
@@ -172,17 +146,17 @@ export default class Mouse {
         const item = Item.get(itemId);
 
         if (item.isUsable) {
-            const pointerEffectSprite = Sprite.get('pointer-cross-red').clone();
-            const pointerEffect = {
-                sprite: pointerEffectSprite,
+            const effectSprite = Sprite.get('pointer-cross-red').clone();
+            const effect = {
+                sprite: effectSprite,
                 position: {...Mouse.positionCanvas},
             }
-            pointerEffectSprite.play().then(() => {
-                if (Mouse.pointerEffect === pointerEffect) {
-                    Mouse.pointerEffect = null
+            effectSprite.play().then(() => {
+                if (Mouse.effect === effect) {
+                    Mouse.effect = null
                 }
             });
-            Mouse.pointerEffect = pointerEffect;
+            Mouse.effect = effect;
             if (isPositionInRange($hero.position, position)) {
                 ServerEvent.use(position, itemId);
             } else {
@@ -194,17 +168,17 @@ export default class Mouse {
         }
 
         if (!item.isUsable) {
-            const pointerEffectSprite = Sprite.get('pointer-cross-yellow').clone();
-            const pointerEffect = {
-                sprite: pointerEffectSprite,
+            const effectSprite = Sprite.get('pointer-cross-yellow').clone();
+            const effect = {
+                sprite: effectSprite,
                 position: {...Mouse.positionCanvas},
             }
-            pointerEffectSprite.play().then(() => {
-                if (Mouse.pointerEffect === pointerEffect) {
-                    Mouse.pointerEffect = null
+            effectSprite.play().then(() => {
+                if (Mouse.effect === effect) {
+                    Mouse.effect = null
                 }
             });
-            Mouse.pointerEffect = pointerEffect;
+            Mouse.effect = effect;
             Movement.setPath(Mouse.positionServer, 'walk');
         }
     }
@@ -215,66 +189,55 @@ export default class Mouse {
     static onRightButtonRelease() {
     }
 
-    static grabItemFrom(position) {
-        Mouse.grabbing.itemId = Board.getTileTopItem(position);
-        Mouse.grabbing.position = position;
+    static grabItem(source) {
+        const itemId = Board.getTileTopItem(source);
+        if (!Item.get(itemId).isMovable) {
+            return;
+        }
+        Mouse.grabbing.itemId = itemId;
+        Mouse.grabbing.position = source;
         $app.setAttribute('cursor', 'crosshair');
     }
 
-    static releaseItemOnPosition(position) {
+    static releaseItem(target) {
+        const item = Item.get(Mouse.grabbing.itemId);
         const positionFrom = {...Mouse.grabbing.position};
-        const positionTo = {...position};
-        const itemId = Mouse.grabbing.itemId;
-
         Mouse.cleanGrab();
         Mouse.updateCursorAndServerPosition();
 
-        if (!isPositionInRange($hero.position, positionFrom)) {
-            if (isSamePosition(positionFrom, positionTo)) {
+        if (isPosition(target)) {
+            if (isSamePosition(positionFrom, target)) {
                 return;
             }
-            if (itemId !== Board.getTileTopItem(positionFrom)) {
+            if (isPositionInRange($hero.position, positionFrom)) {
+                ServerEvent.moveItem(positionFrom, target, item.id);
+            } else {
+                Movement.setPath(positionFrom, 'move', {
+                    itemId: item.id,
+                    positionFrom: positionFrom,
+                    positionTo: target,
+                })
                 return;
             }
-            Movement.setPath(positionFrom, 'move', {
-                itemId: itemId,
-                positionFrom: positionFrom,
-                positionTo: positionTo,
-            })
-            return;
         }
 
-        ServerEvent.moveItem(positionFrom, positionTo, itemId);
-    }
-
-    static releaseItemOnInventory(slot) {
-        const positionFrom = {...Mouse.grabbing.position};
-        const itemId = Mouse.grabbing.itemId;
-
-        Mouse.cleanGrab();
-        Mouse.updateCursorAndServerPosition();
-
-        if (!Item.get(itemId).isPickupable) {
-            return;
-        }
-
-        if (!isPositionInRange($hero.position, positionFrom)) {
-            if (itemId !== Board.getTileTopItem(positionFrom)) {
+        if (!isPosition(target)) {
+            if (!item.isPickupable) {
                 return;
             }
-            Movement.setPath(positionFrom, 'pick-up', {
-                itemId: itemId,
-                positionFrom: positionFrom,
-                slot: slot,
-            })
-            return;
+            if (isPositionInRange($hero.position, positionFrom)) {
+                ServerEvent.pickUp(item.id, positionFrom, target);
+            } else {
+                Movement.setPath(positionFrom, 'pick-up', {
+                    itemId: item.id,
+                    positionFrom: positionFrom,
+                    slot: target,
+                })
+            }
         }
-
-        ServerEvent.pickUp(itemId, positionFrom, slot);
     }
 
     static cleanGrab() {
-        Mouse.grabbing.initialised = false;
         Mouse.grabbing.itemId = null;
         Mouse.grabbing.position = {x: null, y: null};
     }
