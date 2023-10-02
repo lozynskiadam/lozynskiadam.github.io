@@ -1,3 +1,7 @@
+<style>
+@import "Slot.scss";
+</style>
+
 <template>
   <div class="slot" :data-slot-index="index">
     <div class="quantity">{{ quantity }}</div>
@@ -8,7 +12,7 @@
 import Item from "../libs/Item.js";
 
 export default {
-  name: 'InventorySlot',
+  name: 'Slot',
   props: {
     index: Number,
     item: Item,

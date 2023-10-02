@@ -1,3 +1,7 @@
+<style>
+@import "Inventory.scss";
+</style>
+
 <template>
   <button class="bookmark-inventory" @click="visible = !visible" :class="{'active': visible}">
     <img src="../assets/images/inventory.png" alt="Inv"/>
@@ -8,19 +12,19 @@
     </div>
     <div class="inventory-container">
       <template v-for="(slot, index) in slots" :key="slot?.item">
-        <InventorySlot :item="slot?.item" :quantity="slot?.quantity" :index="index"></InventorySlot>
+        <Slot :item="slot?.item" :quantity="slot?.quantity" :index="index"></Slot>
       </template>
     </div>
   </div>
 </template>
 
 <script>
-import InventorySlot from "./InventorySlot.vue";
+import Slot from "./Slot.vue";
 import Item from "../libs/Item.js";
 
 export default {
   name: 'Inventory',
-  components: {InventorySlot},
+  components: {Slot},
   data() {
     return {
       visible: false,

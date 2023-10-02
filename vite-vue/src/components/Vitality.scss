@@ -1,0 +1,19 @@
+#vitality {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  color: #ffffff;
+  cursor: url(../assets/images/cursor.png), default;
+  background: linear-gradient(135deg, rgba(100, 116, 134, 0.2) 0%, rgba(19, 25, 32, 0.7) 100%);
+  backdrop-filter: blur(5px);
+
+  .health-bar {
+    width: 100px;
+    background: #ff0000;
+  }
+  .mana-bar {
+    width: 100px;
+    background: #0000ff;
+  }
+}

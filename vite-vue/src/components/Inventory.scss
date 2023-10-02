@@ -24,7 +24,7 @@
   width: 372px;
   z-index: 3;
   color: #ffffff;
-  cursor: url(../images/cursor.png), default;
+  cursor: url(../assets/images/cursor.png), default;
   border: 1px solid #131920;
   border-radius: 5px;
   background: linear-gradient(135deg, rgba(100, 116, 134, 0.2) 0%, rgba(19, 25, 32, 0.7) 100%);
@@ -42,48 +42,12 @@
     grid-column-gap: 4px;
     grid-row-gap: 4px;
     padding: 12px;
-
-    .slot {
-      position: relative;
-      width: 39px;
-      height: 39px;
-      background: linear-gradient(-45deg, rgba(0,0,0,0) 0%, rgba(19, 25, 32, 0.5) 100%);
-      border: 1px solid #131920;
-      border-radius: 3px;
-
-      canvas {
-        width: 100%;
-        pointer-events: none;
-      }
-
-      .quantity {
-        position: absolute;
-        right: 2px;
-        bottom: 2px;
-        pointer-events: none;
-        font-weight: bold;
-        font-size: 13px;
-        line-height: 13px;
-
-        text-shadow:
-                -1px -1px 0 #000,
-                1px -1px 0 #000,
-                -1px 1px 0 #000,
-                1px 1px 0 #000;
-
-      }
-    }
   }
 }
 
 #app[cursor="crosshair"] {
-
   #inventory {
-    cursor: url(../images/cursor-crosshair.png) 11 11, crosshair;
-
-    .slot:hover {
-      border: 1px solid #ffffff;
-    }
+    cursor: url(../assets/images/cursor-crosshair.png) 11 11, crosshair;
   }
 }
 
