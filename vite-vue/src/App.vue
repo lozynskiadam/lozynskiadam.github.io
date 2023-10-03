@@ -59,7 +59,7 @@ export default {
   },
   async mounted() {
     await this.load();
-    await this.enter(new Creature('Nemnes', {x: 100, y: 100}));
+    await this.enter(new Creature('Guest', {x: 100, y: 100}));
   }
 }
 </script>

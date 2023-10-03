@@ -6,6 +6,8 @@ import {$hero} from "../utils/globals.js";
 
 export default class Creature {
 
+    name = null;
+
     position = {
         x: null,
         y: null,
@@ -28,6 +30,7 @@ export default class Creature {
 
     constructor(name, position) {
         Board.creatures[name] = this;
+        this.name = name;
         this.position = position;
         this.offset = {x: 0, y: 0};
         this.sprite = Sprite.get('outfit').clone()

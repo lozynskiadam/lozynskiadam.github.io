@@ -136,7 +136,7 @@ export default class ServerEvent {
                 window.dispatchEvent(new CustomEvent('update-tile', {detail: {position: position, stack: stack}}));
 
                 if (roll(350)) {
-                    window.dispatchEvent(new CustomEvent('add-creature', {detail: {position: position, name: randomString(20)}}));
+                    window.dispatchEvent(new CustomEvent('add-creature', {detail: {position: position, name: 'NPC #' + randomString(4)}}));
                 }
             }
         }, 200);

@@ -57,6 +57,15 @@ export default class Renderer {
         const top = (position.y * TILE_SIZE) + (TILE_SIZE - image.height) - Math.ceil(TILE_SIZE / 8) + creature.offset.y - altitude;
         const left = (position.x * TILE_SIZE) + (Math.ceil(TILE_SIZE / 2) - Math.ceil(image.width / 2)) + creature.offset.x;
         Renderer.tempCtx.drawImage(image, left, top);
+
+        Renderer.tempCtx.fillStyle = "#ffffff";
+        Renderer.tempCtx.font = "10px Hind Vadodara";
+        Renderer.tempCtx.lineWidth = 1;
+        Renderer.tempCtx.strokeStyle = "#000000";
+        const nicknameTop = top - 1;
+        const nicknameLeft = left + (TILE_SIZE / 2) - Math.ceil(Renderer.tempCtx.measureText(creature.name).width / 2);
+        Renderer.tempCtx.strokeText(creature.name, nicknameLeft, nicknameTop);
+        Renderer.tempCtx.fillText(creature.name, nicknameLeft, nicknameTop);
     }
 
     static cropEdges(ctx) {
