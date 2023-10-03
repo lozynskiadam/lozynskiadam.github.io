@@ -1,6 +1,6 @@
 #vitality {
   position: absolute;
-  top: 10px;
+  top: 5px;
   left: 10px;
   z-index: 3;
   color: #ffffff;
@@ -42,12 +42,12 @@
 
     .indicator {
       border-radius: 5px 5px 0 0;
-      background: linear-gradient(0deg, rgb(175, 42, 39) 0%, rgb(231, 87, 67) 100%);
+      background: linear-gradient(0deg, rgb(175, 42, 39) 0%, rgb(175, 42, 39) 50%, rgb(231, 87, 67) 50%, rgb(231, 87, 67) 100%);
     }
   }
 
   .mana-bar .indicator {
     border-radius: 0 0 5px 5px;
-    background: linear-gradient(0deg, rgb(39, 75, 206) 0%, rgb(82, 116, 245) 100%);
+    background: linear-gradient(0deg, rgb(39, 75, 206) 0%, rgb(39, 75, 206) 50%, rgb(82, 116, 245) 50%, rgb(82, 116, 245) 100%);
   }
 }

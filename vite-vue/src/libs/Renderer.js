@@ -76,7 +76,7 @@ export default class Renderer {
         Board.hudCtx.lineWidth = 2;
         Board.hudCtx.strokeStyle = "#000000";
 
-        top = top - (26 * Board.scale);
+        top = top - (25 * Board.scale) - 1;
         left = left + ((TILE_SIZE * Board.scale) / 2) - Math.ceil(Board.hudCtx.measureText(creature.name).width / 2);
         Board.hudCtx.strokeText(creature.name, left, top);
         Board.hudCtx.fillText(creature.name, left, top);
