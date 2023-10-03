@@ -1,16 +1,15 @@
-import {BOARD_HEIGHT, BOARD_WIDTH, TILE_SIZE} from "../config.js";
+import {BOARD_HEIGHT, BOARD_WIDTH, DEVICE_BREAKPOINT, SCALE_DESKTOP, SCALE_MOBILE, TILE_SIZE} from "../config.js";
 import Item from "./Item.js";
 import {$hero} from "../utils/globals.js";
 import ServerEvent from "./ServerEvent.js";
 import Effect from "./Effect.js";
 import Creature from "./Creature.js";
-import {randomString} from "../utils/common.js";
 
 export default class Board {
 
-    static scale = window.innerWidth <= 800 ? 1.5 : 2;
     static ctx = null;
     static hudCtx = null;
+    static scale = window.innerWidth <= DEVICE_BREAKPOINT ? SCALE_MOBILE : SCALE_DESKTOP;
     static width = null;
     static height = null;
     static firstTilePosition = {};
@@ -51,15 +50,7 @@ export default class Board {
         window.addEventListener("add-creature", (event) => {
             new Creature(event.detail.name, event.detail.position)
         });
-        window.addEventListener("resize", () => {
-            const scale = window.innerWidth <= 800 ? 1.5 : 2;
-            if (Board.scale !== scale) {
-                Board.scale = scale;
-                canvas.style.transform = 'scale(' + Board.scale + ')';
-                hud.width = TILE_SIZE * BOARD_WIDTH * Board.scale;
-                hud.height = TILE_SIZE * BOARD_HEIGHT * Board.scale;
-            }
-        });
+        window.addEventListener("resize", Board.onResize);
     }
 
     static update() {
@@ -152,5 +143,15 @@ export default class Board {
         }
 
         return [];
+    }
+
+    static onResize() {
+        const scale = window.innerWidth <= DEVICE_BREAKPOINT ? SCALE_MOBILE : SCALE_DESKTOP;
+        if (Board.scale !== scale) {
+            Board.scale = scale;
+            Board.ctx.canvas.style.transform = 'scale(' + Board.scale + ')';
+            Board.hudCtx.canvas.width = TILE_SIZE * BOARD_WIDTH * Board.scale;
+            Board.hudCtx.canvas.height = TILE_SIZE * BOARD_HEIGHT * Board.scale;
+        }
     }
 }

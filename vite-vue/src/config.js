@@ -5,3 +5,6 @@ export const SPRITES_PATH = 'data/sprites.json';
 export const ITEMS_PATH = 'data/items.json';
 export const EFFECTS_PATH = 'data/effects.json';
 export const WEBSOCKET_URL = 'ws://localhost/';
+export const SCALE_DESKTOP = 2;
+export const SCALE_MOBILE = 1.5;
+export const DEVICE_BREAKPOINT = 800;
