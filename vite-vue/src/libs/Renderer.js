@@ -37,6 +37,7 @@ export default class Renderer {
                 if (isSamePosition(positionServer, creature.position)) {
                     Renderer.drawCreature(positionClient, creature, altitude);
                     Renderer.drawNickname(positionClient, creature, altitude);
+                    Renderer.drawHealthBar(positionClient, creature, altitude);
                 }
             });
 
@@ -75,10 +76,26 @@ export default class Renderer {
         Board.hudCtx.lineWidth = 2;
         Board.hudCtx.strokeStyle = "#000000";
 
-        top = top - TILE_SIZE;
+        top = top - (26 * Board.scale);
         left = left + ((TILE_SIZE * Board.scale) / 2) - Math.ceil(Board.hudCtx.measureText(creature.name).width / 2);
         Board.hudCtx.strokeText(creature.name, left, top);
         Board.hudCtx.fillText(creature.name, left, top);
+    }
+
+    static drawHealthBar(position, creature, altitude = 0) {
+        const image = Sprite.get('hp-bar').getFrame();
+        let top = (position.y * TILE_SIZE) - altitude;
+        let left = position.x * TILE_SIZE;
+        if (!creature.isHero()) {
+            left = left - ($hero.offset.x - creature.offset.x);
+            top = top - ($hero.offset.y - creature.offset.y);
+        }
+        top *= Board.scale;
+        left *= Board.scale;
+
+        top = top - (23 * Board.scale);
+        left = left + ((TILE_SIZE * Board.scale) / 2) - Math.ceil(image.width / 2);
+        Board.hudCtx.drawImage(Sprite.get('hp-bar').getFrame(), left, top);
     }
 
     static cropEdges(ctx) {

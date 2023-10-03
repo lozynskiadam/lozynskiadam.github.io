@@ -44,7 +44,7 @@ export default {
       globals().setHero(hero);
       window.dispatchEvent(new CustomEvent("update-vitals", {detail: {
         health: 100,
-        mana: 100,
+        mana: 50,
         maxHealth: 100,
         maxMana: 100
       }}));

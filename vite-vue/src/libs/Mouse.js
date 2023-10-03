@@ -103,19 +103,17 @@ export default class Mouse {
             return;
         }
         if (Keyboard.shift.isPressed) {
-            $app.setAttribute('cursor', 'eye');
+            Mouse.setCursor('eye');
             return;
         }
 
         const itemId = Board.getTileTopItem(Mouse.positionServer);
-        if (!itemId) {
-            $app.removeAttribute('cursor');
-        } else if (itemId === 6) {
-            $app.setAttribute('cursor', 'chest');
+        if (itemId === 6) {
+            Mouse.setCursor('chest');
         } else if (itemId === 8) {
-            $app.setAttribute('cursor', 'pick');
+            Mouse.setCursor('pick');
         } else {
-            $app.removeAttribute('cursor');
+            Mouse.setCursor('default');
         }
     }
 
@@ -146,17 +144,7 @@ export default class Mouse {
         const item = Item.get(itemId);
 
         if (item.isUsable) {
-            const effectSprite = Sprite.get('pointer-cross-red').clone();
-            const effect = {
-                sprite: effectSprite,
-                position: {...Mouse.positionCanvas},
-            }
-            effectSprite.play().then(() => {
-                if (Mouse.effect === effect) {
-                    Mouse.effect = null
-                }
-            });
-            Mouse.effect = effect;
+            Mouse.runEffect('pointer-cross-red');
             if (isPositionInRange($hero.position, position)) {
                 ServerEvent.use(position, itemId);
             } else {
@@ -168,17 +156,7 @@ export default class Mouse {
         }
 
         if (!item.isUsable) {
-            const effectSprite = Sprite.get('pointer-cross-yellow').clone();
-            const effect = {
-                sprite: effectSprite,
-                position: {...Mouse.positionCanvas},
-            }
-            effectSprite.play().then(() => {
-                if (Mouse.effect === effect) {
-                    Mouse.effect = null
-                }
-            });
-            Mouse.effect = effect;
+            Mouse.runEffect('pointer-cross-yellow');
             Movement.setPath(Mouse.positionServer, 'walk');
         }
     }
@@ -196,7 +174,7 @@ export default class Mouse {
         }
         Mouse.grabbing.itemId = itemId;
         Mouse.grabbing.position = source;
-        $app.setAttribute('cursor', 'crosshair');
+        Mouse.setCursor('crosshair');
     }
 
     static releaseItem(target) {
@@ -240,5 +218,27 @@ export default class Mouse {
     static cleanGrab() {
         Mouse.grabbing.itemId = null;
         Mouse.grabbing.position = {x: null, y: null};
+    }
+
+    static runEffect(name) {
+        const effectSprite = Sprite.get(name).clone();
+        const effect = {
+            sprite: effectSprite,
+            position: {...Mouse.positionCanvas},
+        }
+        effectSprite.play().then(() => {
+            if (Mouse.effect === effect) {
+                Mouse.effect = null
+            }
+        });
+        Mouse.effect = effect;
+    }
+
+    static setCursor(name) {
+        if (name === 'default') {
+            $app.removeAttribute('cursor');
+        } else {
+            $app.setAttribute('cursor', name);
+        }
     }
 }

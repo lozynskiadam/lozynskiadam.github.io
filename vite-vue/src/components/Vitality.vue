@@ -4,8 +4,15 @@
 
 <template>
   <div id="vitality">
-    <div class="health-bar">{{ health }}/{{ maxHealth }}</div>
-    <div class="mana-bar">{{ mana }}/{{ maxMana }}</div>
+    <div class="icon"></div>
+    <div class="health-bar">
+      <div class="indicator" :style="{width: health / maxHealth * 100 + '%'}"></div>
+      <div class="label">{{ health }} / {{ maxHealth }}</div>
+    </div>
+    <div class="mana-bar">
+      <div class="indicator" :style="{width: mana / maxMana * 100 + '%'}"></div>
+      <div class="label">{{ mana }} / {{ maxMana }}</div>
+    </div>
     <div>
       <span v-for="state in states">{{ state }}</span>
     </div>
