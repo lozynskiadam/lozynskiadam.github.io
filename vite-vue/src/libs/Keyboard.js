@@ -1,6 +1,8 @@
 import {bindKey, checkKey} from "@rwh/keystrokes";
 import Mouse from "./Mouse.js";
 import Item from "./Item.js";
+import Movement from "./Movement.js";
+import Board from "./Board.js";
 
 export default class Keyboard {
 

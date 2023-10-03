@@ -36,6 +36,7 @@ export default class Renderer {
             Object.values(Board.creatures).forEach((creature) => {
                 if (isSamePosition(positionServer, creature.position)) {
                     Renderer.drawCreature(positionClient, creature, altitude);
+                    Renderer.drawNickname(positionClient, creature, altitude);
                 }
             });
 
@@ -57,15 +58,27 @@ export default class Renderer {
         const top = (position.y * TILE_SIZE) + (TILE_SIZE - image.height) - Math.ceil(TILE_SIZE / 8) + creature.offset.y - altitude;
         const left = (position.x * TILE_SIZE) + (Math.ceil(TILE_SIZE / 2) - Math.ceil(image.width / 2)) + creature.offset.x;
         Renderer.tempCtx.drawImage(image, left, top);
+    }
 
-        Renderer.tempCtx.fillStyle = "#ffffff";
-        Renderer.tempCtx.font = "10px Hind Vadodara";
-        Renderer.tempCtx.lineWidth = 1;
-        Renderer.tempCtx.strokeStyle = "#000000";
-        const nicknameTop = top - 1;
-        const nicknameLeft = left + (TILE_SIZE / 2) - Math.ceil(Renderer.tempCtx.measureText(creature.name).width / 2);
-        Renderer.tempCtx.strokeText(creature.name, nicknameLeft, nicknameTop);
-        Renderer.tempCtx.fillText(creature.name, nicknameLeft, nicknameTop);
+    static drawNickname(position, creature, altitude = 0) {
+        let top = (position.y * TILE_SIZE) - altitude;
+        let left = position.x * TILE_SIZE;
+        if (!creature.isHero()) {
+            left = left - ($hero.offset.x - creature.offset.x);
+            top = top - ($hero.offset.y - creature.offset.y);
+        }
+        top *= Board.scale;
+        left *= Board.scale;
+
+        Board.hudCtx.fillStyle = "#ffffff";
+        Board.hudCtx.font = "16px Hind Vadodara";
+        Board.hudCtx.lineWidth = 2;
+        Board.hudCtx.strokeStyle = "#000000";
+
+        top = top - TILE_SIZE;
+        left = left + ((TILE_SIZE * Board.scale) / 2) - Math.ceil(Board.hudCtx.measureText(creature.name).width / 2);
+        Board.hudCtx.strokeText(creature.name, left, top);
+        Board.hudCtx.fillText(creature.name, left, top);
     }
 
     static cropEdges(ctx) {
@@ -82,6 +95,8 @@ export default class Renderer {
         Renderer.tempCtx = canvas.getContext('2d');
         Renderer.tempCtx.fillStyle = '#25131a';
         Renderer.tempCtx.fillRect(0, 0, Renderer.tempCtx.canvas.width, Renderer.tempCtx.canvas.height);
+        Board.hudCtx.clearRect(0, 0, Board.hudCtx.canvas.width, Board.hudCtx.canvas.height);
+
         for (let layer of ['ground', 'objects']) {
             let y = 0;
             for (let [sy, row] of Object.entries(Board.tiles)) {

@@ -52,16 +52,15 @@ body {
   cursor: url(assets/images/cursor-eye.png), help;
 }
 
-#app > canvas {
-  transform: scale(2);
+#board {
+  position: absolute;
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
   image-rendering: crisp-edges;
   user-select: none;
 }
 
-@media screen and (max-width: 800px) {
-  #app > canvas {
-    transform: scale(1.5);
-  }
+#hud {
+  position: absolute;
+  pointer-events: none;
 }

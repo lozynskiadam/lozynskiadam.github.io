@@ -8,7 +8,9 @@ import {randomString} from "../utils/common.js";
 
 export default class Board {
 
+    static scale = window.innerWidth <= 800 ? 1.5 : 2;
     static ctx = null;
+    static hudCtx = null;
     static width = null;
     static height = null;
     static firstTilePosition = {};
@@ -22,12 +24,21 @@ export default class Board {
         canvas.id = 'board';
         canvas.width = TILE_SIZE * BOARD_WIDTH;
         canvas.height = TILE_SIZE * BOARD_HEIGHT;
+        canvas.style.transform = 'scale(' + Board.scale + ')';
         document.querySelector('#app').append(canvas);
 
+        const hud = document.createElement('canvas');
+        hud.id = 'hud';
+        hud.width = TILE_SIZE * BOARD_WIDTH * Board.scale;
+        hud.height = TILE_SIZE * BOARD_HEIGHT * Board.scale;
+        document.querySelector('#app').append(hud);
+
         Board.ctx = canvas.getContext("2d");
+        Board.hudCtx = hud.getContext("2d");
         Board.width = BOARD_WIDTH;
         Board.height = BOARD_HEIGHT;
         Board.update();
+
         window.addEventListener("hero-position-changed", () => {
             Board.update()
         });
@@ -39,6 +50,15 @@ export default class Board {
         });
         window.addEventListener("add-creature", (event) => {
             new Creature(event.detail.name, event.detail.position)
+        });
+        window.addEventListener("resize", () => {
+            const scale = window.innerWidth <= 800 ? 1.5 : 2;
+            if (Board.scale !== scale) {
+                Board.scale = scale;
+                canvas.style.transform = 'scale(' + Board.scale + ')';
+                hud.width = TILE_SIZE * BOARD_WIDTH * Board.scale;
+                hud.height = TILE_SIZE * BOARD_HEIGHT * Board.scale;
+            }
         });
     }
 
