@@ -29,7 +29,11 @@ export default {
   },
   mounted() {
     window.addEventListener("update-inventory-slot", (event) => {
-      this.$refs.slot[event.detail.slot].set(event.detail.itemId, event.detail.quantity);
+      if (event.detail.itemId) {
+        this.$refs.slot[event.detail.slot].set(event.detail.itemId, event.detail.quantity);
+      } else {
+        this.$refs.slot[event.detail.slot].clear();
+      }
     });
     window.addEventListener("inventory-toggle", () => {
       this.visible = !this.visible;
