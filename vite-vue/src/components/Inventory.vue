@@ -6,21 +6,18 @@
   <button class="bookmark-inventory" @click="visible = !visible" :class="{'active': visible}">
     <img src="../assets/images/inventory.png" alt="Inv"/>
   </button>
-  <div v-if="visible" id="inventory">
+  <div id="inventory" :style="{'display': visible ? 'block' : 'none'}">
     <div class="inventory-header">
       Inventory
     </div>
     <div class="inventory-container">
-      <template v-for="(slot, index) in slots" :key="slot?.item">
-        <Slot :item="slot?.item" :quantity="slot?.quantity" :index="index"></Slot>
-      </template>
+      <Slot v-for="i in 80" ref="slot" :index="i - 1"></Slot>
     </div>
   </div>
 </template>
 
 <script>
 import Slot from "./Slot.vue";
-import Item from "../libs/Item.js";
 
 export default {
   name: 'Inventory',
@@ -28,31 +25,11 @@ export default {
   data() {
     return {
       visible: false,
-      slots: [
-        null, null, null, null, null, null, null, null,
-        null, null, null, null, null, null, null, null,
-        null, null, null, null, null, null, null, null,
-        null, null, null, null, null, null, null, null,
-        null, null, null, null, null, null, null, null,
-        null, null, null, null, null, null, null, null,
-        null, null, null, null, null, null, null, null,
-        null, null, null, null, null, null, null, null,
-        null, null, null, null, null, null, null, null,
-        null, null, null, null, null, null, null, null,
-      ]
-    }
-  },
-  methods: {
-    update(slot, itemId, quantity) {
-      this.slots[slot] = {
-        item: Item.get(itemId),
-        quantity: quantity,
-      };
     }
   },
   mounted() {
     window.addEventListener("update-inventory-slot", (event) => {
-      this.update(event.detail.slot, event.detail.itemId, event.detail.quantity);
+      this.$refs.slot[event.detail.slot].set(event.detail.itemId, event.detail.quantity);
     });
     window.addEventListener("inventory-toggle", () => {
       this.visible = !this.visible;

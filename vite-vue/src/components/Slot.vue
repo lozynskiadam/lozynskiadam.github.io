@@ -4,7 +4,7 @@
 
 <template>
   <div class="slot" :data-slot-index="index">
-    <div class="quantity">{{ quantity }}</div>
+    <div v-if="quantity" class="quantity">{{ quantity }}</div>
   </div>
 </template>
 
@@ -15,20 +15,26 @@ export default {
   name: 'Slot',
   props: {
     index: Number,
-    item: Item,
-    quantity: Number
   },
   data() {
     return {
-      sprite: null
+      item: null,
+      quantity: null,
     }
   },
-  mounted() {
-    if (this.item) {
+  methods: {
+    set(itemId, quantity) {
+      this.item = Item.get(itemId);
+      this.quantity = quantity;
+      this.$el.querySelector('canvas')?.remove();
       this.sprite = this.item.sprite.clone();
       this.sprite.getFrame();
       this.$el.appendChild(this.sprite.canvas);
-    }
+    },
+    clear() {
+      this.item = null;
+      this.quantity = null;
+    },
   }
 }
 </script>
