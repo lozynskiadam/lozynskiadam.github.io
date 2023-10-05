@@ -36,11 +36,7 @@ export default class Board {
         Board.hudCtx = hud.getContext("2d");
         Board.width = BOARD_WIDTH;
         Board.height = BOARD_HEIGHT;
-        Board.update();
 
-        window.addEventListener("hero-position-changed", () => {
-            Board.update()
-        });
         window.addEventListener("update-tile", (event) => {
             Board.updateTile(event.detail.position, event.detail.stack);
         });
@@ -51,6 +47,9 @@ export default class Board {
             new Creature(event.detail.name, event.detail.position)
         });
         window.addEventListener("resize", Board.onResize);
+        window.addEventListener("hero-position-changed", Board.update);
+
+        Board.update();
     }
 
     static update() {
