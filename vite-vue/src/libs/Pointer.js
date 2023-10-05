@@ -6,9 +6,9 @@ import Keyboard from "./Keyboard.js";
 import Movement from "./Movement.js";
 import Sprite from "./Sprite.js";
 import {$app, $hero} from "../utils/globals.js";
-import ServerEvent from "./ServerEvent.js";
+import WebsocketRequest from "./WebsocketRequest.js";
 
-export default class Mouse {
+export default class Pointer {
 
     static positionWindow = {x: null, y: null}
 
@@ -34,33 +34,33 @@ export default class Mouse {
 
     static init() {
         document.addEventListener('mousemove', (e) => {
-            Mouse.recalcMousePosition(e);
-            if (Mouse.isLeftButtonPressed && !Mouse.grabbing.itemId) {
-                Mouse.grabItem({...Mouse.positionServer});
+            Pointer.recalcMousePosition(e);
+            if (Pointer.isLeftButtonPressed && !Pointer.grabbing.itemId) {
+                Pointer.grabItem({...Pointer.positionServer});
             }
         }, false);
 
         document.addEventListener('mousedown', (e) => {
-            Mouse.recalcMousePosition(e);
+            Pointer.recalcMousePosition(e);
             if (e.which === 1 || e.button === 0) {
-                Mouse.isLeftButtonPressed = true;
-                Mouse.onLeftButtonPress(e);
+                Pointer.isLeftButtonPressed = true;
+                Pointer.onLeftButtonPress(e);
             }
             if (e.which === 3 || e.button === 2) {
-                Mouse.isRightButtonPressed = true;
-                Mouse.onRightButtonPress(e);
+                Pointer.isRightButtonPressed = true;
+                Pointer.onRightButtonPress(e);
             }
         }, false);
 
         document.addEventListener('mouseup', (e) => {
-            Mouse.recalcMousePosition(e);
+            Pointer.recalcMousePosition(e);
             if (e.which === 1 || e.button === 0) {
-                Mouse.isLeftButtonPressed = false;
-                Mouse.onLeftButtonRelease(e);
+                Pointer.isLeftButtonPressed = false;
+                Pointer.onLeftButtonRelease(e);
             }
             if (e.which === 3 || e.button === 2) {
-                Mouse.isRightButtonPressed = false;
-                Mouse.onRightButtonRelease(e);
+                Pointer.isRightButtonPressed = false;
+                Pointer.onRightButtonRelease(e);
             }
         }, false);
 
@@ -70,50 +70,50 @@ export default class Mouse {
     static recalcMousePosition(e) {
         const rect = Board.ctx.canvas.getBoundingClientRect();
         const old = {
-            positionWindow: {...Mouse.positionWindow},
-            positionClient: {...Mouse.positionClient},
-            positionServer: {...Mouse.positionServer},
+            positionWindow: {...Pointer.positionWindow},
+            positionClient: {...Pointer.positionClient},
+            positionServer: {...Pointer.positionServer},
         };
 
-        Mouse.positionWindow = {
+        Pointer.positionWindow = {
             x: e.clientX,
             y: e.clientY
         };
 
-        Mouse.positionCanvas = {
+        Pointer.positionCanvas = {
             x: ((e.clientX - rect.left) / (rect.right - rect.left) * Board.ctx.canvas.width),
             y: ((e.clientY - rect.top) / (rect.bottom - rect.top) * Board.ctx.canvas.height),
         };
 
-        Mouse.positionClient = {
-            x: Math.floor((Mouse.positionCanvas.x + $hero.offset.x) / TILE_SIZE),
-            y: Math.floor((Mouse.positionCanvas.y + $hero.offset.y) / TILE_SIZE),
+        Pointer.positionClient = {
+            x: Math.floor((Pointer.positionCanvas.x + $hero.offset.x) / TILE_SIZE),
+            y: Math.floor((Pointer.positionCanvas.y + $hero.offset.y) / TILE_SIZE),
         };
 
-        if (!isSamePosition(Mouse.positionClient, old.positionClient) || !isSamePosition(Mouse.positionServer, old.positionServer)) {
-            Mouse.updateCursorAndServerPosition();
+        if (!isSamePosition(Pointer.positionClient, old.positionClient) || !isSamePosition(Pointer.positionServer, old.positionServer)) {
+            Pointer.updateCursorAndServerPosition();
         } else {
-            Mouse.positionServer = Board.positionClientToServer(Mouse.positionClient);
+            Pointer.positionServer = Board.positionClientToServer(Pointer.positionClient);
         }
     }
 
     static updateCursorAndServerPosition() {
-        Mouse.positionServer = Board.positionClientToServer(Mouse.positionClient);
-        if (Mouse.grabbing.itemId) {
+        Pointer.positionServer = Board.positionClientToServer(Pointer.positionClient);
+        if (Pointer.grabbing.itemId) {
             return;
         }
         if (Keyboard.shift.isPressed) {
-            Mouse.setCursor('eye');
+            Pointer.setCursor('eye');
             return;
         }
 
-        const itemId = Board.getTileTopItem(Mouse.positionServer);
+        const itemId = Board.getTileTopItem(Pointer.positionServer);
         if (itemId === 6) {
-            Mouse.setCursor('chest');
+            Pointer.setCursor('chest');
         } else if (itemId === 8) {
-            Mouse.setCursor('pick');
+            Pointer.setCursor('pick');
         } else {
-            Mouse.setCursor('default');
+            Pointer.setCursor('default');
         }
     }
 
@@ -124,31 +124,31 @@ export default class Mouse {
     static onLeftButtonRelease(e) {
 
         // release grab
-        if (Mouse.grabbing.itemId) {
+        if (Pointer.grabbing.itemId) {
             if (e.target.id === "board") {
-                Mouse.releaseItem({...Mouse.positionServer});
+                Pointer.releaseItem({...Pointer.positionServer});
             } else if (e.target.classList && e.target.classList.contains('slot')) {
-                Mouse.releaseItem(e.target.getAttribute('data-slot-index'), {...Mouse.positionServer});
+                Pointer.releaseItem(e.target.getAttribute('data-slot-index'), {...Pointer.positionServer});
             } else {
-                Mouse.cleanGrab();
-                Mouse.updateCursorAndServerPosition();
+                Pointer.cleanGrab();
+                Pointer.updateCursorAndServerPosition();
             }
             return;
         }
 
-        Mouse.cleanGrab();
+        Pointer.cleanGrab();
         if (e.target.id !== "board") return;
 
-        const position = {...Mouse.positionServer};
+        const position = {...Pointer.positionServer};
         const itemId = Board.getTileTopItem(position);
         const item = Item.get(itemId);
 
         if (item.isUsable) {
-            Mouse.runEffect('pointer-cross-red');
+            Pointer.runEffect('pointer-cross-red');
             if (isPositionInRange($hero.position, position)) {
-                ServerEvent.use(position, itemId);
+                WebsocketRequest.use(position, itemId);
             } else {
-                Movement.setPath(Mouse.positionServer, 'use', {
+                Movement.setPath(Pointer.positionServer, 'use', {
                     itemId: item.id
                 });
             }
@@ -156,8 +156,8 @@ export default class Mouse {
         }
 
         if (!item.isUsable) {
-            Mouse.runEffect('pointer-cross-yellow');
-            Movement.setPath(Mouse.positionServer, 'walk');
+            Pointer.runEffect('pointer-cross-yellow');
+            Movement.setPath(Pointer.positionServer, 'walk');
         }
     }
 
@@ -172,23 +172,23 @@ export default class Mouse {
         if (!Item.get(itemId).isMovable) {
             return;
         }
-        Mouse.grabbing.itemId = itemId;
-        Mouse.grabbing.position = source;
-        Mouse.setCursor('crosshair');
+        Pointer.grabbing.itemId = itemId;
+        Pointer.grabbing.position = source;
+        Pointer.setCursor('crosshair');
     }
 
     static releaseItem(target) {
-        const item = Item.get(Mouse.grabbing.itemId);
-        const positionFrom = {...Mouse.grabbing.position};
-        Mouse.cleanGrab();
-        Mouse.updateCursorAndServerPosition();
+        const item = Item.get(Pointer.grabbing.itemId);
+        const positionFrom = {...Pointer.grabbing.position};
+        Pointer.cleanGrab();
+        Pointer.updateCursorAndServerPosition();
 
         if (isPosition(target)) {
             if (isSamePosition(positionFrom, target)) {
                 return;
             }
             if (isPositionInRange($hero.position, positionFrom)) {
-                ServerEvent.moveItem(positionFrom, target, item.id);
+                WebsocketRequest.moveItem(positionFrom, target, item.id);
             } else {
                 Movement.setPath(positionFrom, 'move', {
                     itemId: item.id,
@@ -204,7 +204,7 @@ export default class Mouse {
                 return;
             }
             if (isPositionInRange($hero.position, positionFrom)) {
-                ServerEvent.pickUp(item.id, positionFrom, target);
+                WebsocketRequest.pickUp(item.id, positionFrom, target);
             } else {
                 Movement.setPath(positionFrom, 'pick-up', {
                     itemId: item.id,
@@ -216,22 +216,22 @@ export default class Mouse {
     }
 
     static cleanGrab() {
-        Mouse.grabbing.itemId = null;
-        Mouse.grabbing.position = {x: null, y: null};
+        Pointer.grabbing.itemId = null;
+        Pointer.grabbing.position = {x: null, y: null};
     }
 
     static runEffect(name) {
         const effectSprite = Sprite.get(name).clone();
         const effect = {
             sprite: effectSprite,
-            position: {...Mouse.positionCanvas},
+            position: {...Pointer.positionCanvas},
         }
         effectSprite.play().then(() => {
-            if (Mouse.effect === effect) {
-                Mouse.effect = null
+            if (Pointer.effect === effect) {
+                Pointer.effect = null
             }
         });
-        Mouse.effect = effect;
+        Pointer.effect = effect;
     }
 
     static setCursor(name) {

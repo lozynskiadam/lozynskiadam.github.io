@@ -1,5 +1,5 @@
 import {bindKey, checkKey} from "@rwh/keystrokes";
-import Mouse from "./Mouse.js";
+import Pointer from "./Pointer.js";
 import Item from "./Item.js";
 import Movement from "./Movement.js";
 import Board from "./Board.js";
@@ -16,11 +16,11 @@ export default class Keyboard {
         bindKey('shift', {
             onPressed: () => {
                 Keyboard.shift.isPressed = true;
-                Mouse.updateCursorAndServerPosition();
+                Pointer.updateCursorAndServerPosition();
             },
             onReleased: () => {
                 Keyboard.shift.isPressed = false;
-                Mouse.updateCursorAndServerPosition();
+                Pointer.updateCursorAndServerPosition();
             },
         });
         bindKey('i', () => {

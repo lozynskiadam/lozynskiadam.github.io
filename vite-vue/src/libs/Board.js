@@ -1,7 +1,7 @@
 import {BOARD_HEIGHT, BOARD_WIDTH, DEVICE_BREAKPOINT, SCALE_DESKTOP, SCALE_MOBILE, TILE_SIZE} from "../config.js";
 import Item from "./Item.js";
 import {$hero} from "../utils/globals.js";
-import ServerEvent from "./ServerEvent.js";
+import WebsocketRequest from "./WebsocketRequest.js";
 import Effect from "./Effect.js";
 import Creature from "./Creature.js";
 
@@ -83,7 +83,7 @@ export default class Board {
             }
         }
         Board.tiles = _tiles;
-        ServerEvent.requestTiles(missingTilesPositions);
+        WebsocketRequest.requestTiles(missingTilesPositions);
     }
 
     static getTileStack(position) {

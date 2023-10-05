@@ -13,7 +13,7 @@ import Sprite from "./libs/Sprite.js";
 import Item from "./libs/Item.js";
 import Effect from "./libs/Effect.js";
 import Keyboard from "./libs/Keyboard.js";
-import Mouse from "./libs/Mouse.js";
+import Pointer from "./libs/Pointer.js";
 import Movement from "./libs/Movement.js";
 import Renderer from "./libs/Renderer.js";
 import Creature from "./libs/Creature.js";
@@ -49,7 +49,7 @@ export default {
         maxMana: 100
       }}));
       Keyboard.init();
-      Mouse.init();
+      Pointer.init();
       Movement.init();
       Board.init();
       Renderer.render();

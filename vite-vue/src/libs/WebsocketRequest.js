@@ -4,9 +4,9 @@ import Item from "./Item.js";
 import {$hero} from "../utils/globals.js";
 import {randomString, roll} from "../utils/common.js";
 import Connector from "./Connector.js";
-import Mouse from "./Mouse.js";
+import Pointer from "./Pointer.js";
 
-export default class ServerEvent {
+export default class WebsocketRequest {
 
     static canPickUp(itemId, position, slot) {
         if (itemId !== Board.getTileTopItem(position)) return false;
@@ -16,7 +16,7 @@ export default class ServerEvent {
     }
 
     static pickUp(itemId, position, slot) {
-        if (!ServerEvent.canPickUp(itemId, position, slot)) return;
+        if (!WebsocketRequest.canPickUp(itemId, position, slot)) return;
 
         // Connector.emit('pick-up', {
         //     itemId: itemId,
@@ -44,7 +44,7 @@ export default class ServerEvent {
     }
 
     static moveItem(positionFrom, positionTo, itemId) {
-        if (!ServerEvent.canMoveItem(positionFrom, positionTo, itemId)) return;
+        if (!WebsocketRequest.canMoveItem(positionFrom, positionTo, itemId)) return;
 
         // Connector.emit('move-item', {
         //     itemId: itemId,
@@ -71,7 +71,7 @@ export default class ServerEvent {
     }
 
     static use(position, itemId) {
-        if (!ServerEvent.canUse(position, itemId)) return;
+        if (!WebsocketRequest.canUse(position, itemId)) return;
 
         // Connector.emit('use', {
         //     itemId: itemId,
@@ -98,7 +98,7 @@ export default class ServerEvent {
                 window.dispatchEvent(new CustomEvent('run-effect', {detail: {position: $hero.position, effect: 'yellow-sparkles'}}));
             }
 
-            Mouse.updateCursorAndServerPosition();
+            Pointer.updateCursorAndServerPosition();
         }, 100);
     }
 

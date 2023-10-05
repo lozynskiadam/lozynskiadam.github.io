@@ -1,7 +1,7 @@
 import {TILE_SIZE} from "../config.js";
 import {isSamePosition} from "../utils/position.js";
 import Item from "./Item.js";
-import Mouse from "./Mouse.js";
+import Pointer from "./Pointer.js";
 import Sprite from "./Sprite.js";
 import Board from "./Board.js";
 import Keyboard from "./Keyboard.js";
@@ -29,7 +29,7 @@ export default class Renderer {
                 altitude += item.altitude;
             });
 
-            if (Keyboard.shift.isPressed && isSamePosition(positionClient, Mouse.positionClient)) {
+            if (Keyboard.shift.isPressed && isSamePosition(positionClient, Pointer.positionClient)) {
                 Renderer.drawSprite(positionClient, Sprite.get('cursor'));
             }
 
@@ -136,10 +136,10 @@ export default class Renderer {
     }
 
     static renderPointerEffect(ctx) {
-        if (!Mouse.effect) return;
+        if (!Pointer.effect) return;
 
-        const image = Mouse.effect.sprite.getFrame();
-        const position = Mouse.effect.position;
+        const image = Pointer.effect.sprite.getFrame();
+        const position = Pointer.effect.position;
         const offset = $hero.offset;
         ctx.drawImage(image, position.x + offset.x - (image.width / 2), position.y + offset.y - (image.height / 2));
     }

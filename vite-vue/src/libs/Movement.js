@@ -2,9 +2,9 @@ import {TILE_SIZE} from "../config.js";
 import Board from "./Board.js";
 import * as EasyStar from "easystarjs";
 import {isPositionInRange, isSamePosition} from "../utils/position.js";
-import Mouse from "./Mouse.js";
+import Pointer from "./Pointer.js";
 import {$hero} from "../utils/globals.js";
-import ServerEvent from "./ServerEvent.js";
+import WebsocketRequest from "./WebsocketRequest.js";
 
 export default class Movement {
 
@@ -195,15 +195,15 @@ export default class Movement {
             }
             if (Movement.path.action === 'use' && (path.length === 2 || isPositionInRange($hero.position, Movement.path.destination))) {
                 $hero.sprite.loop('idle-south');
-                ServerEvent.use(Movement.path.destination, Movement.path.actionData.itemId);
+                WebsocketRequest.use(Movement.path.destination, Movement.path.actionData.itemId);
                 Movement.clearPath();
                 return;
             }
             if (Movement.path.action === 'move' && (path.length === 2 || isPositionInRange($hero.position, Movement.path.destination))) {
                 $hero.sprite.loop('idle-south');
                 if (Movement.path.actionData.itemId === Board.getTileTopItem(Movement.path.actionData.positionFrom)) {
-                    Mouse.grabItem(Movement.path.actionData.positionFrom);
-                    Mouse.releaseItem(Movement.path.actionData.positionTo);
+                    Pointer.grabItem(Movement.path.actionData.positionFrom);
+                    Pointer.releaseItem(Movement.path.actionData.positionTo);
                 }
                 Movement.clearPath();
                 return;
@@ -211,8 +211,8 @@ export default class Movement {
             if (Movement.path.action === 'pick-up' && (path.length === 2 || isPositionInRange($hero.position, Movement.path.destination))) {
                 $hero.sprite.loop('idle-south');
                 if (Movement.path.actionData.itemId === Board.getTileTopItem(Movement.path.actionData.positionFrom)) {
-                    Mouse.grabItem(Movement.path.actionData.positionFrom);
-                    Mouse.releaseItem(Movement.path.actionData.slot);
+                    Pointer.grabItem(Movement.path.actionData.positionFrom);
+                    Pointer.releaseItem(Movement.path.actionData.slot);
                 }
                 Movement.clearPath();
                 return;
