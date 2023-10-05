@@ -18,7 +18,7 @@ import Movement from "./libs/Movement.js";
 import Renderer from "./libs/Renderer.js";
 import Creature from "./libs/Creature.js";
 import Board from "./libs/Board.js";
-import Connector from "./libs/Connector.js";
+import Connector from "./libs/ConnectorMock.js";
 import Inventory from "./components/Inventory.vue";
 import Vitality from "./components/Vitality.vue";
 
@@ -35,7 +35,7 @@ export default {
       await Sprite.load();
       await Item.load();
       await Effect.load();
-      Connector.connect('');
+      await Connector.connect('token');
 
       this.loaded = true;
     },

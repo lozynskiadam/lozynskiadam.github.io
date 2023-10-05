@@ -6,22 +6,26 @@ import {isSamePosition} from "../utils/position.js";
 
 export default class Connector {
 
+    static async connect(token) {
+        return new Promise((resolve) => resolve());
+    }
+
     static emit(event, params) {
         if (event === 'move-item') {
-            return Connector.mockMoveItem(params);
+            return Connector.#moveItem(params);
         }
         if (event === 'pick-up') {
-            return Connector.mockPickUp(params);
+            return Connector.#pickUp(params);
         }
         if (event === 'use') {
-            return Connector.mockUse(params);
+            return Connector.#use(params);
         }
         if (event === 'request-tiles') {
-            return Connector.mockRequestTiles(params);
+            return Connector.#requestTiles(params);
         }
     }
 
-    static mockMoveItem(params) {
+    static #moveItem(params) {
         const stackFrom = Board.getTileStack(params.from);
         stackFrom.pop();
         const stackTo = Board.getTileStack(params.to);
@@ -31,7 +35,7 @@ export default class Connector {
         window.dispatchEvent(new CustomEvent('update-tile', {detail: {position: params.to, stack: stackTo}}));
     }
 
-    static mockPickUp(params) {
+    static #pickUp(params) {
         const stack = Board.getTileStack(params.position);
         stack.pop();
         window.dispatchEvent(new CustomEvent('update-inventory-slot', {
@@ -39,7 +43,7 @@ export default class Connector {
         }));
     }
 
-    static mockUse(params) {
+    static #use(params) {
         if (params.itemId === 6) {
             const stack = Board.getTileStack(params.position);
             stack.pop();
@@ -73,7 +77,7 @@ export default class Connector {
         Pointer.updateCursorAndServerPosition();
     }
 
-    static mockRequestTiles(params) {
+    static #requestTiles(params) {
         for (const position of params.positions) {
             const stack = [];
 
