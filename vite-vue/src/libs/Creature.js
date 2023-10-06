@@ -7,21 +7,10 @@ import {$hero} from "../utils/globals.js";
 export default class Creature {
 
     name = null;
-
-    position = {
-        x: null,
-        y: null,
-    };
-
-    offset = {
-        x: null,
-        y: null,
-    }
-
+    position = {x: null, y: null};
+    offset = {x: null, y: null}
     sprite = null;
-
     speed = 25; // 1 = 0.1 sqm/s
-
     movement = {
         isMoving: false,
         currentFrame: 0,

@@ -10,9 +10,7 @@ import {emit} from "../utils/common.js";
 export default class Movement {
 
     static queuedMove = null;
-
     static easyStar = null;
-
     static path = null;
 
     static init() {

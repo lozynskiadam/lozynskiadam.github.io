@@ -31,7 +31,12 @@ export default class Connector {
             const stack = Board.getTileStack(params.position);
             emit('update-tile', {position: params.position, stack: stack});
             emit('run-effect', {position: params.position, effect: 'ore-hit'});
-            emit('update-inventory-slot', {slot: 0, itemId: 10, quantity: 1});
+
+            let quantity = 1;
+            if (document.querySelector("#inventory").__vueParentComponent.refs.slot[0].item?.id === 10) {
+                quantity = document.querySelector("#inventory").__vueParentComponent.refs.slot[0].quantity + 1;
+            }
+            emit('update-inventory-slot', {slot: 0, itemId: 10, quantity: quantity});
         }
 
         if (params.itemId === 9) {

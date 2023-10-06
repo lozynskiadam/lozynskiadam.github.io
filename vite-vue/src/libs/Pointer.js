@@ -11,17 +11,11 @@ import WebsocketRequest from "./WebsocketRequest.js";
 export default class Pointer {
 
     static positionWindow = {x: null, y: null}
-
     static positionCanvas = {x: null, y: null}
-
     static positionClient = {x: null, y: null}
-
     static positionServer = {x: null, y: null}
-
     static isLeftButtonPressed = false;
-
     static isRightButtonPressed = false;
-
     static grabbing = {
         itemId: null,
         position: {
@@ -29,7 +23,6 @@ export default class Pointer {
             y: null,
         },
     }
-
     static effect = null;
 
     static init() {
