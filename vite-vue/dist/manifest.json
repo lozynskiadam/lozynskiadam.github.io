@@ -1,5 +1,12 @@
 {
-  "short_name": "PoC",
-  "name": "PoC MMORPG",
-  "display": "fullscreen"
+  "short_name": "Ragnoria",
+  "name": "Ragnoria MMORPG",
+  "display": "fullscreen",
+  "icons": [
+    {
+      "src": "/images/icons-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    }
+  ]
 }

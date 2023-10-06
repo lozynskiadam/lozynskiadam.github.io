@@ -90,3 +90,7 @@ export const dye = async function (image, mask, colors) {
         newImage.src = ctx.canvas.toDataURL('image/png');
     });
 }
+
+export const emit = function (name, properties = {}) {
+    window.dispatchEvent(new CustomEvent(name, {detail: properties}));
+}

@@ -1,7 +1,7 @@
 import Board from "./Board.js";
 import {$hero} from "../utils/globals.js";
 import Pointer from "./Pointer.js";
-import {randomString, roll} from "../utils/common.js";
+import {emit, randomString, roll} from "../utils/common.js";
 import {isSamePosition} from "../utils/position.js";
 
 export default class Connector {
@@ -11,36 +11,11 @@ export default class Connector {
     }
 
     static emit(event, params) {
-        if (event === 'move-item') {
-            return Connector.#moveItem(params);
-        }
-        if (event === 'pick-up') {
-            return Connector.#pickUp(params);
-        }
-        if (event === 'use') {
-            return Connector.#use(params);
-        }
-        if (event === 'request-tiles') {
-            return Connector.#requestTiles(params);
-        }
-    }
-
-    static #moveItem(params) {
-        const stackFrom = Board.getTileStack(params.from);
-        stackFrom.pop();
-        const stackTo = Board.getTileStack(params.to);
-        stackTo.push(params.itemId);
-
-        window.dispatchEvent(new CustomEvent('update-tile', {detail: {position: params.from, stack: stackFrom}}));
-        window.dispatchEvent(new CustomEvent('update-tile', {detail: {position: params.to, stack: stackTo}}));
-    }
-
-    static #pickUp(params) {
-        const stack = Board.getTileStack(params.position);
-        stack.pop();
-        window.dispatchEvent(new CustomEvent('update-inventory-slot', {
-            detail: {slot: params.slot, itemId: params.itemId, quantity: 1}
-        }));
+        if (event === 'use') return Connector.#use(params);
+        if (event === 'move-item') return Connector.#moveItem(params);
+        if (event === 'pick-up') return Connector.#pickUp(params);
+        if (event === 'drop') return Connector.#drop(params);
+        if (event === 'request-tiles') return Connector.#requestTiles(params);
     }
 
     static #use(params) {
@@ -48,33 +23,45 @@ export default class Connector {
             const stack = Board.getTileStack(params.position);
             stack.pop();
             stack.push(9);
-            window.dispatchEvent(new CustomEvent('update-tile', {detail: {position: params.position, stack: stack}}));
-            window.dispatchEvent(new CustomEvent('run-effect', {detail: {position: params.position, effect: 'ore-hit'}}));
+            emit('update-tile', {position: params.position, stack: stack});
+            emit('run-effect', {position: params.position, effect: 'ore-hit'});
         }
 
         if (params.itemId === 8) {
             const stack = Board.getTileStack(params.position);
-            window.dispatchEvent(new CustomEvent('update-tile', {detail: {position: params.position, stack: stack}}));
-            window.dispatchEvent(new CustomEvent('run-effect', {detail: {position: params.position, effect: 'ore-hit'}}));
-            window.dispatchEvent(new CustomEvent('update-inventory-slot', {
-                detail: {
-                    slot: 0,
-                    itemId: 10,
-                    quantity: 1
-                }
-            }));
+            emit('update-tile', {position: params.position, stack: stack});
+            emit('run-effect', {position: params.position, effect: 'ore-hit'});
+            emit('update-inventory-slot', {slot: 0, itemId: 10, quantity: 1});
         }
 
         if (params.itemId === 9) {
-            window.dispatchEvent(new CustomEvent('run-effect', {
-                detail: {
-                    position: $hero.position,
-                    effect: 'yellow-sparkles'
-                }
-            }));
+            emit('run-effect', {position: $hero.position, effect: 'yellow-sparkles'})
         }
 
         Pointer.updateCursorAndServerPosition();
+    }
+
+    static #moveItem(params) {
+        const stackFrom = Board.getTileStack(params.from);
+        stackFrom.pop();
+        const stackTo = Board.getTileStack(params.to);
+        stackTo.push(params.itemId);
+        emit('update-tile', {position: params.from, stack: stackFrom});
+        emit('update-tile', {position: params.to, stack: stackTo});
+    }
+
+    static #pickUp(params) {
+        const stack = Board.getTileStack(params.position);
+        stack.pop();
+        emit('update-inventory-slot', {slot: params.slot, itemId: params.itemId, quantity: 1});
+    }
+
+    static #drop(params) {
+        const itemId = document.querySelector("#inventory").__vueParentComponent.refs.slot[params.slot].item.id;
+        const stack = Board.getTileStack(params.position);
+        stack.push(itemId);
+        emit('update-tile', {position: params.position, stack: stack});
+        emit('update-inventory-slot', {slot: params.slot, itemId: null});
     }
 
     static #requestTiles(params) {
@@ -103,15 +90,9 @@ export default class Connector {
                 }
             }
 
-            window.dispatchEvent(new CustomEvent('update-tile', {detail: {position: position, stack: stack}}));
-
+            emit('update-tile', {position: position, stack: stack});
             if (roll(350)) {
-                window.dispatchEvent(new CustomEvent('add-creature', {
-                    detail: {
-                        position: position,
-                        name: 'NPC #' + randomString(4)
-                    }
-                }));
+                emit('add-creature', {position: position, name: 'NPC #' + randomString(4)});
             }
         }
     }

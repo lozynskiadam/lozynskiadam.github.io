@@ -21,6 +21,7 @@ import Board from "./libs/Board.js";
 import Connector from "./libs/ConnectorMock.js";
 import Inventory from "./components/Inventory.vue";
 import Vitality from "./components/Vitality.vue";
+import {emit} from "./utils/common.js";
 
 export default {
   components: {Inventory, Vitality},
@@ -42,12 +43,7 @@ export default {
 
     async enter(hero) {
       globals().setHero(hero);
-      window.dispatchEvent(new CustomEvent("update-vitals", {detail: {
-        health: 100,
-        mana: 50,
-        maxHealth: 100,
-        maxMana: 100
-      }}));
+      emit("update-vitals", {health: 100, mana: 50, maxHealth: 100, maxMana: 100});
       Keyboard.init();
       Pointer.init();
       Movement.init();

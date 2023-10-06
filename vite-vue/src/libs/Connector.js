@@ -1,4 +1,5 @@
 import {WEBSOCKET_URL} from "../config.js";
+import {emit} from "../utils/common.js";
 
 export default class Connector {
 
@@ -21,7 +22,7 @@ export default class Connector {
 
     static onMessage(e) {
         let message = JSON.parse(e.data);
-        window.dispatchEvent(new CustomEvent(message.event, {detail: message.params}));
+        emit(message.event, message.params);
     }
 
     static onClose() {

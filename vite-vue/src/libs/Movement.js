@@ -5,6 +5,7 @@ import {isPositionInRange, isSamePosition} from "../utils/position.js";
 import Pointer from "./Pointer.js";
 import {$hero} from "../utils/globals.js";
 import WebsocketRequest from "./WebsocketRequest.js";
+import {emit} from "../utils/common.js";
 
 export default class Movement {
 
@@ -74,7 +75,7 @@ export default class Movement {
         Movement.updateOffsetAfterAnimationFrameChange(creature, direction);
         if (creature.movement.currentFrame === (TILE_SIZE / 2)) {
             creature.position = position;
-            window.dispatchEvent(new CustomEvent("hero-position-changed"));
+            emit('hero-position-changed');
             Movement.updateOffsetAfterPositionChange(creature, direction);
         }
         if (creature.movement.currentFrame === TILE_SIZE) {

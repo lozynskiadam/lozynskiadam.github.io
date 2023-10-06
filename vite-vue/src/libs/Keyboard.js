@@ -3,6 +3,7 @@ import Pointer from "./Pointer.js";
 import Item from "./Item.js";
 import Movement from "./Movement.js";
 import Board from "./Board.js";
+import {emit} from "../utils/common.js";
 
 export default class Keyboard {
 
@@ -24,22 +25,22 @@ export default class Keyboard {
             },
         });
         bindKey('i', () => {
-            window.dispatchEvent(new CustomEvent('inventory-toggle'));
+            emit('inventory-toggle');
         });
     }
 
     static triggerKeyHoldingFunctions = () => {
         if (checkKey('ArrowUp') || checkKey('w')) {
-            window.dispatchEvent(new CustomEvent("move-north"));
+            emit('move-north');
         }
         if (checkKey('ArrowDown') || checkKey('s')) {
-            window.dispatchEvent(new CustomEvent("move-south"));
+            emit('move-south');
         }
         if (checkKey('ArrowLeft') || checkKey('a')) {
-            window.dispatchEvent(new CustomEvent("move-west"));
+            emit('move-west');
         }
         if (checkKey('ArrowRight') || checkKey('d')) {
-            window.dispatchEvent(new CustomEvent("move-east"));
+            emit('move-east');
         }
     }
 

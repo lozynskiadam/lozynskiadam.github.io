@@ -34,6 +34,7 @@ export default {
     clear() {
       this.item = null;
       this.quantity = null;
+      this.$el.querySelector('canvas')?.remove();
     },
   }
 }
