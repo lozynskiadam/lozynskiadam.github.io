@@ -26,13 +26,21 @@ export default {
       visible: false,
     }
   },
+  methods: {
+    getSlot(slot) {
+      return this.$refs.slot[slot];
+    },
+    getSlots() {
+      return this.$refs.slot;
+    }
+  },
   mounted() {
     globals().setInventory(this);
     window.addEventListener("update-inventory-slot", (event) => {
       if (event.detail.itemId) {
-        this.$refs.slot[event.detail.slot].set(event.detail.itemId, event.detail.quantity);
+        this.getSlot(event.detail.slot).set(event.detail.itemId, event.detail.quantity);
       } else {
-        this.$refs.slot[event.detail.slot].clear();
+        this.getSlot(event.detail.slot).clear();
       }
     });
     window.addEventListener("inventory-toggle", () => {

@@ -20,6 +20,8 @@
 </template>
 
 <script>
+import {globals} from "../utils/globals.js";
+
 export default {
   name: 'Vitality',
   data() {
@@ -32,6 +34,7 @@ export default {
     }
   },
   mounted() {
+    globals().setVitality(this);
     window.addEventListener("update-vitals", (event) => {
       if (typeof event.detail.health !== 'undefined') this.health = event.detail.health;
       if (typeof event.detail.mana !== 'undefined') this.mana = event.detail.mana;

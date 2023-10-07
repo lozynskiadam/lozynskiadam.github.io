@@ -3,7 +3,7 @@ export const rand = function (max) {
 }
 
 export const roll = function (max) {
-    return rand(max) === max;
+    return (Math.floor(Math.random() * (max)) + 1) === max;
 }
 
 export const randomString = function (length) {

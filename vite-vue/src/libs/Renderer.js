@@ -42,7 +42,11 @@ export default class Renderer {
             });
 
             Board.getVisibleEffectsSprites(positionServer).forEach((sprite) => {
-                Renderer.drawSprite(positionClient, sprite, altitude);
+                if (sprite.customData.onCreature ?? false) {
+                    Renderer.drawSprite(positionClient, sprite, altitude + Math.ceil(TILE_SIZE / 8));
+                } else {
+                    Renderer.drawSprite(positionClient, sprite, altitude);
+                }
             });
         }
     }

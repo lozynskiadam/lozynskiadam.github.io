@@ -49,7 +49,7 @@ export default {
       Movement.init();
       Board.init();
       Renderer.render();
-      Effect.get('energy').run($hero.position);
+      Effect.get('energy').run($hero.position, true);
     }
 
   },

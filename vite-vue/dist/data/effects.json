@@ -9,6 +9,18 @@
     },
     {
         "id": "yellow-sparkles",
-        "sprite": "effect-yellow-sparkles"
+        "sprite": "effect-sparkles-yellow"
+    },
+    {
+        "id": "red-sparkles",
+        "sprite": "effect-sparkles-red"
+    },
+    {
+        "id": "blue-sparkles",
+        "sprite": "effect-sparkles-blue"
+    },
+    {
+        "id": "blood",
+        "sprite": "effect-blood"
     }
 ]

@@ -97,9 +97,9 @@
   },
   {
     "id": 9,
-    "name": "potion",
+    "name": "health potion",
     "type": "object",
-    "sprite": "potion",
+    "sprite": "health-potion",
     "altitude": 0,
     "isUsable": true,
     "isMovable": true,
@@ -117,6 +117,42 @@
     "isMovable": true,
     "isPickupable": true,
     "isBlockingCreatures": false,
+    "isBlockingItems": false
+  },
+  {
+    "id": 11,
+    "name": "mana-potion",
+    "type": "object",
+    "sprite": "mana-potion",
+    "altitude": 0,
+    "isUsable": true,
+    "isMovable": true,
+    "isPickupable": true,
+    "isBlockingCreatures": false,
+    "isBlockingItems": false
+  },
+  {
+    "id": 12,
+    "name": "spikes off",
+    "type": "object",
+    "sprite": "spikes-off",
+    "altitude": 0,
+    "isUsable": false,
+    "isMovable": false,
+    "isPickupable": false,
+    "isBlockingCreatures": false,
+    "isBlockingItems": false
+  },
+  {
+    "id": 13,
+    "name": "spikes on",
+    "type": "object",
+    "sprite": "spikes-on",
+    "altitude": 0,
+    "isUsable": false,
+    "isMovable": false,
+    "isPickupable": false,
+    "isBlockingCreatures": true,
     "isBlockingItems": false
   }
 ]

@@ -36,7 +36,7 @@ export default class Effect {
         return Effect.#instances[id] ?? null;
     }
 
-    run(position) {
+    run(position, onCreature = false) {
         if (!Board.effects[position.y]) {
             Board.effects[position.y] = {};
         }
@@ -46,6 +46,9 @@ export default class Effect {
 
         const uuid = ++Effect.#lastUID;
         const sprite = this.#sprite.clone();
+        sprite.customData = {
+            onCreature: onCreature
+        };
         Board.effects[position.y][position.x][uuid] = sprite;
         sprite.play().then(() => {
             delete Board.effects[position.y][position.x][uuid];

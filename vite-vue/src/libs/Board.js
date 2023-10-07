@@ -41,7 +41,7 @@ export default class Board {
             Board.updateTile(event.detail.position, event.detail.stack);
         });
         window.addEventListener("run-effect", (event) => {
-            Effect.get(event.detail.effect).run(event.detail.position);
+            Effect.get(event.detail.effect).run(event.detail.position, event.detail.onCreature ?? false);
         });
         window.addEventListener("add-creature", (event) => {
             new Creature(event.detail.name, event.detail.position)
