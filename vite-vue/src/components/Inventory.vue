@@ -16,6 +16,7 @@
 
 <script>
 import Slot from "./Slot.vue";
+import {globals} from "../utils/globals.js";
 
 export default {
   name: 'Inventory',
@@ -26,6 +27,7 @@ export default {
     }
   },
   mounted() {
+    globals().setInventory(this);
     window.addEventListener("update-inventory-slot", (event) => {
       if (event.detail.itemId) {
         this.$refs.slot[event.detail.slot].set(event.detail.itemId, event.detail.quantity);

@@ -1,5 +1,5 @@
 import Board from "./Board.js";
-import {$hero} from "../utils/globals.js";
+import {$hero, $inventory} from "../utils/globals.js";
 import Pointer from "./Pointer.js";
 import {emit, randomString, roll} from "../utils/common.js";
 import {isSamePosition} from "../utils/position.js";
@@ -33,8 +33,8 @@ export default class Connector {
             emit('run-effect', {position: params.position, effect: 'ore-hit'});
 
             let quantity = 1;
-            if (document.querySelector("#inventory").__vueParentComponent.refs.slot[0].item?.id === 10) {
-                quantity = document.querySelector("#inventory").__vueParentComponent.refs.slot[0].quantity + 1;
+            if ($inventory.$refs.slot[0].item?.id === 10) {
+                quantity = $inventory.$refs.slot[0].quantity + 1;
             }
             emit('update-inventory-slot', {slot: 0, itemId: 10, quantity: quantity});
         }
@@ -62,7 +62,7 @@ export default class Connector {
     }
 
     static #drop(params) {
-        const itemId = document.querySelector("#inventory").__vueParentComponent.refs.slot[params.slot].item.id;
+        const itemId = $inventory.$refs.slot[params.slot].item.id;
         const stack = Board.getTileStack(params.position);
         stack.push(itemId);
         emit('update-tile', {position: params.position, stack: stack});
