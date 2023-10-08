@@ -20,7 +20,7 @@
 </template>
 
 <script>
-import {globals} from "../utils/globals.js";
+import {$hero, globals} from "../utils/globals.js";
 import {emit} from "../utils/common.js";
 
 export default {
@@ -46,6 +46,7 @@ export default {
       if (typeof event.detail.states !== 'undefined') this.states = event.detail.states;
       this.healthPercent = Math.ceil((this.health / this.maxHealth) * 100);
       this.manaPercent = Math.ceil((this.mana / this.maxMana) * 100);
+      $hero.healthPercent = this.healthPercent;
       if (this.health === 0) {
         emit('dead');
       }

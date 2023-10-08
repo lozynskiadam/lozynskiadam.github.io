@@ -15,6 +15,10 @@
 </template>
 
 <script>
+import Movement from "../libs/Movement.js";
+import Board from "../libs/Board.js";
+import {$hero} from "../utils/globals.js";
+
 export default {
   name: 'DeadDisplay',
   data() {
@@ -30,6 +34,9 @@ export default {
   mounted() {
     window.addEventListener("dead", () => {
       this.visible = true;
+      Movement.clearPath();
+      Movement.isBlocked = true;
+      delete Board.creatures[$hero.name];
     });
   }
 }

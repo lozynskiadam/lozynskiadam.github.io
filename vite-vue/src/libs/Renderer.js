@@ -97,7 +97,7 @@ export default class Renderer {
         Board.hudCtx.globalAlpha = 0.5;
         Board.hudCtx.fillRect(left-1, top-1, image.width+2, image.height+2);
         Board.hudCtx.globalAlpha = 1;
-        Board.hudCtx.drawImage(image, left, top, Math.ceil(image.width * $vitality.healthPercent / 100), image.height);
+        Board.hudCtx.drawImage(image, left, top, Math.ceil(image.width * creature.healthPercent / 100), image.height);
     }
 
     static render() {

@@ -11,6 +11,7 @@ export default class Creature {
     offset = {x: null, y: null}
     sprite = null;
     speed = 25; // 1 = 0.1 sqm/s
+    healthPercent = 100;
     movement = {
         isMoving: false,
         currentFrame: 0,

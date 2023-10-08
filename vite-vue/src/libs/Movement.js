@@ -12,6 +12,7 @@ export default class Movement {
     static queuedMove = null;
     static easyStar = null;
     static path = null;
+    static isBlocked = false;
 
     static init() {
         Movement.easyStar = new EasyStar.js()
@@ -34,6 +35,10 @@ export default class Movement {
     }
 
     static walk(direction) {
+        if (Movement.isBlocked) {
+            return false;
+        }
+
         if ($hero.movement.isMoving) {
             if ($hero.movement.currentFrame > (TILE_SIZE - (TILE_SIZE/3))) {
                 Movement.queuedMove = direction;
