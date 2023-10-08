@@ -6,11 +6,11 @@
   <div id="vitality">
     <div class="icon"></div>
     <div class="health-bar">
-      <div class="indicator" :style="{width: health / maxHealth * 100 + '%'}"></div>
+      <div class="indicator" :style="{width: healthPercent + '%'}"></div>
       <div class="label">{{ health }} / {{ maxHealth }}</div>
     </div>
     <div class="mana-bar">
-      <div class="indicator" :style="{width: mana / maxMana * 100 + '%'}"></div>
+      <div class="indicator" :style="{width: manaPercent + '%'}"></div>
       <div class="label">{{ mana }} / {{ maxMana }}</div>
     </div>
     <div>
@@ -27,9 +27,11 @@ export default {
   data() {
     return {
       health: 0,
-      maxHealth: 0,
       mana: 0,
+      maxHealth: 0,
       maxMana: 0,
+      healthPercent: 0,
+      manaPercent: 0,
       states: []
     }
   },
@@ -41,6 +43,8 @@ export default {
       if (typeof event.detail.maxHealth !== 'undefined') this.maxHealth = event.detail.maxHealth;
       if (typeof event.detail.maxMana !== 'undefined') this.maxMana = event.detail.maxMana;
       if (typeof event.detail.states !== 'undefined') this.states = event.detail.states;
+      this.healthPercent = Math.ceil((this.health / this.maxHealth) * 100);
+      this.manaPercent = Math.ceil((this.mana / this.maxMana) * 100);
     });
   }
 }

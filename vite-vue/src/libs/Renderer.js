@@ -4,7 +4,7 @@ import Item from "./Item.js";
 import Pointer from "./Pointer.js";
 import Sprite from "./Sprite.js";
 import Board from "./Board.js";
-import {$hero} from "../utils/globals.js";
+import {$hero, $vitality} from "../utils/globals.js";
 
 export default class Renderer {
 
@@ -93,7 +93,11 @@ export default class Renderer {
 
         top = top - (23 * Board.scale);
         left = left + ((TILE_SIZE * Board.scale) / 2) - Math.ceil(image.width / 2);
-        Board.hudCtx.drawImage(Sprite.get('hp-bar').getFrame(), left, top);
+        Board.hudCtx.fillStyle = "#000000";
+        Board.hudCtx.globalAlpha = 0.5;
+        Board.hudCtx.fillRect(left-1, top-1, image.width+2, image.height+2);
+        Board.hudCtx.globalAlpha = 1;
+        Board.hudCtx.drawImage(image, left, top, Math.ceil(image.width * $vitality.healthPercent / 100), image.height);
     }
 
     static render() {
