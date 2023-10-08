@@ -95,10 +95,6 @@ export default class Pointer {
         if (Pointer.grabbing.itemId) {
             return;
         }
-        if (Keyboard.shift.isPressed) {
-            Pointer.setCursor('eye');
-            return;
-        }
 
         const itemId = Board.getTileTopItem(Pointer.positionServer);
         if (itemId === 6) {

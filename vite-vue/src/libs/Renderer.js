@@ -4,7 +4,6 @@ import Item from "./Item.js";
 import Pointer from "./Pointer.js";
 import Sprite from "./Sprite.js";
 import Board from "./Board.js";
-import Keyboard from "./Keyboard.js";
 import {$hero} from "../utils/globals.js";
 
 export default class Renderer {
@@ -20,18 +19,13 @@ export default class Renderer {
 
         if (layer === 'objects') {
             let altitude = 0;
-
             tile.forEach((itemId) => {
                 const item = Item.get(itemId);
                 if (item.type === 'object') {
                     Renderer.drawSprite(positionClient, item.sprite, altitude);
+                    altitude += item.altitude;
                 }
-                altitude += item.altitude;
             });
-
-            if (Keyboard.shift.isPressed && isSamePosition(positionClient, Pointer.positionClient)) {
-                Renderer.drawSprite(positionClient, Sprite.get('cursor'));
-            }
 
             Object.values(Board.creatures).forEach((creature) => {
                 if (isSamePosition(positionServer, creature.position)) {
@@ -55,14 +49,14 @@ export default class Renderer {
         const image = sprite.getFrame();
         const top = (position.y * TILE_SIZE) + (TILE_SIZE - image.height) - altitude;
         const left = (position.x * TILE_SIZE) + (Math.ceil(TILE_SIZE / 2) - Math.ceil(image.width / 2));
-        Renderer.tempCtx.drawImage(image, left, top);
+        Board.tempCtx.drawImage(image, left, top);
     }
 
     static drawCreature(position, creature, altitude = 0) {
         const image = creature.sprite.getFrame();
         const top = (position.y * TILE_SIZE) + (TILE_SIZE - image.height) - Math.ceil(TILE_SIZE / 8) + creature.offset.y - altitude;
         const left = (position.x * TILE_SIZE) + (Math.ceil(TILE_SIZE / 2) - Math.ceil(image.width / 2)) + creature.offset.x;
-        Renderer.tempCtx.drawImage(image, left, top);
+        Board.tempCtx.drawImage(image, left, top);
     }
 
     static drawNickname(position, creature, altitude = 0) {
@@ -76,9 +70,9 @@ export default class Renderer {
         left *= Board.scale;
 
         Board.hudCtx.fillStyle = "#ffffff";
+        Board.hudCtx.strokeStyle = "#000000";
         Board.hudCtx.font = "16px Hind Vadodara";
         Board.hudCtx.lineWidth = 2;
-        Board.hudCtx.strokeStyle = "#000000";
 
         top = top - (25 * Board.scale) - 1;
         left = left + ((TILE_SIZE * Board.scale) / 2) - Math.ceil(Board.hudCtx.measureText(creature.name).width / 2);
@@ -102,20 +96,8 @@ export default class Renderer {
         Board.hudCtx.drawImage(Sprite.get('hp-bar').getFrame(), left, top);
     }
 
-    static cropEdges(ctx) {
-        ctx.clearRect(0, 0, TILE_SIZE, ctx.canvas.height);
-        ctx.clearRect(0, 0, ctx.canvas.width, TILE_SIZE);
-        ctx.clearRect(ctx.canvas.width - TILE_SIZE, 0, ctx.canvas.width, ctx.canvas.height);
-        ctx.clearRect(0, ctx.canvas.height - TILE_SIZE, ctx.canvas.width, ctx.canvas.height);
-    }
-
     static render() {
-        const canvas = document.createElement('canvas');
-        canvas.width = Board.ctx.canvas.width;
-        canvas.height = Board.ctx.canvas.height;
-        Renderer.tempCtx = canvas.getContext('2d');
-        Renderer.tempCtx.fillStyle = '#25131a';
-        Renderer.tempCtx.fillRect(0, 0, Renderer.tempCtx.canvas.width, Renderer.tempCtx.canvas.height);
+        Board.tempCtx.fillRect(0, 0, Board.tempCtx.canvas.width, Board.tempCtx.canvas.height);
         Board.hudCtx.clearRect(0, 0, Board.hudCtx.canvas.width, Board.hudCtx.canvas.height);
 
         for (let layer of ['ground', 'objects']) {
@@ -131,10 +113,8 @@ export default class Renderer {
                 y++;
             }
         }
-        Renderer.renderPointerEffect(Renderer.tempCtx);
-        Board.ctx.clearRect(0, 0, Board.ctx.canvas.width, Board.ctx.canvas.height);
-        Board.ctx.drawImage(canvas, -$hero.offset.x, -$hero.offset.y);
-        Renderer.cropEdges(Board.ctx);
+        Renderer.renderPointerEffect(Board.tempCtx);
+        Board.ctx.drawImage(Board.tempCtx.canvas, -$hero.offset.x, -$hero.offset.y);
 
         window.requestAnimationFrame(Renderer.render);
     }

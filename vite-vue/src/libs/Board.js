@@ -8,6 +8,7 @@ import Creature from "./Creature.js";
 export default class Board {
 
     static ctx = null;
+    static tempCtx = null;
     static hudCtx = null;
     static scale = window.innerWidth <= DEVICE_BREAKPOINT ? SCALE_MOBILE : SCALE_DESKTOP;
     static width = null;
@@ -32,8 +33,15 @@ export default class Board {
         hud.height = TILE_SIZE * BOARD_HEIGHT * Board.scale;
         document.querySelector('#app').append(hud);
 
-        Board.ctx = canvas.getContext("2d");
+        const temp = document.createElement('canvas');
+        temp.width = TILE_SIZE * BOARD_WIDTH;
+        temp.height = TILE_SIZE * BOARD_HEIGHT;
+
+        Board.ctx = canvas.getContext("2d", {alpha: false});
+        Board.ctx.fillStyle = '#25131a';
         Board.hudCtx = hud.getContext("2d");
+        Board.tempCtx = temp.getContext("2d");
+        Board.tempCtx.fillStyle = '#25131a';
         Board.width = BOARD_WIDTH;
         Board.height = BOARD_HEIGHT;
 

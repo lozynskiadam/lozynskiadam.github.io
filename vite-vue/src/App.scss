@@ -58,9 +58,17 @@ body {
   image-rendering: -moz-crisp-edges;
   image-rendering: crisp-edges;
   user-select: none;
+
+  // cropping edges
+  outline: 34px solid #25131a;
+  outline-offset: -32px;
 }
 
 #hud {
   position: absolute;
   pointer-events: none;
+
+  // cropping edges
+  outline: 34px solid #25131a;
+  outline-offset: -32px;
 }
