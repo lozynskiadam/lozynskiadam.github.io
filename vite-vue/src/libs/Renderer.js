@@ -117,18 +117,33 @@ export default class Renderer {
                 y++;
             }
         }
-        Renderer.renderPointerEffect(Board.tempCtx);
+        Renderer.renderTexts();
+        Renderer.renderPointerEffect();
         Board.ctx.drawImage(Board.tempCtx.canvas, -$hero.offset.x, -$hero.offset.y);
 
         window.requestAnimationFrame(Renderer.render);
     }
 
-    static renderPointerEffect(ctx) {
+    static renderTexts() {
+        Board.hudCtx.font = "bold 18px Hind Vadodara";
+        Board.hudCtx.lineWidth = 2;
+
+        for (let text of Object.values(Board.texts)) {
+            Board.hudCtx.fillStyle = text.color;
+            let top = text.position.y * TILE_SIZE * Board.scale + text.offset.y - (TILE_SIZE / 2);
+            let left = text.position.x * TILE_SIZE * Board.scale + text.offset.x;
+            left = left + ((TILE_SIZE * Board.scale) / 2) - Math.ceil(Board.hudCtx.measureText(text.content).width / 2);
+            Board.hudCtx.strokeText(text.content, left, top);
+            Board.hudCtx.fillText(text.content, left, top);
+        }
+    }
+
+    static renderPointerEffect() {
         if (!Pointer.effect) return;
 
         const image = Pointer.effect.sprite.getFrame();
         const position = Pointer.effect.position;
         const offset = $hero.offset;
-        ctx.drawImage(image, position.x + offset.x - (image.width / 2), position.y + offset.y - (image.height / 2));
+        Board.tempCtx.drawImage(image, position.x + offset.x - (image.width / 2), position.y + offset.y - (image.height / 2));
     }
 }

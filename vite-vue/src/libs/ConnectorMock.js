@@ -122,6 +122,7 @@ export default class Connector {
                 let health = $vitality.health - 15;
                 if (health < 0) health = 0;
                 stack[index] = 13;
+                Board.update();
                 emit('run-effect', {position: $hero.position, effect: 'blood', onCreature: true});
                 emit('update-vitals', {health: health});
                 setTimeout(() => {stack[index] = 12}, 1000);

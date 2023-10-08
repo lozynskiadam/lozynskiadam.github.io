@@ -18,6 +18,7 @@ export default class Board {
     static tiles = {};
     static effects = {};
     static creatures = {};
+    static texts = {};
 
     static init() {
         const canvas = document.createElement('canvas');
