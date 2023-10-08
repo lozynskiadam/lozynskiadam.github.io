@@ -124,7 +124,7 @@ export default class Connector {
                 stack[index] = 13;
                 emit('run-effect', {position: $hero.position, effect: 'blood', onCreature: true});
                 emit('update-vitals', {health: health});
-                setTimeout(() => {stack[index] = 12}, 2000);
+                setTimeout(() => {stack[index] = 12}, 1000);
             }
         });
     }

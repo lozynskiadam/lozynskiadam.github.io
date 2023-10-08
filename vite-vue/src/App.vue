@@ -5,6 +5,7 @@
 <template>
   <Inventory v-if="loaded"/>
   <Vitality v-if="loaded"/>
+  <DeadDisplay v-if="loaded"/>
 </template>
 
 <script>
@@ -22,9 +23,10 @@ import Connector from "./libs/ConnectorMock.js";
 import Inventory from "./components/Inventory.vue";
 import Vitality from "./components/Vitality.vue";
 import {emit} from "./utils/common.js";
+import DeadDisplay from "./components/DeadDisplay.vue";
 
 export default {
-  components: {Inventory, Vitality},
+  components: {DeadDisplay, Inventory, Vitality},
   data() {
     return {
       loaded: false
