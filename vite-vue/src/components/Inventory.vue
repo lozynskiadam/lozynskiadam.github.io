@@ -17,6 +17,7 @@
 <script>
 import Slot from "./Slot.vue";
 import {globals} from "../utils/globals.js";
+import {playAudio} from "../utils/audio.js";
 
 export default {
   name: 'Inventory',
@@ -24,6 +25,10 @@ export default {
   data() {
     return {
       visible: false,
+      audio: {
+        open: null,
+        close: null,
+      }
     }
   },
   methods: {
@@ -45,6 +50,11 @@ export default {
     });
     window.addEventListener("inventory-toggle", () => {
       this.visible = !this.visible;
+      if (this.visible) {
+        playAudio('inventoryOpen');
+      } else {
+        playAudio('inventoryClose');
+      }
     });
   }
 }

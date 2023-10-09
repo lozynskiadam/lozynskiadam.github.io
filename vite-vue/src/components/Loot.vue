@@ -8,6 +8,7 @@
 
 <script>
 import Item from "../libs/Item.js";
+import {playAudio} from "../utils/audio.js";
 
 export default {
   name: 'Loot',
@@ -34,6 +35,7 @@ export default {
       setTimeout(() => {
         $element.remove();
       }, 3000);
+      playAudio('pickup');
     }
   },
   mounted() {

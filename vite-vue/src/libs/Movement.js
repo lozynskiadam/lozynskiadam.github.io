@@ -6,6 +6,7 @@ import Pointer from "./Pointer.js";
 import {$hero} from "../utils/globals.js";
 import WebsocketRequest from "./WebsocketRequest.js";
 import {emit} from "../utils/common.js";
+import {playAudio} from "../utils/audio.js";
 
 export default class Movement {
 
@@ -59,6 +60,7 @@ export default class Movement {
     }
 
     static move(creature, position, direction) {
+        playAudio('footstep');
         creature.movement.timeouts.forEach((timeout) => clearTimeout(timeout));
         creature.movement.timeouts = [];
         creature.currentFrame = 0;

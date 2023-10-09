@@ -46,10 +46,16 @@
         border-radius: 5px;
         background: linear-gradient(135deg, rgba(100, 116, 134, 0.2) 0%, rgba(19, 25, 32, 0.7) 100%);
         padding: 0.25rem 0.75rem;
+        transition: all 0.2s;
 
-        &:hover {
+        &:hover:not([disabled]) {
+          background: linear-gradient(135deg, rgba(100, 116, 134, 0.3) 0%, rgba(19, 25, 32, 0.7) 100%);
           color: rgba(248, 248, 248, 0.92);
           text-shadow: 0 0 4px rgba(255, 255, 255, 0.75);
+        }
+
+        &[disabled] {
+          opacity: 0.75;
         }
       }
     }

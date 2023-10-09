@@ -1,8 +1,9 @@
 import Board from "./Board.js";
 import {$hero, $inventory, $vitality} from "../utils/globals.js";
 import Pointer from "./Pointer.js";
-import {emit, randomString, roll} from "../utils/common.js";
+import {emit, rand, randomString, roll} from "../utils/common.js";
 import {isSamePosition} from "../utils/position.js";
+import {playAudio} from "../utils/audio.js";
 
 export default class Connector {
 
@@ -29,19 +30,23 @@ export default class Connector {
             const stack = Board.getTileStack(params.position);
             stack.pop();
             stack.push(roll(2) ? 9 : 11);
+            playAudio('chest');
             emit('update-tile', {position: params.position, stack: stack});
             emit('run-effect', {position: params.position, effect: 'yellow-sparkles'});
         }
 
         if (params.itemId === 8) {
+            playAudio('mining');
             emit('run-effect', {position: params.position, effect: 'ore-hit'});
 
-            let quantity = 1;
-            if ($inventory.getSlot(0).item?.id === 10) {
-                quantity = $inventory.getSlot(0).quantity + 1;
+            let quantity = rand(3);
+            if (roll(3) && quantity) {
+                emit('loot', {itemId: 10, quantity: quantity});
+                if ($inventory.getSlot(0).item?.id === 10) {
+                    quantity = $inventory.getSlot(0).quantity + 1;
+                }
+                emit('update-inventory-slot', {slot: 0, itemId: 10, quantity: quantity});
             }
-            emit('loot', {itemId: 10, quantity: 1});
-            emit('update-inventory-slot', {slot: 0, itemId: 10, quantity: quantity});
         }
 
         if (params.itemId === 9) {
@@ -49,6 +54,7 @@ export default class Connector {
             if (health > $vitality.maxHealth) health = $vitality.maxHealth;
             emit('update-vitals', {health: health});
             emit('run-effect', {position: $hero.position, effect: 'red-sparkles'})
+            playAudio('potion');
         }
 
         if (params.itemId === 11) {
@@ -56,6 +62,7 @@ export default class Connector {
             if (mana > $vitality.maxMana) mana = $vitality.maxMana;
             emit('update-vitals', {mana: mana});
             emit('run-effect', {position: $hero.position, effect: 'blue-sparkles'})
+            playAudio('potion');
         }
 
         Pointer.updateCursorAndServerPosition();
@@ -129,6 +136,7 @@ export default class Connector {
                 Board.update();
                 emit('run-effect', {position: $hero.position, effect: 'blood', onCreature: true});
                 emit('update-vitals', {health: health});
+                playAudio('spikes');
                 setTimeout(() => {stack[index] = 12}, 1000);
             }
         });
