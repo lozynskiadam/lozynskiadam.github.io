@@ -9,7 +9,7 @@
   height: 32px;
   background: transparent;
   border: 0;
-  z-index: 2;
+  z-index: 5;
   opacity: 0.5;
 
   &.active {
@@ -22,7 +22,7 @@
   right: 50px;
   top: 50px;
   width: 372px;
-  z-index: 3;
+  z-index: 4;
   color: #ffffff;
   cursor: url(../assets/images/cursor.png), default;
   border: 1px solid #131920;
