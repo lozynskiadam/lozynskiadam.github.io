@@ -40,6 +40,7 @@ export default class Connector {
             if ($inventory.getSlot(0).item?.id === 10) {
                 quantity = $inventory.getSlot(0).quantity + 1;
             }
+            emit('loot', {itemId: params.itemId, quantity: 1});
             emit('update-inventory-slot', {slot: 0, itemId: 10, quantity: quantity});
         }
 

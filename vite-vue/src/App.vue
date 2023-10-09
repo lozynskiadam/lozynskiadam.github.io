@@ -6,10 +6,12 @@
   <Inventory v-if="loaded"/>
   <Vitality v-if="loaded"/>
   <DeadDisplay v-if="loaded"/>
+  <Loot v-if="loaded"/>
 </template>
 
 <script>
 import {$hero, globals} from "./utils/globals.js";
+import {emit} from "./utils/common.js";
 import Sprite from "./libs/Sprite.js";
 import Item from "./libs/Item.js";
 import Effect from "./libs/Effect.js";
@@ -22,11 +24,11 @@ import Board from "./libs/Board.js";
 import Connector from "./libs/ConnectorMock.js";
 import Inventory from "./components/Inventory.vue";
 import Vitality from "./components/Vitality.vue";
-import {emit} from "./utils/common.js";
 import DeadDisplay from "./components/DeadDisplay.vue";
+import Loot from "./components/Loot.vue";
 
 export default {
-  components: {DeadDisplay, Inventory, Vitality},
+  components: {DeadDisplay, Inventory, Vitality, Loot},
   data() {
     return {
       loaded: false
