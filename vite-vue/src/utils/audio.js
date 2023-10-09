@@ -14,5 +14,6 @@ export const audios = {
     background: new Audio('sfx/background.m4a'),
 }
 export const playAudio = function (name) {
-    audios[name].cloneNode().play();
+    audios[name].currentTime = 0
+    audios[name].play();
 }
