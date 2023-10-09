@@ -166,17 +166,15 @@ export default class Board {
 
     static addFloatingText(content, color) {
         const uid = randomString(8);
-        const position = {...$hero.position};
 
         Board.texts[uid] = {
-            position: Board.positionServerToClient(position),
+            position: {...$hero.position},
             content: content,
             offset: {x: 0, y: -(TILE_SIZE / 2)},
             color: color,
             iteration: 0
         };
         const interval = setInterval(() => {
-            Board.texts[uid].position = Board.positionServerToClient(position);
             Board.texts[uid].offset.y--;
             Board.texts[uid].iteration++;
             if (Board.texts[uid].iteration >= 30) {

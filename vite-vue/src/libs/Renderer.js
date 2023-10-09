@@ -129,9 +129,10 @@ export default class Renderer {
         Board.hudCtx.lineWidth = 2;
 
         for (let text of Object.values(Board.texts)) {
+            const position = Board.positionServerToClient(text.position);
             Board.hudCtx.fillStyle = text.color;
-            const top = ((text.position.y * TILE_SIZE - $hero.offset.y) * Board.scale) + text.offset.y;
-            let left = ((text.position.x * TILE_SIZE - $hero.offset.x) * Board.scale) + text.offset.x;
+            const top = ((position.y * TILE_SIZE - $hero.offset.y) * Board.scale) + text.offset.y;
+            let left = ((position.x * TILE_SIZE - $hero.offset.x) * Board.scale) + text.offset.x;
             left = left + ((TILE_SIZE * Board.scale) / 2) - Math.ceil(Board.hudCtx.measureText(text.content).width / 2);
             Board.hudCtx.strokeText(text.content, left, top);
             Board.hudCtx.fillText(text.content, left, top);
