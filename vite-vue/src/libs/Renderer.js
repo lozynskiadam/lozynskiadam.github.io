@@ -4,7 +4,7 @@ import Item from "./Item.js";
 import Pointer from "./Pointer.js";
 import Sprite from "./Sprite.js";
 import Board from "./Board.js";
-import {$hero, $vitality} from "../utils/globals.js";
+import {$hero} from "../utils/globals.js";
 
 export default class Renderer {
 
@@ -130,8 +130,8 @@ export default class Renderer {
 
         for (let text of Object.values(Board.texts)) {
             Board.hudCtx.fillStyle = text.color;
-            let top = text.position.y * TILE_SIZE * Board.scale + text.offset.y - (TILE_SIZE / 2);
-            let left = text.position.x * TILE_SIZE * Board.scale + text.offset.x;
+            const top = ((text.position.y * TILE_SIZE - $hero.offset.y) * Board.scale) + text.offset.y;
+            let left = ((text.position.x * TILE_SIZE - $hero.offset.x) * Board.scale) + text.offset.x;
             left = left + ((TILE_SIZE * Board.scale) / 2) - Math.ceil(Board.hudCtx.measureText(text.content).width / 2);
             Board.hudCtx.strokeText(text.content, left, top);
             Board.hudCtx.fillText(text.content, left, top);

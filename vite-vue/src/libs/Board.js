@@ -4,6 +4,7 @@ import {$hero} from "../utils/globals.js";
 import WebsocketRequest from "./WebsocketRequest.js";
 import Effect from "./Effect.js";
 import Creature from "./Creature.js";
+import {randomString} from "../utils/common.js";
 
 export default class Board {
 
@@ -161,5 +162,27 @@ export default class Board {
             Board.hudCtx.canvas.width = TILE_SIZE * BOARD_WIDTH * Board.scale;
             Board.hudCtx.canvas.height = TILE_SIZE * BOARD_HEIGHT * Board.scale;
         }
+    }
+
+    static addFloatingText(content, color) {
+        const uid = randomString(8);
+        const position = {...$hero.position};
+
+        Board.texts[uid] = {
+            position: Board.positionServerToClient(position),
+            content: content,
+            offset: {x: 0, y: -(TILE_SIZE / 2)},
+            color: color,
+            iteration: 0
+        };
+        const interval = setInterval(() => {
+            Board.texts[uid].position = Board.positionServerToClient(position);
+            Board.texts[uid].offset.y--;
+            Board.texts[uid].iteration++;
+            if (Board.texts[uid].iteration >= 30) {
+                delete Board.texts[uid];
+                clearInterval(interval);
+            }
+        }, 25);
     }
 }

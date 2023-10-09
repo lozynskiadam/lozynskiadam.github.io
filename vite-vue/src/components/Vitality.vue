@@ -21,7 +21,6 @@
 
 <script>
 import {$hero, globals} from "../utils/globals.js";
-import {emit, randomString} from "../utils/common.js";
 import Board from "../libs/Board.js";
 
 export default {
@@ -37,31 +36,13 @@ export default {
       states: []
     }
   },
-  methods: {
-    drawText(content, color) {
-      const uid = randomString(5);
-      Board.texts[uid] = {
-        position: Board.positionServerToClient($hero.position),
-        content: content,
-        offset: {x: 0, y: 0},
-        color: color
-      };
-      const interval = setInterval(() => {
-        Board.texts[uid].offset.y--;
-        if (Board.texts[uid].offset.y < -30) {
-          delete Board.texts[uid];
-          clearInterval(interval);
-        }
-      }, 25);
-    }
-  },
   mounted() {
     globals().setVitality(this);
     window.addEventListener("update-vitals", (event) => {
       if (typeof event.detail.health !== 'undefined') {
         const changed = event.detail.health - this.health;
         if (changed) {
-          this.drawText(Math.abs(changed), changed > 0 ? '#00ff00' : '#ff0000');
+          Board.addFloatingText(Math.abs(changed), changed > 0 ? '#00ff00' : '#ff0000');
           this.health = event.detail.health;
         }
       }
@@ -72,9 +53,6 @@ export default {
       this.healthPercent = Math.ceil((this.health / this.maxHealth) * 100);
       this.manaPercent = Math.ceil((this.mana / this.maxMana) * 100);
       $hero.healthPercent = this.healthPercent;
-      if (this.health === 0) {
-        emit('dead');
-      }
     });
   }
 }

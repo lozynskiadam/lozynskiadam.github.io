@@ -30,13 +30,13 @@
   background: linear-gradient(135deg, rgba(100, 116, 134, 0.2) 0%, rgba(19, 25, 32, 0.7) 100%);
   backdrop-filter: blur(5px);
 
-  .inventory-header {
+  .header {
     padding: 0.25rem 0.75rem 0;
     font-size: 1.1rem;
     font-weight: bold;
   }
 
-  .inventory-container {
+  .container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(39px, 1fr));
     grid-column-gap: 4px;

@@ -9,6 +9,9 @@ export default class Connector {
     static async connect(token) {
         return new Promise((resolve) => {
             window.addEventListener("hero-position-changed", Connector.#onPositionChange);
+            window.addEventListener("update-vitals", (event) => {
+                if (event.detail?.health === 0) emit('dead');
+            });
             return resolve();
         });
     }

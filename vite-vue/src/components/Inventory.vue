@@ -7,8 +7,8 @@
     <img src="../assets/images/inventory.png" alt="Inv"/>
   </button>
   <div id="inventory" :style="{'display': visible ? 'block' : 'none'}">
-    <div class="inventory-header">Inventory</div>
-    <div class="inventory-container">
+    <div class="header">Inventory</div>
+    <div class="container">
       <Slot v-for="i in 80" ref="slot" :index="i - 1"></Slot>
     </div>
   </div>
