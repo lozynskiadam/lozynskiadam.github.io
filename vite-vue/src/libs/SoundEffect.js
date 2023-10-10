@@ -3,19 +3,19 @@ import { sound } from '@pixi/sound';
 export default class SoundEffect {
 
     static load() {
-        sound.add('inventoryOpen', 'sfx/inventory-open.mp3');
-        sound.add('inventoryClose', 'sfx/inventory-close.mp3');
-        sound.add('spikes', 'sfx/spikes.mp3');
-        sound.add('click', 'sfx/click.wav');
-        sound.add('confirm', 'sfx/confirm.mp3');
-        sound.add('chest', 'sfx/chest.m4a');
-        sound.add('footstep', 'sfx/footstep.m4a');
-        sound.add('dead', 'sfx/dead.m4a');
-        sound.add('mining', 'sfx/mining.m4a');
-        sound.add('pickup', 'sfx/pickup.m4a');
-        sound.add('potion', 'sfx/potion.m4a');
-        sound.add('login', 'sfx/login.m4a');
-        sound.add('background', 'sfx/background.m4a');
+        sound.add('inventoryOpen', {url: 'sfx/inventory-open.mp3', preload: true});
+        sound.add('inventoryClose', {url: 'sfx/inventory-close.mp3', preload: true});
+        sound.add('spikes', {url: 'sfx/spikes.mp3', preload: true});
+        sound.add('click', {url: 'sfx/click.wav', preload: true});
+        sound.add('confirm', {url: 'sfx/confirm.mp3', preload: true});
+        sound.add('chest', {url: 'sfx/chest.m4a', preload: true});
+        sound.add('footstep', {url: 'sfx/footstep.m4a', preload: true});
+        sound.add('dead', {url: 'sfx/dead.m4a', preload: true});
+        sound.add('mining', {url: 'sfx/mining.m4a', preload: true});
+        sound.add('pickup', {url: 'sfx/pickup.m4a', preload: true});
+        sound.add('potion', {url: 'sfx/potion.m4a', preload: true});
+        sound.add('login', {url: 'sfx/login.m4a', preload: true});
+        sound.add('background', {url: 'sfx/background.m4a', preload: true});
     }
 
     static play(id) {
