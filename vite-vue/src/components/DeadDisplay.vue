@@ -17,8 +17,11 @@
 <script>
 import Movement from "../libs/Movement.js";
 import Board from "../libs/Board.js";
-import {$hero} from "../utils/globals.js";
+import {$hero, globals} from "../utils/globals.js";
 import SoundEffect from "../libs/SoundEffect.js";
+import Effect from "../libs/Effect.js";
+import Creature from "../libs/Creature.js";
+import {emit} from "../utils/common.js";
 
 export default {
   name: 'DeadDisplay',
@@ -37,7 +40,16 @@ export default {
     respawn() {
       SoundEffect.play('confirm');
       this.disabled = true;
-      setTimeout(() => window.location.href = '', 1000);
+      setTimeout(() => {
+        const hero = new Creature('Guest', {x: 100, y: 100});
+        globals().setHero(hero);
+        Effect.get('energy').run($hero.position, true);
+        SoundEffect.play('login');
+        emit('hero-position-changed');
+        Movement.isBlocked = false;
+        this.visible = false;
+        this.disabled = false;
+      }, 500);
     }
   },
   mounted() {
