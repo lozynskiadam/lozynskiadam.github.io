@@ -3,7 +3,7 @@ import {$hero, $inventory, $vitality} from "../utils/globals.js";
 import Pointer from "./Pointer.js";
 import {emit, rand, randomString, roll} from "../utils/common.js";
 import {isSamePosition} from "../utils/position.js";
-import {playAudio} from "../utils/audio.js";
+import SoundEffect from "./SoundEffect.js";
 
 export default class Connector {
 
@@ -30,13 +30,13 @@ export default class Connector {
             const stack = Board.getTileStack(params.position);
             stack.pop();
             stack.push(roll(2) ? 9 : 11);
-            playAudio('chest');
+            SoundEffect.play('chest');
             emit('update-tile', {position: params.position, stack: stack});
             emit('run-effect', {position: params.position, effect: 'yellow-sparkles'});
         }
 
         if (params.itemId === 8) {
-            playAudio('mining');
+            SoundEffect.play('mining');
             emit('run-effect', {position: params.position, effect: 'ore-hit'});
 
             let quantity = rand(3);
@@ -54,7 +54,7 @@ export default class Connector {
             if (health > $vitality.maxHealth) health = $vitality.maxHealth;
             emit('update-vitals', {health: health});
             emit('run-effect', {position: $hero.position, effect: 'red-sparkles'})
-            playAudio('potion');
+            SoundEffect.play('potion');
         }
 
         if (params.itemId === 11) {
@@ -62,7 +62,7 @@ export default class Connector {
             if (mana > $vitality.maxMana) mana = $vitality.maxMana;
             emit('update-vitals', {mana: mana});
             emit('run-effect', {position: $hero.position, effect: 'blue-sparkles'})
-            playAudio('potion');
+            SoundEffect.play('potion');
         }
 
         Pointer.updateCursorAndServerPosition();
@@ -136,7 +136,7 @@ export default class Connector {
                 Board.update();
                 emit('run-effect', {position: $hero.position, effect: 'blood', onCreature: true});
                 emit('update-vitals', {health: health});
-                playAudio('spikes');
+                SoundEffect.play('spikes');
                 setTimeout(() => {stack[index] = 12}, 1000);
             }
         });

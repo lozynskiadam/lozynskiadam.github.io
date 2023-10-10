@@ -8,7 +8,7 @@
 
 <script>
 import Item from "../libs/Item.js";
-import {playAudio} from "../utils/audio.js";
+import SoundEffect from "../libs/SoundEffect.js";
 
 export default {
   name: 'Loot',
@@ -35,7 +35,7 @@ export default {
       setTimeout(() => {
         $element.remove();
       }, 3000);
-      playAudio('pickup');
+      SoundEffect.play('pickup');
     }
   },
   mounted() {

@@ -8,7 +8,7 @@
       <h2 class="title">You are dead</h2>
       <div class="subtitle">Your deeds of valor will be remembered.</div>
       <div class="buttons">
-        <button @mouseenter="playAudio('click')" @click="respawn()" :disabled="disabled">Respawn</button>
+        <button @mouseenter="SoundEffect.play('click')" @click="respawn()" :disabled="disabled">Respawn</button>
       </div>
     </div>
   </div>
@@ -18,10 +18,15 @@
 import Movement from "../libs/Movement.js";
 import Board from "../libs/Board.js";
 import {$hero} from "../utils/globals.js";
-import {playAudio} from "../utils/audio.js";
+import SoundEffect from "../libs/SoundEffect.js";
 
 export default {
   name: 'DeadDisplay',
+  computed: {
+    SoundEffect() {
+      return SoundEffect
+    }
+  },
   data() {
     return {
       visible: false,
@@ -29,9 +34,8 @@ export default {
     }
   },
   methods: {
-    playAudio,
     respawn() {
-      playAudio('confirm');
+      SoundEffect.play('confirm');
       this.disabled = true;
       setTimeout(() => window.location.href = '', 1000);
     }
@@ -42,7 +46,7 @@ export default {
       Movement.clearPath();
       Movement.isBlocked = true;
       delete Board.creatures[$hero.name];
-      playAudio('dead');
+      SoundEffect.play('dead');
     });
   }
 }

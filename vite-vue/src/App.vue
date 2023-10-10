@@ -26,7 +26,7 @@ import Inventory from "./components/Inventory.vue";
 import Vitality from "./components/Vitality.vue";
 import DeadDisplay from "./components/DeadDisplay.vue";
 import Loot from "./components/Loot.vue";
-import {playAudio} from "./utils/audio.js";
+import SoundEffect from "./libs/SoundEffect.js";
 
 export default {
   components: {DeadDisplay, Inventory, Vitality, Loot},
@@ -41,6 +41,7 @@ export default {
       await Sprite.load();
       await Item.load();
       await Effect.load();
+      await SoundEffect.load();
       await Connector.connect('token');
 
       this.loaded = true;
@@ -55,8 +56,8 @@ export default {
       Board.init();
       Renderer.render();
       Effect.get('energy').run($hero.position, true);
-      playAudio('login');
-      playAudio('background');
+      SoundEffect.play('login');
+      SoundEffect.play('background');
     }
 
   },

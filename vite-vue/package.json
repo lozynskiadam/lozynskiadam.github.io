@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@pixi/sound": "^5.2.1",
     "@rwh/keystrokes": "^1.2.3",
     "easystarjs": "^0.4.4",
     "vue": "^3.3.4"
