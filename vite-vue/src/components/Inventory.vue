@@ -3,7 +3,7 @@
 </style>
 
 <template>
-  <button class="bookmark-inventory" @click="visible = !visible" :class="{'active': visible}">
+  <button class="bookmark-inventory" @click="this.toggle()" :class="{'active': visible}">
     <img src="../assets/images/inventory.png" alt="Inv"/>
   </button>
   <div id="inventory" :style="{'display': visible ? 'block' : 'none'}">
@@ -37,7 +37,15 @@ export default {
     },
     getSlots() {
       return this.$refs.slot;
-    }
+    },
+    toggle() {
+      this.visible = !this.visible;
+      if (this.visible) {
+        SoundEffect.play('inventoryOpen');
+      } else {
+        SoundEffect.play('inventoryClose');
+      }
+    },
   },
   mounted() {
     globals().setInventory(this);
@@ -48,14 +56,7 @@ export default {
         this.getSlot(event.detail.slot).clear();
       }
     });
-    window.addEventListener("inventory-toggle", () => {
-      this.visible = !this.visible;
-      if (this.visible) {
-        SoundEffect.play('inventoryOpen');
-      } else {
-        SoundEffect.play('inventoryClose');
-      }
-    });
+    window.addEventListener("inventory-toggle", this.toggle);
   }
 }
 </script>
