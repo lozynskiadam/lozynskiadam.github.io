@@ -46,6 +46,7 @@ export default {
         Effect.get('energy').run($hero.position, true);
         SoundEffect.play('login');
         emit('hero-position-changed');
+        emit('update-vitals', {health: 1});
         Movement.isBlocked = false;
         this.visible = false;
         this.disabled = false;
