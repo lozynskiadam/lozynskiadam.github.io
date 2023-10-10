@@ -29,10 +29,18 @@ export default class Connector {
         if (params.itemId === 6) {
             const stack = Board.getTileStack(params.position);
             stack.pop();
-            stack.push(roll(2) ? 9 : 11);
+
             SoundEffect.play('chest');
             emit('update-tile', {position: params.position, stack: stack});
             emit('run-effect', {position: params.position, effect: 'yellow-sparkles'});
+
+            if (roll(2)) {
+                emit('loot', {itemId: 9, quantity: 1});
+                emit('update-inventory-slot', {slot: 1, itemId: 9, quantity: 1});
+            } else {
+                emit('loot', {itemId: 11, quantity: 1});
+                emit('update-inventory-slot', {slot: 2, itemId: 11, quantity: 1});
+            }
         }
 
         if (params.itemId === 8) {
@@ -80,6 +88,8 @@ export default class Connector {
     static #pickUp(params) {
         const stack = Board.getTileStack(params.position);
         stack.pop();
+
+        emit('loot', {itemId: params.itemId, quantity: 1});
         emit('update-inventory-slot', {slot: params.slot, itemId: params.itemId, quantity: 1});
     }
 
