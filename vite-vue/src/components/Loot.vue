@@ -7,23 +7,21 @@
 </template>
 
 <script>
-import ItemStructure from "../libs/ItemStructure.js";
 import SoundEffect from "../libs/SoundEffect.js";
+import Item from "../libs/Item.js";
 
 export default {
   name: 'Loot',
   methods: {
-    addItem(itemId, quantity) {
-      const item = ItemStructure.get(itemId);
-
+    addItem(item) {
       const $element = document.createElement('div');
       $element.classList.add('entry')
 
       const $content = document.createElement('div');
       $content.classList.add('content')
-      $content.innerText = item.name + ' (' + quantity + ')';
+      $content.innerText = item.getName() + ' (' + item.quantity + ')';
 
-      const $image = item.sprite.clone().getFrame();
+      const $image = item.getSprite().clone().getFrame();
       $image.classList.add('image');
 
       $element.appendChild($image);
@@ -40,7 +38,7 @@ export default {
   },
   mounted() {
     window.addEventListener("loot", (event) => {
-        this.addItem(event.detail.itemId, event.detail.quantity);
+        this.addItem(new Item(event.detail.itemId, event.detail.quantity));
     });
   }
 }

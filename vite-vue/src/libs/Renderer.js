@@ -10,8 +10,8 @@ export default class Renderer {
     static renderTile(positionClient, positionServer, layer, tile) {
         if (layer === 'ground') {
             tile.forEach((item) => {
-                if (item.getStructure().type === 'ground') {
-                    Renderer.drawSprite(positionClient, item.getStructure().sprite);
+                if (item.getType() === 'ground') {
+                    Renderer.drawSprite(positionClient, item.getSprite());
                 }
             });
         }
@@ -19,9 +19,9 @@ export default class Renderer {
         if (layer === 'objects') {
             let altitude = 0;
             tile.forEach((item) => {
-                if (item.getStructure().type === 'object') {
-                    Renderer.drawSprite(positionClient, item.getStructure().sprite, altitude);
-                    altitude += item.getStructure().altitude;
+                if (item.getType() === 'object') {
+                    Renderer.drawSprite(positionClient, item.getSprite(), altitude);
+                    altitude += item.getAltitude();
                 }
             });
 

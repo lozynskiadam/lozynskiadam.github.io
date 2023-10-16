@@ -40,12 +40,12 @@ export default class Connector {
             if (roll(2)) {
                 emit('loot', {itemId: 9, quantity: 1});
                 let slot = $inventory.getFirstSlotWithItem(9) ?? $inventory.getFirstSlotWithItem(null);
-                let quantity = $inventory.getSlot(slot).quantity;
+                let quantity = $inventory.getSlot(slot).item?.quantity ?? 0;
                 emit('update-inventory-slot', {slot: slot, itemId: 9, quantity: quantity + 1});
             } else {
                 emit('loot', {itemId: 11, quantity: 1});
                 let slot = $inventory.getFirstSlotWithItem(11) ?? $inventory.getFirstSlotWithItem(null);
-                let quantity = $inventory.getSlot(slot).quantity;
+                let quantity = $inventory.getSlot(slot).item?.quantity ?? 0;
                 emit('update-inventory-slot', {slot: slot, itemId: 11, quantity: quantity + 1});
             }
         }
@@ -55,26 +55,31 @@ export default class Connector {
             SoundEffect.play('mining');
             emit('run-effect', {position: params.position, effect: 'ore-hit'});
 
-            let quantity = rand(3);
+            const quantity = rand(3);
             if (roll(3) && quantity) {
                 emit('loot', {itemId: 10, quantity: quantity});
                 let slot = $inventory.getFirstSlotWithItem(10) ?? $inventory.getFirstSlotWithItem(null);
-                quantity = $inventory.getSlot(slot).quantity + quantity;
-                emit('update-inventory-slot', {slot: slot, itemId: 10, quantity: quantity});
+                const oldQuantity = $inventory.getSlot(slot).item?.quantity ?? 0;
+                emit('update-inventory-slot', {slot: slot, itemId: 10, quantity: oldQuantity + quantity});
             }
         }
 
         if (params.itemId === 9) {
             if (params.slot) {
-                const currentQuantity = $inventory.getSlot(params.slot).quantity;
+                const currentQuantity = $inventory.getSlot(params.slot).item?.quantity ?? 0;
                 if (currentQuantity > 1) {
                     emit('update-inventory-slot', {slot: params.slot, itemId: params.itemId, quantity: currentQuantity - 1});
                 } else {
                     emit('update-inventory-slot', {slot: params.slot, itemId: null});
                 }
             } else {
-                const stack = Board.getTileStack(params.position);
-                stack.pop();
+                const item = Board.getTileTopItem(params.position);
+                if (item.quantity > 1) {
+                    item.quantity--;
+                } else {
+                    const stack = Board.getTileStack(params.position);
+                    stack.pop();
+                }
             }
             let health = $vitality.health + 1000;
             if (health > $vitality.maxHealth) health = $vitality.maxHealth;
@@ -85,15 +90,20 @@ export default class Connector {
 
         if (params.itemId === 11) {
             if (params.slot) {
-                const currentQuantity = $inventory.getSlot(params.slot).quantity;
+                const currentQuantity = $inventory.getSlot(params.slot).item?.quantity ?? 0;
                 if (currentQuantity > 1) {
                     emit('update-inventory-slot', {slot: params.slot, itemId: params.itemId, quantity: currentQuantity - 1});
                 } else {
                     emit('update-inventory-slot', {slot: params.slot, itemId: null});
                 }
             } else {
-                const stack = Board.getTileStack(params.position);
-                stack.pop();
+                const item = Board.getTileTopItem(params.position);
+                if (item.quantity > 1) {
+                    item.quantity--;
+                } else {
+                    const stack = Board.getTileStack(params.position);
+                    stack.pop();
+                }
             }
             let mana = $vitality.mana + 50;
             if (mana > $vitality.maxMana) mana = $vitality.maxMana;
@@ -109,7 +119,7 @@ export default class Connector {
         const stackFrom = Board.getTileStack(params.from);
         stackFrom.pop();
         const stackTo = Board.getTileStack(params.to);
-        stackTo.push(new Item(params.itemId));
+        stackTo.push(new Item(params.itemId, params.quantity));
         emit('update-tile', {position: params.from, stack: stackFrom});
         emit('update-tile', {position: params.to, stack: stackTo});
     }
@@ -117,24 +127,34 @@ export default class Connector {
     static #pickUp(params) {
         const stack = Board.getTileStack(params.position);
         stack.pop();
-
-        emit('loot', {itemId: params.itemId, quantity: 1});
-        emit('update-inventory-slot', {slot: params.slot, itemId: params.itemId, quantity: 1});
+        emit('loot', {itemId: params.itemId, quantity: params.quantity});
+        const inventorySlotItem = $inventory.getSlot(params.slot).item;
+        if (inventorySlotItem) {
+            if (inventorySlotItem.id === params.itemId) {
+                emit('update-inventory-slot', {slot: params.slot, itemId: params.itemId, quantity: inventorySlotItem.quantity + params.quantity});
+            } else {
+                stack.push(inventorySlotItem);
+                emit('update-inventory-slot', {slot: params.slot, itemId: params.itemId, quantity: params.quantity});
+            }
+        } else {
+            emit('update-inventory-slot', {slot: params.slot, itemId: params.itemId, quantity: params.quantity});
+        }
+        emit('update-tile', {position: params.position, stack: stack});
     }
 
     static #drop(params) {
-        const itemId = $inventory.getSlot(params.slot).item.id;
+        const item = $inventory.getSlot(params.slot).item;
         const stack = Board.getTileStack(params.position);
-        stack.push(new Item(itemId));
+        stack.push(item);
         emit('update-tile', {position: params.position, stack: stack});
         emit('update-inventory-slot', {slot: params.slot, itemId: null});
     }
 
     static #rearrangeItem(params) {
         const itemSource = $inventory.getSlot(params.slotFrom).item?.id;
-        const quantitySource = $inventory.getSlot(params.slotFrom).quantity;
+        const quantitySource = $inventory.getSlot(params.slotFrom).item?.quantity ?? 0;
         const itemTarget = $inventory.getSlot(params.slotTo).item?.id;
-        const quantityTarget = $inventory.getSlot(params.slotTo).quantity;
+        const quantityTarget = $inventory.getSlot(params.slotTo).item?.quantity ?? 0;
         if (itemSource === itemTarget) {
             emit('update-inventory-slot', {slot: params.slotFrom, itemId: null});
             emit('update-inventory-slot', {slot: params.slotTo, itemId: itemSource, quantity: quantitySource + quantityTarget});

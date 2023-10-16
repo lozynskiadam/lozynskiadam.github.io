@@ -38,10 +38,10 @@ export default {
   methods: {
 
     async load() {
+      await SoundEffect.load();
       await Sprite.load();
       await ItemStructure.load();
       await Effect.load();
-      await SoundEffect.load();
       await Connector.connect('token');
 
       this.loaded = true;
@@ -57,7 +57,6 @@ export default {
       Renderer.render();
       Effect.get('energy').run($hero.position, true);
       SoundEffect.play('login');
-      SoundEffect.play('background');
     }
 
   },

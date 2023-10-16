@@ -18,6 +18,7 @@
 import Slot from "./Slot.vue";
 import {globals} from "../utils/globals.js";
 import SoundEffect from "../libs/SoundEffect.js";
+import Item from "../libs/Item.js";
 
 export default {
   name: 'Inventory',
@@ -59,7 +60,7 @@ export default {
     globals().setInventory(this);
     window.addEventListener("update-inventory-slot", (event) => {
       if (event.detail.itemId) {
-        this.getSlot(event.detail.slot).set(event.detail.itemId, event.detail.quantity);
+        this.getSlot(event.detail.slot).set(new Item(event.detail.itemId, event.detail.quantity));
       } else {
         this.getSlot(event.detail.slot).clear();
       }

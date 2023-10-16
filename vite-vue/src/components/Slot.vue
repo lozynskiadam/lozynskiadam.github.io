@@ -4,13 +4,11 @@
 
 <template>
   <div class="slot" :data-slot-index="index">
-    <div v-if="quantity" class="quantity">{{ quantity }}</div>
+    <div v-if="item" class="quantity">{{ item.quantity }}</div>
   </div>
 </template>
 
 <script>
-import ItemStructure from "../libs/ItemStructure.js";
-
 export default {
   name: 'Slot',
   props: {
@@ -19,21 +17,19 @@ export default {
   data() {
     return {
       item: null,
-      quantity: null,
+      sprite: null,
     }
   },
   methods: {
-    set(itemId, quantity) {
-      this.item = ItemStructure.get(itemId);
-      this.quantity = quantity;
+    set(item) {
+      this.item = item;
       this.$el.querySelector('canvas')?.remove();
-      this.sprite = this.item.sprite.clone();
-      this.sprite.getFrame();
-      this.$el.appendChild(this.sprite.canvas);
+      const sprite = this.item.getSprite().clone();
+      sprite.getFrame();
+      this.$el.appendChild(sprite.canvas);
     },
     clear() {
       this.item = null;
-      this.quantity = null;
       this.$el.querySelector('canvas')?.remove();
     },
   }

@@ -10,8 +10,40 @@ export default class Item {
         this.quantity = quantity;
     }
 
-    getStructure() {
-        return ItemStructure.get(this.id);
+    getName() {
+        return ItemStructure.get(this.id).name;
+    }
+
+    getType() {
+        return ItemStructure.get(this.id).type;
+    }
+
+    getAltitude() {
+        return ItemStructure.get(this.id).altitude;
+    }
+
+    getSprite() {
+        return ItemStructure.get(this.id).sprite;
+    }
+
+    isUsable() {
+        return ItemStructure.get(this.id).isUsable;
+    }
+
+    isMovable() {
+        return ItemStructure.get(this.id).isMovable;
+    }
+
+    isPickupable() {
+        return ItemStructure.get(this.id).isPickupable;
+    }
+
+    isBlockingCreatures() {
+        return ItemStructure.get(this.id).isBlockingCreatures;
+    }
+
+    isBlockingItems() {
+        return ItemStructure.get(this.id).isBlockingItems;
     }
 
 }

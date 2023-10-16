@@ -15,7 +15,6 @@ export default class SoundEffect {
         sound.add('pickup', {url: 'sfx/pickup.m4a', preload: true});
         sound.add('potion', {url: 'sfx/potion.m4a', preload: true});
         sound.add('login', {url: 'sfx/login.m4a', preload: true});
-        sound.add('background', {url: 'sfx/background.m4a', preload: true});
     }
 
     static play(id) {

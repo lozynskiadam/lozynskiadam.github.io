@@ -30,7 +30,10 @@ export default class ItemStructure {
     }
 
     static get(id) {
-        return ItemStructure.#instances[id] ?? null;
+        const structure = ItemStructure.#instances[id];
+        if (!structure) throw `Could not load structure for item ${id}.`;
+
+        return structure;
     }
 
     constructor(id, data) {

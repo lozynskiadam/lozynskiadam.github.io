@@ -120,14 +120,10 @@ export default class Pointer {
         Pointer.cleanGrab();
         if (e.target.classList && e.target.classList.contains('slot')) {
             const slot = e.target.dataset.slotIndex;
-            const itemId = $inventory.getSlot(slot).item?.id;
-            if (!itemId) return;
-            const item = ItemStructure.get(itemId);
+            const item = $inventory.getSlot(slot).item;
             if (!item) return;
-            if (item.isUsable) {
-                WebsocketRequest.use(itemId, null, slot);
-            }
-
+            if (!item.isUsable()) return;
+            WebsocketRequest.use(item.id, null, slot);
             return;
         }
 
@@ -167,9 +163,9 @@ export default class Pointer {
     }
 
     static grabItemFromInventory(slot) {
-        const itemId = $inventory.getSlot(slot).item?.id;
-        if (!itemId) return;
-        Pointer.grabbing.itemId = itemId;
+        const item = $inventory.getSlot(slot).item;
+        if (!item) return;
+        Pointer.grabbing.itemId = item.id;
         Pointer.grabbing.source = slot;
         Pointer.setCursor('crosshair');
     }
