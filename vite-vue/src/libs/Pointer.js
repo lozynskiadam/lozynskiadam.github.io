@@ -126,6 +126,19 @@ export default class Pointer {
         }
 
         Pointer.cleanGrab();
+        if (e.target.classList && e.target.classList.contains('slot')) {
+            const slot = e.target.dataset.slotIndex;
+            const itemId = $inventory.getSlot(slot).item?.id;
+            if (!itemId) return;
+            const item = Item.get(itemId);
+            if (!item) return;
+            if (item.isUsable) {
+                WebsocketRequest.use(itemId, null, slot);
+            }
+
+            return;
+        }
+
         if (e.target.id !== "board") return;
 
         const position = {...Pointer.positionServer};
@@ -135,7 +148,7 @@ export default class Pointer {
         if (item.isUsable) {
             Pointer.runEffect('pointer-cross-red');
             if (isPositionInRange($hero.position, position)) {
-                WebsocketRequest.use(position, itemId);
+                WebsocketRequest.use(itemId, position);
             } else {
                 Movement.setPath(Pointer.positionServer, 'use', {
                     itemId: item.id

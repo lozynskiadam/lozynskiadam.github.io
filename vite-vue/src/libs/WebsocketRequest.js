@@ -39,6 +39,8 @@ export default class WebsocketRequest {
     }
 
     static rearrangeItem(itemId, slotFrom, slotTo) {
+        if (slotFrom === slotTo) return;
+
         Connector.emit('rearrange-item', {
             itemId: itemId,
             slotFrom: slotFrom,
@@ -46,13 +48,16 @@ export default class WebsocketRequest {
         })
     }
 
-    static use(position, itemId) {
-        if (Board.getTileTopItem(position) !== itemId) return false;
-        if (!isPositionInRange($hero.position, position)) return false;
+    static use(itemId, position = null, slot = null) {
+        if (position) {
+            if (Board.getTileTopItem(position) !== itemId) return false;
+            if (!isPositionInRange($hero.position, position)) return false;
+        }
 
         Connector.emit('use', {
             itemId: itemId,
             position: position,
+            slot: slot,
         })
     }
 

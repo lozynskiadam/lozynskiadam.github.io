@@ -28,6 +28,7 @@ export default class Connector {
 
     static #use(params) {
         if (params.itemId === 6) {
+            if (params.slot) return;
             const stack = Board.getTileStack(params.position);
             stack.pop();
 
@@ -49,6 +50,7 @@ export default class Connector {
         }
 
         if (params.itemId === 8) {
+            if (params.slot) return;
             SoundEffect.play('mining');
             emit('run-effect', {position: params.position, effect: 'ore-hit'});
 
@@ -62,7 +64,18 @@ export default class Connector {
         }
 
         if (params.itemId === 9) {
-            let health = $vitality.health + 10;
+            if (params.slot) {
+                const currentQuantity = $inventory.getSlot(params.slot).quantity;
+                if (currentQuantity > 1) {
+                    emit('update-inventory-slot', {slot: params.slot, itemId: params.itemId, quantity: currentQuantity - 1});
+                } else {
+                    emit('update-inventory-slot', {slot: params.slot, itemId: null});
+                }
+            } else {
+                const stack = Board.getTileStack(params.position);
+                stack.pop();
+            }
+            let health = $vitality.health + 1000;
             if (health > $vitality.maxHealth) health = $vitality.maxHealth;
             emit('update-vitals', {health: health});
             emit('run-effect', {position: $hero.position, effect: 'red-sparkles'})
@@ -70,7 +83,18 @@ export default class Connector {
         }
 
         if (params.itemId === 11) {
-            let mana = $vitality.mana + 10;
+            if (params.slot) {
+                const currentQuantity = $inventory.getSlot(params.slot).quantity;
+                if (currentQuantity > 1) {
+                    emit('update-inventory-slot', {slot: params.slot, itemId: params.itemId, quantity: currentQuantity - 1});
+                } else {
+                    emit('update-inventory-slot', {slot: params.slot, itemId: null});
+                }
+            } else {
+                const stack = Board.getTileStack(params.position);
+                stack.pop();
+            }
+            let mana = $vitality.mana + 50;
             if (mana > $vitality.maxMana) mana = $vitality.maxMana;
             emit('update-vitals', {mana: mana});
             emit('run-effect', {position: $hero.position, effect: 'blue-sparkles'})
