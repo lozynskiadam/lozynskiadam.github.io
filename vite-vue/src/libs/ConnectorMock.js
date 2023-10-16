@@ -4,6 +4,7 @@ import Pointer from "./Pointer.js";
 import {emit, rand, randomString, roll} from "../utils/common.js";
 import {isSamePosition} from "../utils/position.js";
 import SoundEffect from "./SoundEffect.js";
+import Item from "./Item.js";
 
 export default class Connector {
 
@@ -108,7 +109,7 @@ export default class Connector {
         const stackFrom = Board.getTileStack(params.from);
         stackFrom.pop();
         const stackTo = Board.getTileStack(params.to);
-        stackTo.push(params.itemId);
+        stackTo.push(new Item(params.itemId));
         emit('update-tile', {position: params.from, stack: stackFrom});
         emit('update-tile', {position: params.to, stack: stackTo});
     }
@@ -124,7 +125,7 @@ export default class Connector {
     static #drop(params) {
         const itemId = $inventory.getSlot(params.slot).item.id;
         const stack = Board.getTileStack(params.position);
-        stack.push(itemId);
+        stack.push(new Item(itemId));
         emit('update-tile', {position: params.position, stack: stack});
         emit('update-inventory-slot', {slot: params.slot, itemId: null});
     }
@@ -148,26 +149,26 @@ export default class Connector {
             const stack = [];
 
             if (roll(40)) {
-                stack.push(2);
+                stack.push(new Item(2));
             } else if (roll(40)) {
-                stack.push(3);
+                stack.push(new Item(3));
             } else if (roll(30)) {
-                stack.push(4);
+                stack.push(new Item(4));
             } else {
-                stack.push(1)
+                stack.push(new Item(1))
             }
 
             if (!isSamePosition(position, $hero.position)) {
                 if (roll(100)) {
-                    stack.push(6);
+                    stack.push(new Item(6));
                 } else if (roll(100)) {
-                    stack.push(8);
+                    stack.push(new Item(8));
                 } else if (roll(100)) {
-                    stack.push(5);
+                    stack.push(new Item(5));
                 } else if (roll(100)) {
-                    stack.push(7);
+                    stack.push(new Item(7));
                 } else if (roll(100)) {
-                    stack.push(12);
+                    stack.push(new Item(12));
                 }
             }
 
@@ -180,16 +181,16 @@ export default class Connector {
 
     static #onPositionChange() {
         const stack = Board.getTileStack($hero.position);
-        stack.forEach((itemId, index) => {
-            if (itemId === 12) {
+        stack.forEach((item, index) => {
+            if (item.id === 12) {
                 let health = $vitality.health - 15;
                 if (health < 0) health = 0;
-                stack[index] = 13;
+                stack[index] = new Item(13);
                 Board.update();
                 emit('run-effect', {position: $hero.position, effect: 'blood', onCreature: true});
                 emit('update-vitals', {health: health});
                 SoundEffect.play('spikes');
-                setTimeout(() => {stack[index] = 12}, 1000);
+                setTimeout(() => {stack[index] = new Item(12)}, 1000);
             }
         });
     }

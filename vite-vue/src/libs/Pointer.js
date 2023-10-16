@@ -1,7 +1,7 @@
 import {TILE_SIZE} from "../config.js";
 import {isPosition, isPositionInRange, isSamePosition} from "../utils/position.js";
 import Board from "./Board.js";
-import Item from "./Item.js";
+import ItemStructure from "./ItemStructure.js";
 import Movement from "./Movement.js";
 import Sprite from "./Sprite.js";
 import {$app, $hero, $inventory} from "../utils/globals.js";
@@ -39,10 +39,6 @@ export default class Pointer {
                 Pointer.isLeftButtonPressed = true;
                 Pointer.onLeftButtonPress(e);
             }
-            if (e.which === 3 || e.button === 2) {
-                Pointer.isRightButtonPressed = true;
-                Pointer.onRightButtonPress(e);
-            }
         }, false);
 
         document.addEventListener('mouseup', (e) => {
@@ -50,10 +46,6 @@ export default class Pointer {
             if (e.which === 1 || e.button === 0) {
                 Pointer.isLeftButtonPressed = false;
                 Pointer.onLeftButtonRelease(e);
-            }
-            if (e.which === 3 || e.button === 2) {
-                Pointer.isRightButtonPressed = false;
-                Pointer.onRightButtonRelease(e);
             }
         }, false);
 
@@ -96,10 +88,10 @@ export default class Pointer {
             return;
         }
 
-        const itemId = Board.getTileTopItem(Pointer.positionServer);
-        if (itemId === 6) {
+        const item = Board.getTileTopItem(Pointer.positionServer);
+        if (item.id === 6) {
             Pointer.setCursor('chest');
-        } else if (itemId === 8) {
+        } else if (item.id === 8) {
             Pointer.setCursor('pick');
         } else {
             Pointer.setCursor('default');
@@ -130,7 +122,7 @@ export default class Pointer {
             const slot = e.target.dataset.slotIndex;
             const itemId = $inventory.getSlot(slot).item?.id;
             if (!itemId) return;
-            const item = Item.get(itemId);
+            const item = ItemStructure.get(itemId);
             if (!item) return;
             if (item.isUsable) {
                 WebsocketRequest.use(itemId, null, slot);
@@ -142,8 +134,10 @@ export default class Pointer {
         if (e.target.id !== "board") return;
 
         const position = {...Pointer.positionServer};
-        const itemId = Board.getTileTopItem(position);
-        const item = Item.get(itemId);
+        const itemId = Board.getTileTopItem(position)?.id;
+        if (!itemId) return;
+        const item = ItemStructure.get(itemId);
+        if (!item) return;
 
         if (item.isUsable) {
             Pointer.runEffect('pointer-cross-red');
@@ -163,16 +157,10 @@ export default class Pointer {
         }
     }
 
-    static onRightButtonPress() {
-    }
-
-    static onRightButtonRelease() {
-    }
-
     static grabItemFromFloor(source) {
-        const itemId = Board.getTileTopItem(source);
+        const itemId = Board.getTileTopItem(source)?.id;
         if (!itemId) return;
-        if (!Item.get(itemId).isMovable) return;
+        if (!ItemStructure.get(itemId).isMovable) return;
         Pointer.grabbing.itemId = itemId;
         Pointer.grabbing.source = source;
         Pointer.setCursor('crosshair');
@@ -187,7 +175,7 @@ export default class Pointer {
     }
 
     static releaseItemOnFloor(target) {
-        const item = Item.get(Pointer.grabbing.itemId);
+        const item = ItemStructure.get(Pointer.grabbing.itemId);
         if (isPosition(Pointer.grabbing.source)) {
             const positionFrom = {...Pointer.grabbing.source};
             Pointer.cleanGrab();
@@ -214,7 +202,7 @@ export default class Pointer {
     }
 
     static releaseItemOnInventory(target) {
-        const item = Item.get(Pointer.grabbing.itemId);
+        const item = ItemStructure.get(Pointer.grabbing.itemId);
         if (isPosition(Pointer.grabbing.source)) {
             const positionFrom = {...Pointer.grabbing.source};
             Pointer.cleanGrab();

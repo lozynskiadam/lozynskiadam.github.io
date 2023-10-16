@@ -7,14 +7,14 @@
 </template>
 
 <script>
-import Item from "../libs/Item.js";
+import ItemStructure from "../libs/ItemStructure.js";
 import SoundEffect from "../libs/SoundEffect.js";
 
 export default {
   name: 'Loot',
   methods: {
     addItem(itemId, quantity) {
-      const item = Item.get(itemId);
+      const item = ItemStructure.get(itemId);
 
       const $element = document.createElement('div');
       $element.classList.add('entry')

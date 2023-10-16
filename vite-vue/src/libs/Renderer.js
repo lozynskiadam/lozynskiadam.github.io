@@ -1,6 +1,5 @@
 import {TILE_SIZE} from "../config.js";
 import {isSamePosition} from "../utils/position.js";
-import Item from "./Item.js";
 import Pointer from "./Pointer.js";
 import Sprite from "./Sprite.js";
 import Board from "./Board.js";
@@ -10,20 +9,19 @@ export default class Renderer {
 
     static renderTile(positionClient, positionServer, layer, tile) {
         if (layer === 'ground') {
-            tile.forEach((itemId) => {
-                if (Item.get(itemId).type === 'ground') {
-                    Renderer.drawSprite(positionClient, Item.get(itemId).sprite);
+            tile.forEach((item) => {
+                if (item.getStructure().type === 'ground') {
+                    Renderer.drawSprite(positionClient, item.getStructure().sprite);
                 }
             });
         }
 
         if (layer === 'objects') {
             let altitude = 0;
-            tile.forEach((itemId) => {
-                const item = Item.get(itemId);
-                if (item.type === 'object') {
-                    Renderer.drawSprite(positionClient, item.sprite, altitude);
-                    altitude += item.altitude;
+            tile.forEach((item) => {
+                if (item.getStructure().type === 'object') {
+                    Renderer.drawSprite(positionClient, item.getStructure().sprite, altitude);
+                    altitude += item.getStructure().altitude;
                 }
             });
 

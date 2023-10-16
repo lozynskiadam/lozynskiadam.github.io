@@ -13,7 +13,7 @@
 import {$hero, globals} from "./utils/globals.js";
 import {emit} from "./utils/common.js";
 import Sprite from "./libs/Sprite.js";
-import Item from "./libs/Item.js";
+import ItemStructure from "./libs/ItemStructure.js";
 import Effect from "./libs/Effect.js";
 import Keyboard from "./libs/Keyboard.js";
 import Pointer from "./libs/Pointer.js";
@@ -39,7 +39,7 @@ export default {
 
     async load() {
       await Sprite.load();
-      await Item.load();
+      await ItemStructure.load();
       await Effect.load();
       await SoundEffect.load();
       await Connector.connect('token');

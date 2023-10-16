@@ -1,5 +1,5 @@
 import {BOARD_HEIGHT, BOARD_WIDTH, DEVICE_BREAKPOINT, SCALE_DESKTOP, SCALE_MOBILE, TILE_SIZE} from "../config.js";
-import Item from "./Item.js";
+import ItemStructure from "./ItemStructure.js";
 import {$hero} from "../utils/globals.js";
 import WebsocketRequest from "./WebsocketRequest.js";
 import Effect from "./Effect.js";
@@ -118,10 +118,10 @@ export default class Board {
     static isWalkable(position) {
         const stack = Board.getTileStack(position);
 
-        if (!stack.find((itemId) => Item.get(itemId).type === 'ground')) {
+        if (!stack.find((item) => item.getStructure().type === 'ground')) {
             return false
         }
-        if (stack.find((itemId) => Item.get(itemId).isBlockingCreatures)) {
+        if (stack.find((item) => item.getStructure().isBlockingCreatures)) {
             return false
         }
 

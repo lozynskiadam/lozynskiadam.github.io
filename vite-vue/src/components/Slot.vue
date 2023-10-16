@@ -9,7 +9,7 @@
 </template>
 
 <script>
-import Item from "../libs/Item.js";
+import ItemStructure from "../libs/ItemStructure.js";
 
 export default {
   name: 'Slot',
@@ -24,7 +24,7 @@ export default {
   },
   methods: {
     set(itemId, quantity) {
-      this.item = Item.get(itemId);
+      this.item = ItemStructure.get(itemId);
       this.quantity = quantity;
       this.$el.querySelector('canvas')?.remove();
       this.sprite = this.item.sprite.clone();

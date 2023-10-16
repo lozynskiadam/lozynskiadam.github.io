@@ -1,13 +1,13 @@
 import {isPositionInRange, isSamePosition} from "../utils/position.js";
 import Board from "./Board.js";
-import Item from "./Item.js";
+import ItemStructure from "./ItemStructure.js";
 import {$hero} from "../utils/globals.js";
 import Connector from "./ConnectorMock.js";
 
 export default class WebsocketRequest {
 
     static pickUp(itemId, position, slot) {
-        if (itemId !== Board.getTileTopItem(position)) return false;
+        if (itemId !== Board.getTileTopItem(position)?.id) return false;
         if (!isPositionInRange($hero.position, position)) return false;
 
         Connector.emit('pick-up', {
@@ -27,8 +27,8 @@ export default class WebsocketRequest {
 
     static moveItem(positionFrom, positionTo, itemId) {
         if (isSamePosition(positionFrom, positionTo)) return false;
-        if (itemId !== Board.getTileTopItem(positionFrom)) return false;
-        if (Board.getTileStack(positionTo).find((itemId) => Item.get(itemId).isBlockingItems)) return false;
+        if (itemId !== Board.getTileTopItem(positionFrom)?.id) return false;
+        if (Board.getTileStack(positionTo).find((item) => item.getStructure().isBlockingItems)) return false;
         if (!isPositionInRange($hero.position, positionFrom)) return false;
 
         Connector.emit('move-item', {
@@ -50,7 +50,7 @@ export default class WebsocketRequest {
 
     static use(itemId, position = null, slot = null) {
         if (position) {
-            if (Board.getTileTopItem(position) !== itemId) return false;
+            if (Board.getTileTopItem(position)?.id !== itemId) return false;
             if (!isPositionInRange($hero.position, position)) return false;
         }
 

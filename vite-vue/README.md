@@ -4,6 +4,7 @@ Testowane na node v16.13.0 (npm v8.1.0)
 
 ### TODO
 
+- Jeśli `Tile` jest tym samym co `Stack` to ujednolicić.
 - Używanie przedmiotów z Inventory
 - Zamienić funkcje `pickUp()` `drop()` `moveItem()` `rearrangeItem()` na jedną `moveItem()` (emitować zawsze ten sam event, a obsługa skąd gdzie na backendzie)
 - Obsługa `quantity` przy `moveItem()`
