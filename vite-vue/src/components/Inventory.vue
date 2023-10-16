@@ -38,6 +38,14 @@ export default {
     getSlots() {
       return this.$refs.slot;
     },
+    getFirstSlotWithItem(itemId) {
+      for (const [slotId, value] of Object.entries(this.getSlots())) {
+        if (value.item ? value.item.id === itemId : null === itemId) {
+          return slotId;
+        }
+      }
+      return null;
+    },
     toggle() {
       this.visible = !this.visible;
       if (this.visible) {

@@ -17,6 +17,14 @@ export default class WebsocketRequest {
         })
     }
 
+    static drop(itemId, slot, position) {
+        Connector.emit('drop', {
+            itemId: itemId,
+            slot: slot,
+            position: position,
+        })
+    }
+
     static moveItem(positionFrom, positionTo, itemId) {
         if (isSamePosition(positionFrom, positionTo)) return false;
         if (itemId !== Board.getTileTopItem(positionFrom)) return false;
@@ -27,6 +35,14 @@ export default class WebsocketRequest {
             itemId: itemId,
             from: positionFrom,
             to: positionTo,
+        })
+    }
+
+    static rearrangeItem(itemId, slotFrom, slotTo) {
+        Connector.emit('rearrange-item', {
+            itemId: itemId,
+            slotFrom: slotFrom,
+            slotTo: slotTo,
         })
     }
 

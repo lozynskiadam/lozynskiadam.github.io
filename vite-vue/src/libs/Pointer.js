@@ -2,10 +2,9 @@ import {TILE_SIZE} from "../config.js";
 import {isPosition, isPositionInRange, isSamePosition} from "../utils/position.js";
 import Board from "./Board.js";
 import Item from "./Item.js";
-import Keyboard from "./Keyboard.js";
 import Movement from "./Movement.js";
 import Sprite from "./Sprite.js";
-import {$app, $hero} from "../utils/globals.js";
+import {$app, $hero, $inventory} from "../utils/globals.js";
 import WebsocketRequest from "./WebsocketRequest.js";
 
 export default class Pointer {
@@ -18,10 +17,7 @@ export default class Pointer {
     static isRightButtonPressed = false;
     static grabbing = {
         itemId: null,
-        position: {
-            x: null,
-            y: null,
-        },
+        source: null,
     }
     static effect = null;
 
@@ -29,7 +25,11 @@ export default class Pointer {
         document.addEventListener('mousemove', (e) => {
             Pointer.recalcMousePosition(e);
             if (Pointer.isLeftButtonPressed && !Pointer.grabbing.itemId) {
-                Pointer.grabItem({...Pointer.positionServer});
+                if (e.target.id === "board") {
+                    Pointer.grabItemFromFloor({...Pointer.positionServer});
+                } else if (e.target.classList && e.target.classList.contains('slot')) {
+                    Pointer.grabItemFromInventory(e.target.dataset.slotIndex);
+                }
             }
         }, false);
 
@@ -115,9 +115,9 @@ export default class Pointer {
         // release grab
         if (Pointer.grabbing.itemId) {
             if (e.target.id === "board") {
-                Pointer.releaseItem({...Pointer.positionServer});
+                Pointer.releaseItemOnFloor({...Pointer.positionServer});
             } else if (e.target.classList && e.target.classList.contains('slot')) {
-                Pointer.releaseItem(e.target.getAttribute('data-slot-index'), {...Pointer.positionServer});
+                Pointer.releaseItemOnInventory(e.target.dataset.slotIndex);
             } else {
                 Pointer.cleanGrab();
                 Pointer.updateCursorAndServerPosition();
@@ -156,23 +156,30 @@ export default class Pointer {
     static onRightButtonRelease() {
     }
 
-    static grabItem(source) {
+    static grabItemFromFloor(source) {
         const itemId = Board.getTileTopItem(source);
-        if (!Item.get(itemId).isMovable) {
-            return;
-        }
+        if (!itemId) return;
+        if (!Item.get(itemId).isMovable) return;
         Pointer.grabbing.itemId = itemId;
-        Pointer.grabbing.position = source;
+        Pointer.grabbing.source = source;
         Pointer.setCursor('crosshair');
     }
 
-    static releaseItem(target) {
-        const item = Item.get(Pointer.grabbing.itemId);
-        const positionFrom = {...Pointer.grabbing.position};
-        Pointer.cleanGrab();
-        Pointer.updateCursorAndServerPosition();
+    static grabItemFromInventory(slot) {
+        const itemId = $inventory.getSlot(slot).item?.id;
+        if (!itemId) return;
+        Pointer.grabbing.itemId = itemId;
+        Pointer.grabbing.source = slot;
+        Pointer.setCursor('crosshair');
+    }
 
-        if (isPosition(target)) {
+    static releaseItemOnFloor(target) {
+        const item = Item.get(Pointer.grabbing.itemId);
+        if (isPosition(Pointer.grabbing.source)) {
+            const positionFrom = {...Pointer.grabbing.source};
+            Pointer.cleanGrab();
+            Pointer.updateCursorAndServerPosition();
+
             if (isSamePosition(positionFrom, target)) {
                 return;
             }
@@ -184,11 +191,21 @@ export default class Pointer {
                     positionFrom: positionFrom,
                     positionTo: target,
                 })
-                return;
             }
+        } else {
+            const slot = Pointer.grabbing.source;
+            Pointer.cleanGrab();
+            Pointer.updateCursorAndServerPosition();
+            WebsocketRequest.drop(item.id, slot, target);
         }
+    }
 
-        if (!isPosition(target)) {
+    static releaseItemOnInventory(target) {
+        const item = Item.get(Pointer.grabbing.itemId);
+        if (isPosition(Pointer.grabbing.source)) {
+            const positionFrom = {...Pointer.grabbing.source};
+            Pointer.cleanGrab();
+            Pointer.updateCursorAndServerPosition();
             if (!item.isPickupable) {
                 return;
             }
@@ -201,12 +218,17 @@ export default class Pointer {
                     slot: target,
                 })
             }
+        } else {
+            const source = Pointer.grabbing.source;
+            Pointer.cleanGrab();
+            Pointer.updateCursorAndServerPosition();
+            WebsocketRequest.rearrangeItem(item.id, source, target);
         }
     }
 
     static cleanGrab() {
         Pointer.grabbing.itemId = null;
-        Pointer.grabbing.position = {x: null, y: null};
+        Pointer.grabbing.source = null;
     }
 
     static runEffect(name) {

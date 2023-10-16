@@ -22,6 +22,7 @@ export default class Connector {
         if (event === 'move-item') return Connector.#moveItem(params);
         if (event === 'pick-up') return Connector.#pickUp(params);
         if (event === 'drop') return Connector.#drop(params);
+        if (event === 'rearrange-item') return Connector.#rearrangeItem(params);
         if (event === 'request-tiles') return Connector.#requestTiles(params);
     }
 
@@ -36,10 +37,14 @@ export default class Connector {
 
             if (roll(2)) {
                 emit('loot', {itemId: 9, quantity: 1});
-                emit('update-inventory-slot', {slot: 1, itemId: 9, quantity: 1});
+                let slot = $inventory.getFirstSlotWithItem(9) ?? $inventory.getFirstSlotWithItem(null);
+                let quantity = $inventory.getSlot(slot).quantity;
+                emit('update-inventory-slot', {slot: slot, itemId: 9, quantity: quantity + 1});
             } else {
                 emit('loot', {itemId: 11, quantity: 1});
-                emit('update-inventory-slot', {slot: 2, itemId: 11, quantity: 1});
+                let slot = $inventory.getFirstSlotWithItem(11) ?? $inventory.getFirstSlotWithItem(null);
+                let quantity = $inventory.getSlot(slot).quantity;
+                emit('update-inventory-slot', {slot: slot, itemId: 11, quantity: quantity + 1});
             }
         }
 
@@ -50,10 +55,9 @@ export default class Connector {
             let quantity = rand(3);
             if (roll(3) && quantity) {
                 emit('loot', {itemId: 10, quantity: quantity});
-                if ($inventory.getSlot(0).item?.id === 10) {
-                    quantity = $inventory.getSlot(0).quantity + 1;
-                }
-                emit('update-inventory-slot', {slot: 0, itemId: 10, quantity: quantity});
+                let slot = $inventory.getFirstSlotWithItem(10) ?? $inventory.getFirstSlotWithItem(null);
+                quantity = $inventory.getSlot(slot).quantity + quantity;
+                emit('update-inventory-slot', {slot: slot, itemId: 10, quantity: quantity});
             }
         }
 
@@ -99,6 +103,20 @@ export default class Connector {
         stack.push(itemId);
         emit('update-tile', {position: params.position, stack: stack});
         emit('update-inventory-slot', {slot: params.slot, itemId: null});
+    }
+
+    static #rearrangeItem(params) {
+        const itemSource = $inventory.getSlot(params.slotFrom).item?.id;
+        const quantitySource = $inventory.getSlot(params.slotFrom).quantity;
+        const itemTarget = $inventory.getSlot(params.slotTo).item?.id;
+        const quantityTarget = $inventory.getSlot(params.slotTo).quantity;
+        if (itemSource === itemTarget) {
+            emit('update-inventory-slot', {slot: params.slotFrom, itemId: null});
+            emit('update-inventory-slot', {slot: params.slotTo, itemId: itemSource, quantity: quantitySource + quantityTarget});
+        } else {
+            emit('update-inventory-slot', {slot: params.slotFrom, itemId: itemTarget, quantity: quantityTarget});
+            emit('update-inventory-slot', {slot: params.slotTo, itemId: itemSource, quantity: quantitySource});
+        }
     }
 
     static #requestTiles(params) {

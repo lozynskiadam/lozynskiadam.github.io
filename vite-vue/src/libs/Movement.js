@@ -208,8 +208,8 @@ export default class Movement {
             if (Movement.path.action === 'move' && (path.length === 2 || isPositionInRange($hero.position, Movement.path.destination))) {
                 $hero.sprite.loop('idle-south');
                 if (Movement.path.actionData.itemId === Board.getTileTopItem(Movement.path.actionData.positionFrom)) {
-                    Pointer.grabItem(Movement.path.actionData.positionFrom);
-                    Pointer.releaseItem(Movement.path.actionData.positionTo);
+                    Pointer.grabItemFromFloor(Movement.path.actionData.positionFrom);
+                    Pointer.releaseItemOnFloor(Movement.path.actionData.positionTo);
                 }
                 Movement.clearPath();
                 return;
@@ -217,8 +217,8 @@ export default class Movement {
             if (Movement.path.action === 'pick-up' && (path.length === 2 || isPositionInRange($hero.position, Movement.path.destination))) {
                 $hero.sprite.loop('idle-south');
                 if (Movement.path.actionData.itemId === Board.getTileTopItem(Movement.path.actionData.positionFrom)) {
-                    Pointer.grabItem(Movement.path.actionData.positionFrom);
-                    Pointer.releaseItem(Movement.path.actionData.slot);
+                    Pointer.grabItemFromFloor(Movement.path.actionData.positionFrom);
+                    Pointer.releaseItemOnInventory(Movement.path.actionData.slot);
                 }
                 Movement.clearPath();
                 return;
