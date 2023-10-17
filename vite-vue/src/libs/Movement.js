@@ -207,18 +207,18 @@ export default class Movement {
             }
             if (Movement.path.action === 'move' && (path.length === 2 || isPositionInRange($hero.position, Movement.path.destination))) {
                 $hero.sprite.loop('idle-south');
-                if (Movement.path.actionData.itemId === Board.getTileTopItem(Movement.path.actionData.positionFrom)?.id) {
-                    Pointer.grabItemFromFloor(Movement.path.actionData.positionFrom);
-                    Pointer.releaseItemOnFloor(Movement.path.actionData.positionTo);
+                if (Movement.path.actionData.itemId === Board.getTileTopItem(Movement.path.actionData.fromPosition)?.id) {
+                    Pointer.grabItemFromFloor(Movement.path.actionData.fromPosition);
+                    Pointer.releaseItemOnFloor(Movement.path.actionData.toPosition);
                 }
                 Movement.clearPath();
                 return;
             }
-            if (Movement.path.action === 'pick-up' && (path.length === 2 || isPositionInRange($hero.position, Movement.path.destination))) {
+            if (Movement.path.action === 'loot' && (path.length === 2 || isPositionInRange($hero.position, Movement.path.destination))) {
                 $hero.sprite.loop('idle-south');
-                if (Movement.path.actionData.itemId === Board.getTileTopItem(Movement.path.actionData.positionFrom)?.id) {
-                    Pointer.grabItemFromFloor(Movement.path.actionData.positionFrom);
-                    Pointer.releaseItemOnInventory(Movement.path.actionData.slot);
+                if (Movement.path.actionData.itemId === Board.getTileTopItem(Movement.path.actionData.fromPosition)?.id) {
+                    Pointer.grabItemFromFloor(Movement.path.actionData.fromPosition);
+                    Pointer.releaseItemOnInventory(Movement.path.actionData.slot ?? null);
                 }
                 Movement.clearPath();
                 return;

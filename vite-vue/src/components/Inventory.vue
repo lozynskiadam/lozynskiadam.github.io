@@ -59,7 +59,7 @@ export default {
   mounted() {
     globals().setInventory(this);
     window.addEventListener("update-inventory-slot", (event) => {
-      if (event.detail.itemId) {
+      if (event.detail.itemId && event.detail.quantity > 0) {
         this.getSlot(event.detail.slot).set(new Item(event.detail.itemId, event.detail.quantity));
       } else {
         this.getSlot(event.detail.slot).clear();

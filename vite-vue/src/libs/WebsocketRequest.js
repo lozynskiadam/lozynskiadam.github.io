@@ -5,50 +5,39 @@ import Connector from "./ConnectorMock.js";
 
 export default class WebsocketRequest {
 
-    static pickUp(itemId, position, slot) {
-        const item = Board.getTileTopItem(position);
-        if (itemId !== item.id) return false;
-        if (!isPositionInRange($hero.position, position)) return false;
+    static moveItem(params) {
+        params.fromPosition = params.fromPosition ?? null;
+        params.fromSlot = params.fromSlot ?? null;
+        params.toPosition = params.toPosition ?? null;
+        params.toSlot = params.toSlot ?? null;
 
-        Connector.emit('pick-up', {
-            itemId: item.id,
-            quantity: item.quantity,
-            position: position,
-            slot: slot,
-        })
-    }
+        if (!['move', 'loot', 'drop', 'swap'].includes(params.action)) return
 
-    static drop(itemId, slot, position) {
-        Connector.emit('drop', {
-            itemId: itemId,
-            slot: slot,
-            position: position,
-        })
-    }
+        if (params.action === 'move') {
+            if (params.fromPosition === null || params.toPosition === null) return;
+            if (isSamePosition(params.fromPosition, params.toPosition)) return;
+            if (!isPositionInRange($hero.position, params.fromPosition)) return;
+            if (Board.getTileTopItem(params.fromPosition).id !== params.itemId) return;
+            if (Board.getTileStack(params.toPosition).find((item) => item.isBlockingItems())) return;
+        }
 
-    static moveItem(positionFrom, positionTo, itemId) {
-        const item = Board.getTileTopItem(positionFrom);
-        if (isSamePosition(positionFrom, positionTo)) return false;
-        if (itemId !== item.id) return false;
-        if (Board.getTileStack(positionTo).find((item) => item.isBlockingItems())) return false;
-        if (!isPositionInRange($hero.position, positionFrom)) return false;
+        if (params.action === 'loot') {
+            if (params.fromPosition === null) return;
+            if (Board.getTileTopItem(params.fromPosition).id !== params.itemId) return;
+            if (!isPositionInRange($hero.position, params.fromPosition)) return;
+        }
 
-        Connector.emit('move-item', {
-            itemId: item.id,
-            quantity: item.quantity,
-            from: positionFrom,
-            to: positionTo,
-        })
-    }
+        if (params.action === 'drop') {
+            if (params.fromSlot === null) return;
+            if (Board.getTileStack(params.toPosition).find((item) => item.isBlockingItems())) return;
+        }
 
-    static rearrangeItem(itemId, slotFrom, slotTo) {
-        if (slotFrom === slotTo) return;
+        if (params.action === 'swap') {
+            if (params.fromSlot === null || params.toSlot === null) return;
+            if (params.fromSlot === params.toSlot) return;
+        }
 
-        Connector.emit('rearrange-item', {
-            itemId: itemId,
-            slotFrom: slotFrom,
-            slotTo: slotTo,
-        })
+        Connector.emit('MoveItem', params);
     }
 
     static use(itemId, position = null, slot = null) {

@@ -16,7 +16,7 @@ export default class Pointer {
     static isLeftButtonPressed = false;
     static isRightButtonPressed = false;
     static grabbing = {
-        itemId: null,
+        item: null,
         source: null,
     }
     static effect = null;
@@ -24,11 +24,11 @@ export default class Pointer {
     static init() {
         document.addEventListener('mousemove', (e) => {
             Pointer.recalcMousePosition(e);
-            if (Pointer.isLeftButtonPressed && !Pointer.grabbing.itemId) {
+            if (Pointer.isLeftButtonPressed && !Pointer.grabbing.item) {
                 if (e.target.id === "board") {
                     Pointer.grabItemFromFloor({...Pointer.positionServer});
                 } else if (e.target.classList && e.target.classList.contains('slot')) {
-                    Pointer.grabItemFromInventory(e.target.dataset.slotIndex);
+                    Pointer.grabItemFromInventory(parseInt(e.target.dataset.slotIndex));
                 }
             }
         }, false);
@@ -84,7 +84,7 @@ export default class Pointer {
 
     static updateCursorAndServerPosition() {
         Pointer.positionServer = Board.positionClientToServer(Pointer.positionClient);
-        if (Pointer.grabbing.itemId) {
+        if (Pointer.grabbing.item) {
             return;
         }
 
@@ -105,15 +105,16 @@ export default class Pointer {
     static onLeftButtonRelease(e) {
 
         // release grab
-        if (Pointer.grabbing.itemId) {
+        if (Pointer.grabbing.item) {
             if (e.target.id === "board") {
-                Pointer.releaseItemOnFloor({...Pointer.positionServer});
-            } else if (e.target.classList && e.target.classList.contains('slot')) {
-                Pointer.releaseItemOnInventory(e.target.dataset.slotIndex);
-            } else {
-                Pointer.cleanGrab();
-                Pointer.updateCursorAndServerPosition();
+                return Pointer.releaseItemOnFloor({...Pointer.positionServer});
             }
+            if (e.target.classList && e.target.classList.contains('slot')) {
+                return Pointer.releaseItemOnInventory(parseInt(e.target.dataset.slotIndex));
+            }
+
+            Pointer.cleanGrab();
+            Pointer.updateCursorAndServerPosition();
             return;
         }
 
@@ -130,15 +131,31 @@ export default class Pointer {
         if (e.target.id !== "board") return;
 
         const position = {...Pointer.positionServer};
-        const itemId = Board.getTileTopItem(position)?.id;
-        if (!itemId) return;
-        const item = ItemStructure.get(itemId);
+        const item = Board.getTileTopItem(position);
         if (!item) return;
 
-        if (item.isUsable) {
+        if (item.isPickupable()) {
             Pointer.runEffect('pointer-cross-red');
             if (isPositionInRange($hero.position, position)) {
-                WebsocketRequest.use(itemId, position);
+                WebsocketRequest.moveItem({
+                    action: 'loot',
+                    itemId: item.id,
+                    quantity: item.quantity,
+                    fromPosition: position
+                });
+            } else {
+                Movement.setPath(Pointer.positionServer, 'loot', {
+                    itemId: item.id,
+                    fromPosition: position,
+                });
+            }
+            return;
+        }
+
+        if (item.isUsable()) {
+            Pointer.runEffect('pointer-cross-red');
+            if (isPositionInRange($hero.position, position)) {
+                WebsocketRequest.use(item.id, position);
             } else {
                 Movement.setPath(Pointer.positionServer, 'use', {
                     itemId: item.id
@@ -147,85 +164,108 @@ export default class Pointer {
             return;
         }
 
-        if (!item.isUsable) {
-            Pointer.runEffect('pointer-cross-yellow');
-            Movement.setPath(Pointer.positionServer, 'walk');
-        }
+        Pointer.runEffect('pointer-cross-yellow');
+        Movement.setPath(Pointer.positionServer, 'walk');
     }
 
-    static grabItemFromFloor(source) {
-        const itemId = Board.getTileTopItem(source)?.id;
-        if (!itemId) return;
-        if (!ItemStructure.get(itemId).isMovable) return;
-        Pointer.grabbing.itemId = itemId;
-        Pointer.grabbing.source = source;
-        Pointer.setCursor('crosshair');
-    }
-
-    static grabItemFromInventory(slot) {
-        const item = $inventory.getSlot(slot).item;
+    static grabItemFromFloor(fromPosition) {
+        const item = Board.getTileTopItem(fromPosition);
         if (!item) return;
-        Pointer.grabbing.itemId = item.id;
-        Pointer.grabbing.source = slot;
+        if (!item.isMovable()) return;
+        Pointer.grabbing.item = item;
+        Pointer.grabbing.fromPosition = fromPosition;
         Pointer.setCursor('crosshair');
     }
 
-    static releaseItemOnFloor(target) {
-        const item = ItemStructure.get(Pointer.grabbing.itemId);
-        if (isPosition(Pointer.grabbing.source)) {
-            const positionFrom = {...Pointer.grabbing.source};
+    static grabItemFromInventory(fromSlot) {
+        const item = $inventory.getSlot(fromSlot).item;
+        if (!item) return;
+        Pointer.grabbing.item = item;
+        Pointer.grabbing.fromSlot = fromSlot;
+        Pointer.setCursor('crosshair');
+    }
+
+    static releaseItemOnFloor(toPosition) {
+        const item = Pointer.grabbing.item;
+        if (Pointer.grabbing.fromPosition) {
+            const fromPosition = {...Pointer.grabbing.fromPosition};
             Pointer.cleanGrab();
             Pointer.updateCursorAndServerPosition();
 
-            if (isSamePosition(positionFrom, target)) {
+            if (isSamePosition(fromPosition, toPosition)) {
                 return;
             }
-            if (isPositionInRange($hero.position, positionFrom)) {
-                WebsocketRequest.moveItem(positionFrom, target, item.id);
-            } else {
-                Movement.setPath(positionFrom, 'move', {
+            if (isPositionInRange($hero.position, fromPosition)) {
+                WebsocketRequest.moveItem({
+                    action: 'move',
                     itemId: item.id,
-                    positionFrom: positionFrom,
-                    positionTo: target,
+                    quantity: item.quantity,
+                    fromPosition: fromPosition,
+                    toPosition: toPosition
+                });
+            } else {
+                Movement.setPath(fromPosition, 'move', {
+                    itemId: item.id,
+                    fromPosition: fromPosition,
+                    toPosition: toPosition,
                 })
             }
         } else {
-            const slot = Pointer.grabbing.source;
+            const fromSlot = Pointer.grabbing.fromSlot;
             Pointer.cleanGrab();
             Pointer.updateCursorAndServerPosition();
-            WebsocketRequest.drop(item.id, slot, target);
+            WebsocketRequest.moveItem({
+                action: 'drop',
+                itemId: item.id,
+                quantity: item.quantity,
+                fromSlot: fromSlot,
+                toPosition: toPosition
+            });
         }
     }
 
-    static releaseItemOnInventory(target) {
-        const item = ItemStructure.get(Pointer.grabbing.itemId);
-        if (isPosition(Pointer.grabbing.source)) {
-            const positionFrom = {...Pointer.grabbing.source};
+    static releaseItemOnInventory(toSlot) {
+        const item = Pointer.grabbing.item;
+        if (Pointer.grabbing.fromPosition) {
+            const fromPosition = {...Pointer.grabbing.fromPosition};
             Pointer.cleanGrab();
             Pointer.updateCursorAndServerPosition();
-            if (!item.isPickupable) {
+            if (!item.isPickupable()) {
                 return;
             }
-            if (isPositionInRange($hero.position, positionFrom)) {
-                WebsocketRequest.pickUp(item.id, positionFrom, target);
-            } else {
-                Movement.setPath(positionFrom, 'pick-up', {
+            if (isPositionInRange($hero.position, fromPosition)) {
+                WebsocketRequest.moveItem({
+                    action: 'loot',
                     itemId: item.id,
-                    positionFrom: positionFrom,
-                    slot: target,
+                    quantity: item.quantity,
+                    fromPosition: fromPosition,
+                    toSlot: toSlot
+                });
+            } else {
+                Movement.setPath(fromPosition, 'loot', {
+                    itemId: item.id,
+                    fromPosition: fromPosition,
+                    slot: toSlot,
                 })
             }
         } else {
-            const source = Pointer.grabbing.source;
+            const fromSlot = Pointer.grabbing.fromSlot;
             Pointer.cleanGrab();
             Pointer.updateCursorAndServerPosition();
-            WebsocketRequest.rearrangeItem(item.id, source, target);
+            WebsocketRequest.moveItem({
+                action: 'swap',
+                itemId: item.id,
+                quantity: item.quantity,
+                fromSlot: fromSlot,
+                toSlot: toSlot
+            });
         }
     }
 
     static cleanGrab() {
-        Pointer.grabbing.itemId = null;
-        Pointer.grabbing.source = null;
+        Pointer.grabbing.item = null;
+        Pointer.grabbing.fromSlot = null;
+        Pointer.grabbing.fromPosition = null;
     }
 
     static runEffect(name) {

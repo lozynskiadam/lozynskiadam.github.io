@@ -20,11 +20,8 @@ export default class Connector {
 
     static emit(event, params) {
         if (event === 'use') return Connector.#use(params);
-        if (event === 'move-item') return Connector.#moveItem(params);
-        if (event === 'pick-up') return Connector.#pickUp(params);
-        if (event === 'drop') return Connector.#drop(params);
-        if (event === 'rearrange-item') return Connector.#rearrangeItem(params);
         if (event === 'request-tiles') return Connector.#requestTiles(params);
+        if (event === 'MoveItem') return Connector.#MoveItem(params);
     }
 
     static #use(params) {
@@ -115,55 +112,6 @@ export default class Connector {
         Pointer.updateCursorAndServerPosition();
     }
 
-    static #moveItem(params) {
-        const stackFrom = Board.getTileStack(params.from);
-        stackFrom.pop();
-        const stackTo = Board.getTileStack(params.to);
-        stackTo.push(new Item(params.itemId, params.quantity));
-        emit('update-tile', {position: params.from, stack: stackFrom});
-        emit('update-tile', {position: params.to, stack: stackTo});
-    }
-
-    static #pickUp(params) {
-        const stack = Board.getTileStack(params.position);
-        stack.pop();
-        emit('loot', {itemId: params.itemId, quantity: params.quantity});
-        const inventorySlotItem = $inventory.getSlot(params.slot).item;
-        if (inventorySlotItem) {
-            if (inventorySlotItem.id === params.itemId) {
-                emit('update-inventory-slot', {slot: params.slot, itemId: params.itemId, quantity: inventorySlotItem.quantity + params.quantity});
-            } else {
-                stack.push(inventorySlotItem);
-                emit('update-inventory-slot', {slot: params.slot, itemId: params.itemId, quantity: params.quantity});
-            }
-        } else {
-            emit('update-inventory-slot', {slot: params.slot, itemId: params.itemId, quantity: params.quantity});
-        }
-        emit('update-tile', {position: params.position, stack: stack});
-    }
-
-    static #drop(params) {
-        const item = $inventory.getSlot(params.slot).item;
-        const stack = Board.getTileStack(params.position);
-        stack.push(item);
-        emit('update-tile', {position: params.position, stack: stack});
-        emit('update-inventory-slot', {slot: params.slot, itemId: null});
-    }
-
-    static #rearrangeItem(params) {
-        const itemSource = $inventory.getSlot(params.slotFrom).item?.id;
-        const quantitySource = $inventory.getSlot(params.slotFrom).item?.quantity ?? 0;
-        const itemTarget = $inventory.getSlot(params.slotTo).item?.id;
-        const quantityTarget = $inventory.getSlot(params.slotTo).item?.quantity ?? 0;
-        if (itemSource === itemTarget) {
-            emit('update-inventory-slot', {slot: params.slotFrom, itemId: null});
-            emit('update-inventory-slot', {slot: params.slotTo, itemId: itemSource, quantity: quantitySource + quantityTarget});
-        } else {
-            emit('update-inventory-slot', {slot: params.slotFrom, itemId: itemTarget, quantity: quantityTarget});
-            emit('update-inventory-slot', {slot: params.slotTo, itemId: itemSource, quantity: quantitySource});
-        }
-    }
-
     static #requestTiles(params) {
         for (const position of params.positions) {
             const stack = [];
@@ -210,9 +158,77 @@ export default class Connector {
                 emit('run-effect', {position: $hero.position, effect: 'blood', onCreature: true});
                 emit('update-vitals', {health: health});
                 SoundEffect.play('spikes');
-                setTimeout(() => {stack[index] = new Item(12)}, 1000);
+                setTimeout(() => {
+                    stack[index] = new Item(12)
+                }, 1000);
             }
         });
+    }
+
+    static #MoveItem(params) {
+        if (params.action === 'move') return Connector.#handleMove(params);
+        if (params.action === 'loot') return Connector.#handleLoot(params);
+        if (params.action === 'drop') return Connector.#handleDrop(params);
+        if (params.action === 'swap') return Connector.#handleSwap(params);
+    }
+
+    static #handleMove(params) {
+        const stackFrom = Board.getTileStack(params.fromPosition);
+        stackFrom.pop();
+        const stackTo = Board.getTileStack(params.toPosition);
+        stackTo.push(new Item(params.itemId, params.quantity));
+
+        emit('update-tile', {position: params.fromPosition, stack: stackFrom});
+        emit('update-tile', {position: params.toPosition, stack: stackTo});
+    }
+
+    static #handleLoot(params) {
+        const stack = Board.getTileStack(params.fromPosition);
+        stack.pop();
+        emit('update-tile', {position: params.fromPosition, stack: stack});
+        params.toSlot = params.toSlot ?? $inventory.getFirstSlotWithItem(params.itemId) ?? $inventory.getFirstSlotWithItem(null);
+        const inventorySlotItem = $inventory.getSlot(params.toSlot).item;
+        if (inventorySlotItem) {
+            if (inventorySlotItem.id === params.itemId) {
+                emit('update-inventory-slot', {slot: params.toSlot, itemId: params.itemId, quantity: inventorySlotItem.quantity + params.quantity});
+            } else {
+                stack.push(inventorySlotItem);
+                emit('update-inventory-slot', {slot: params.toSlot, itemId: params.itemId, quantity: params.quantity});
+            }
+        } else {
+            emit('update-inventory-slot', {slot: params.toSlot, itemId: params.itemId, quantity: params.quantity});
+        }
+        emit('loot', {itemId: params.itemId, quantity: params.quantity});
+    }
+
+    static #handleDrop(params) {
+        const quantityLeft = $inventory.getSlot(params.fromSlot).item.quantity - params.quantity;
+        emit('update-inventory-slot', {slot: params.fromSlot, itemId: params.itemId, quantity: quantityLeft});
+
+        const position = params.toPosition ?? $hero.position;
+        const stack = Board.getTileStack(position);
+        stack.push(new Item(params.itemId, params.quantity));
+        emit('update-tile', {position: position, stack: stack});
+    }
+
+    static #handleSwap(params) {
+        const itemSource = $inventory.getSlot(params.fromSlot).item?.id;
+        const quantitySource = $inventory.getSlot(params.fromSlot).item?.quantity ?? 0;
+        const itemTarget = $inventory.getSlot(params.toSlot).item?.id;
+        const quantityTarget = $inventory.getSlot(params.toSlot).item?.quantity ?? 0;
+        if (itemSource === itemTarget) {
+            if (params.quantity === quantitySource) {
+                emit('update-inventory-slot', {slot: params.fromSlot, itemId: null});
+            } else {
+                emit('update-inventory-slot', {slot: params.fromSlot, itemId: params.itemId, quantity: quantitySource - params.quantity});
+            }
+            emit('update-inventory-slot', {slot: params.toSlot, itemId: params.itemId, quantity: quantityTarget + params.quantity});
+        } else {
+            if (params.quantity === quantitySource) {
+                emit('update-inventory-slot', {slot: params.fromSlot, itemId: itemTarget, quantity: quantityTarget});
+                emit('update-inventory-slot', {slot: params.toSlot, itemId: itemSource, quantity: quantitySource});
+            }
+        }
     }
 
 }

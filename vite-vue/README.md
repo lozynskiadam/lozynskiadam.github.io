@@ -6,7 +6,6 @@ Testowane na node v16.13.0 (npm v8.1.0)
 
 - Jeśli `Tile` jest tym samym co `Stack` to ujednolicić.
 - Używanie przedmiotów z Inventory
-- Zamienić funkcje `pickUp()` `drop()` `moveItem()` `rearrangeItem()` na jedną `moveItem()` (emitować zawsze ten sam event, a obsługa skąd gdzie na backendzie)
 - Obsługa `quantity` przy `moveItem()`
 
 ### Kontrakty
@@ -18,6 +17,7 @@ Podnoszenie, upuszczanie, przekładanie w ekwipunku oraz przemieszczanie po mapi
 {
   "event": "MoveItem",
   "params": {
+    "action": "swap", // string ["move"/"pickup"/"drop"/"swap"]
     "itemId": 1, // int
     "quantity": 1, // int
     "from": {
