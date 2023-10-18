@@ -10,7 +10,7 @@
     <div class="header">
       <div class="header-icon"></div>
       <span class="header-title">Inventory</span>
-      <button @click="toggle()" class="button-close">🞨</button>
+      <button @click="toggle()" class="button-close">✕</button>
     </div>
     <div class="container">
       <Slot v-for="i in 80" ref="slot" :index="i - 1"></Slot>
