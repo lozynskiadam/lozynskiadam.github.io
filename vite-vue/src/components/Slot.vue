@@ -3,12 +3,14 @@
 </style>
 
 <template>
-  <div class="slot" :data-slot-index="index">
+  <div class="slot" :data-slot-index="index" @click="use()">
     <div v-if="item" class="quantity">{{ item.quantity }}</div>
   </div>
 </template>
 
 <script>
+import WebsocketRequest from "../libs/WebsocketRequest.js";
+
 export default {
   name: 'Slot',
   props: {
@@ -21,6 +23,11 @@ export default {
     }
   },
   methods: {
+    use() {
+      if (!this.item) return;
+      if (!this.item.isUsable()) return;
+      WebsocketRequest.use(this.item.id, null, this.index);
+    },
     set(item) {
       this.item = item;
       this.$el.querySelector('canvas')?.remove();

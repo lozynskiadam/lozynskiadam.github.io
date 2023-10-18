@@ -41,9 +41,9 @@ export default class WebsocketRequest {
     }
 
     static use(itemId, position = null, slot = null) {
-        if (position) {
-            if (Board.getTileTopItem(position)?.id !== itemId) return false;
-            if (!isPositionInRange($hero.position, position)) return false;
+        if (position !== null) {
+            if (Board.getTileTopItem(position)?.id !== itemId) return;
+            if (!isPositionInRange($hero.position, position)) return;
         }
 
         Connector.emit('use', {

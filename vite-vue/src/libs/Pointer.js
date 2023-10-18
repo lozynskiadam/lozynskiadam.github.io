@@ -1,7 +1,6 @@
 import {TILE_SIZE} from "../config.js";
-import {isPosition, isPositionInRange, isSamePosition} from "../utils/position.js";
+import {isPositionInRange, isSamePosition} from "../utils/position.js";
 import Board from "./Board.js";
-import ItemStructure from "./ItemStructure.js";
 import Movement from "./Movement.js";
 import Sprite from "./Sprite.js";
 import {$app, $hero, $inventory} from "../utils/globals.js";
@@ -103,7 +102,6 @@ export default class Pointer {
     }
 
     static onLeftButtonRelease(e) {
-
         // release grab
         if (Pointer.grabbing.item) {
             if (e.target.id === "board") {
@@ -115,16 +113,6 @@ export default class Pointer {
 
             Pointer.cleanGrab();
             Pointer.updateCursorAndServerPosition();
-            return;
-        }
-
-        Pointer.cleanGrab();
-        if (e.target.classList && e.target.classList.contains('slot')) {
-            const slot = e.target.dataset.slotIndex;
-            const item = $inventory.getSlot(slot).item;
-            if (!item) return;
-            if (!item.isUsable()) return;
-            WebsocketRequest.use(item.id, null, slot);
             return;
         }
 

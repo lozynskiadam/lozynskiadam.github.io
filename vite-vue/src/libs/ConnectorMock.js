@@ -26,7 +26,7 @@ export default class Connector {
 
     static #use(params) {
         if (params.itemId === 6) {
-            if (params.slot) return;
+            if (params.slot !== null) return;
             const stack = Board.getTileStack(params.position);
             stack.pop();
 
@@ -48,7 +48,7 @@ export default class Connector {
         }
 
         if (params.itemId === 8) {
-            if (params.slot) return;
+            if (params.slot !== null) return;
             SoundEffect.play('mining');
             emit('run-effect', {position: params.position, effect: 'ore-hit'});
 
@@ -62,7 +62,7 @@ export default class Connector {
         }
 
         if (params.itemId === 9) {
-            if (params.slot) {
+            if (params.slot !== null) {
                 const currentQuantity = $inventory.getSlot(params.slot).item?.quantity ?? 0;
                 if (currentQuantity > 1) {
                     emit('update-inventory-slot', {slot: params.slot, itemId: params.itemId, quantity: currentQuantity - 1});
@@ -86,7 +86,7 @@ export default class Connector {
         }
 
         if (params.itemId === 11) {
-            if (params.slot) {
+            if (params.slot !== null) {
                 const currentQuantity = $inventory.getSlot(params.slot).item?.quantity ?? 0;
                 if (currentQuantity > 1) {
                     emit('update-inventory-slot', {slot: params.slot, itemId: params.itemId, quantity: currentQuantity - 1});
