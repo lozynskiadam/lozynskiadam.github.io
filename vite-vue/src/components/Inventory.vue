@@ -4,10 +4,14 @@
 
 <template>
   <button class="bookmark-inventory" @click="this.toggle()" :class="{'active': visible}">
-    <img src="../assets/images/inventory.png" alt="Inv"/>
+    <img src="../assets/images/bookmark-inventory.png" alt="Inv"/>
   </button>
   <div id="inventory" :style="{'display': visible ? 'block' : 'none'}">
-    <div class="header">Inventory</div>
+    <div class="header">
+      <div class="header-icon"></div>
+      <span class="header-title">Inventory</span>
+      <button @click="toggle()" class="button-close">🞨</button>
+    </div>
     <div class="container">
       <Slot v-for="i in 80" ref="slot" :index="i - 1"></Slot>
     </div>
