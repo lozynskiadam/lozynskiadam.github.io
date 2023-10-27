@@ -26,8 +26,8 @@ export default class Pointer {
             if (Pointer.isLeftButtonPressed && !Pointer.grabbing.item) {
                 if (e.target.id === "board") {
                     Pointer.grabItemFromFloor({...Pointer.positionServer});
-                } else if (e.target.classList && e.target.classList.contains('slot')) {
-                    Pointer.grabItemFromInventory(parseInt(e.target.dataset.slotIndex));
+                } else if (e.target.classList && e.target.classList.contains('slot') && e.target.closest('#inventory')) {
+                    Pointer.grabItemFromInventory(e.target.dataset.slotId);
                 }
             }
         }, false);
@@ -107,8 +107,8 @@ export default class Pointer {
             if (e.target.id === "board") {
                 return Pointer.releaseItemOnFloor({...Pointer.positionServer});
             }
-            if (e.target.classList && e.target.classList.contains('slot')) {
-                return Pointer.releaseItemOnInventory(parseInt(e.target.dataset.slotIndex));
+            if (e.target.classList && e.target.classList.contains('slot') && e.target.closest('#inventory')) {
+                return Pointer.releaseItemOnInventory(e.target.dataset.slotId);
             }
 
             Pointer.cleanGrab();

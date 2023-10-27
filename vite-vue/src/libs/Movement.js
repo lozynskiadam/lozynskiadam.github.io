@@ -199,6 +199,9 @@ export default class Movement {
                 console.log("Path was not found.");
                 return;
             }
+            if (Movement.path === null) {
+                return;
+            }
             if (Movement.path.action === 'use' && (path.length === 2 || isPositionInRange($hero.position, Movement.path.destination))) {
                 $hero.sprite.loop('idle-south');
                 WebsocketRequest.use(Movement.path.actionData.itemId, Movement.path.destination);

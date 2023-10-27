@@ -71,70 +71,70 @@
         background-repeat: no-repeat;
         background-position: center;
 
-        &[data-id="helmet"] {
+        &[data-slot-id="equipment-helmet"] {
           left: 50%;
           margin-left: -20px;
           top: 0;
           background-image: url("../assets/images/inventory/helmet.png");
         }
 
-        &[data-id="armor"] {
+        &[data-slot-id="equipment-armor"] {
           left: 50%;
           margin-left: -20px;
           top: 48px;
           background-image: url("../assets/images/inventory/armor.png");
         }
 
-        &[data-id="belt"] {
+        &[data-slot-id="equipment-belt"] {
           left: 50%;
           margin-left: -20px;
           top: 96px;
           background-image: url("../assets/images/inventory/belt.png");
         }
 
-        &[data-id="boots"] {
+        &[data-slot-id="equipment-boots"] {
           left: 50%;
           margin-left: -20px;
           top: 144px;
           background-image: url("../assets/images/inventory/boots.png");
         }
 
-        &[data-id="amulet"] {
+        &[data-slot-id="equipment-amulet"] {
           left: 50%;
           margin-left: -68px;
           top: 25px;
           background-image: url("../assets/images/inventory/amulet.png");
         }
 
-        &[data-id="weapon"] {
+        &[data-slot-id="equipment-weapon"] {
           left: 50%;
           margin-left: -68px;
           top: 73px;
           background-image: url("../assets/images/inventory/weapon.png");
         }
 
-        &[data-id="glove"] {
+        &[data-slot-id="equipment-glove"] {
           left: 50%;
           margin-left: -68px;
           top: 121px;
           background-image: url("../assets/images/inventory/glove.png");
         }
 
-        &[data-id="cape"] {
+        &[data-slot-id="equipment-cape"] {
           left: 50%;
           margin-left: 28px;
           top: 25px;
           background-image: url("../assets/images/inventory/cape.png");
         }
 
-        &[data-id="shield"] {
+        &[data-slot-id="equipment-shield"] {
           left: 50%;
           margin-left: 28px;
           top: 73px;
           background-image: url("../assets/images/inventory/shield.png");
         }
 
-        &[data-id="ring"] {
+        &[data-slot-id="equipment-ring"] {
           left: 50%;
           margin-left: 28px;
           top: 121px;

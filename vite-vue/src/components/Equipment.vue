@@ -14,16 +14,16 @@
     </div>
     <div class="container">
       <div class="slots">
-        <Slot ref="slot" id="helmet" index=100></Slot>
-        <Slot ref="slot" id="armor" index=101></Slot>
-        <Slot ref="slot" id="belt" index=102></Slot>
-        <Slot ref="slot" id="boots" index=103></Slot>
-        <Slot ref="slot" id="amulet" index=104></Slot>
-        <Slot ref="slot" id="cape" index=105></Slot>
-        <Slot ref="slot" id="weapon" index=106></Slot>
-        <Slot ref="slot" id="shield" index=107></Slot>
-        <Slot ref="slot" id="glove" index=108></Slot>
-        <Slot ref="slot" id="ring" index=109></Slot>
+        <Slot ref="equipment-helmet" id="equipment-helmet"></Slot>
+        <Slot ref="equipment-armor" id="equipment-armor"></Slot>
+        <Slot ref="equipment-belt" id="equipment-belt"></Slot>
+        <Slot ref="equipment-boots" id="equipment-boots"></Slot>
+        <Slot ref="equipment-amulet" id="equipment-amulet"></Slot>
+        <Slot ref="equipment-cape" id="equipment-cape"></Slot>
+        <Slot ref="equipment-weapon" id="equipment-weapon"></Slot>
+        <Slot ref="equipment-shield" id="equipment-shield"></Slot>
+        <Slot ref="equipment-glove" id="equipment-glove"></Slot>
+        <Slot ref="equipment-ring" id="equipment-ring"></Slot>
       </div>
     </div>
   </div>
