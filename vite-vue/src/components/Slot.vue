@@ -3,7 +3,7 @@
 </style>
 
 <template>
-  <div class="slot" :data-slot-index="index" @click="use()">
+  <div class="slot" :data-id="id" :data-slot-index="index" @click="use()">
     <div v-if="item" class="quantity">{{ item.quantity }}</div>
   </div>
 </template>
@@ -14,6 +14,7 @@ import WebsocketRequest from "../libs/WebsocketRequest.js";
 export default {
   name: 'Slot',
   props: {
+    id: String,
     index: Number,
   },
   data() {

@@ -1,5 +1,5 @@
 .bookmark-inventory {
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
   position: fixed;
@@ -74,10 +74,6 @@
 }
 
 @media screen and (max-width: 800px) {
-  .bookmark-inventory {
-    display: flex;
-  }
-
   #inventory {
     left: 10px;
     right: 10px;

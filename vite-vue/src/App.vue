@@ -4,6 +4,7 @@
 
 <template>
   <Inventory v-if="loaded"/>
+  <Equipment v-if="loaded"/>
   <Vitality v-if="loaded"/>
   <DeadDisplay v-if="loaded"/>
   <Loot v-if="loaded"/>
@@ -22,6 +23,7 @@ import Renderer from "./libs/Renderer.js";
 import Creature from "./libs/Creature.js";
 import Board from "./libs/Board.js";
 import Connector from "./libs/ConnectorMock.js";
+import Equipment from "./components/Equipment.vue";
 import Inventory from "./components/Inventory.vue";
 import Vitality from "./components/Vitality.vue";
 import DeadDisplay from "./components/DeadDisplay.vue";
@@ -29,7 +31,7 @@ import Loot from "./components/Loot.vue";
 import SoundEffect from "./libs/SoundEffect.js";
 
 export default {
-  components: {DeadDisplay, Inventory, Vitality, Loot},
+  components: {DeadDisplay, Inventory, Equipment, Vitality, Loot},
   data() {
     return {
       loaded: false

@@ -9,6 +9,9 @@ export default class Keyboard {
         bindKey('i', () => {
             emit('inventory-toggle');
         });
+        bindKey('u', () => {
+            emit('equipment-toggle');
+        });
     }
 
     static triggerKeyHoldingFunctions = () => {

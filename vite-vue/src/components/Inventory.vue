@@ -4,7 +4,7 @@
 
 <template>
   <button class="bookmark-inventory" @click="this.toggle()" :class="{'active': visible}">
-    <img src="../assets/images/bookmark-inventory.png" alt="Inv"/>
+    <img src="../assets/images/inventory.png" alt="Inv"/>
   </button>
   <div id="inventory" :style="{'display': visible ? 'block' : 'none'}">
     <div class="header">
@@ -29,11 +29,7 @@ export default {
   components: {Slot},
   data() {
     return {
-      visible: false,
-      audio: {
-        open: null,
-        close: null,
-      }
+      visible: false
     }
   },
   methods: {
