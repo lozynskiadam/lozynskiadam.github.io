@@ -69,7 +69,7 @@ export default class Renderer {
 
         Board.hudCtx.fillStyle = "#dce1e3";
         Board.hudCtx.strokeStyle = "#000000";
-        Board.hudCtx.font = "16px Hind Vadodara";
+        Board.hudCtx.font = "15px Hind Vadodara";
         Board.hudCtx.lineWidth = 2;
 
         top = top - (26 * Board.scale);

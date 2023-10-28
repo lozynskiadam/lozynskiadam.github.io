@@ -4,13 +4,13 @@
   justify-content: center;
   position: fixed;
   right: 10px;
-  top: 10px;
+  top: 12px;
   width: 32px;
   height: 32px;
   background: transparent;
   border: 0;
   z-index: 5;
-  opacity: 0.5;
+  opacity: 0.65;
 
   &.active {
     opacity: 1;
@@ -19,8 +19,8 @@
 
 #inventory {
   position: absolute;
-  right: 50px;
-  top: 50px;
+  right: 25px;
+  top: 58px;
   width: 348px;
   z-index: 4;
   color: #d7e0e3;
@@ -75,9 +75,7 @@
 
 @media screen and (max-width: 800px) {
   #inventory {
-    left: 10px;
     right: 10px;
-    top: 52px;
-    width: auto;
+    width: calc(100vw - 210px);
   }
 }
