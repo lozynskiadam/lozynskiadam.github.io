@@ -53,11 +53,7 @@ export default class Pointer {
 
     static recalcMousePosition(e) {
         const rect = Board.ctx.canvas.getBoundingClientRect();
-        const old = {
-            positionWindow: {...Pointer.positionWindow},
-            positionClient: {...Pointer.positionClient},
-            positionServer: {...Pointer.positionServer},
-        };
+        const oldPositionClient = {...Pointer.positionClient};
 
         Pointer.positionWindow = {
             x: e.clientX,
@@ -74,27 +70,39 @@ export default class Pointer {
             y: Math.floor((Pointer.positionCanvas.y + $hero.offset.y) / TILE_SIZE),
         };
 
-        if (!isSamePosition(Pointer.positionClient, old.positionClient) || !isSamePosition(Pointer.positionServer, old.positionServer)) {
-            Pointer.updateCursorAndServerPosition();
+        if (!isSamePosition(Pointer.positionClient, oldPositionClient)) {
+            Pointer.refreshPointer();
         } else {
             Pointer.positionServer = Board.positionClientToServer(Pointer.positionClient);
         }
     }
 
-    static updateCursorAndServerPosition() {
+    static refreshPointer() {
         Pointer.positionServer = Board.positionClientToServer(Pointer.positionClient);
-        if (Pointer.grabbing.item) {
-            return;
-        }
+        if (Pointer.grabbing.item) return;
 
         const item = Board.getTileTopItem(Pointer.positionServer);
-        if (item.id === 6) {
-            Pointer.setCursor('chest');
-        } else if (item.id === 8) {
-            Pointer.setCursor('pick');
-        } else {
+        if (!item) {
             Pointer.setCursor('default');
+            return;
         }
+        if (item.isPickupable()) {
+            Pointer.setCursor('hand');
+            return;
+        }
+        if (!item.isUsable()) {
+            Pointer.setCursor('default');
+            return;
+        }
+        if (item.getType() === 'ore') {
+            Pointer.setCursor('pick');
+            return;
+        }
+        if (item.getType() === 'chest') {
+            Pointer.setCursor('chest');
+            return;
+        }
+        Pointer.setCursor('gears');
     }
 
     static onLeftButtonPress(e) {
@@ -112,7 +120,7 @@ export default class Pointer {
             }
 
             Pointer.cleanGrab();
-            Pointer.updateCursorAndServerPosition();
+            Pointer.refreshPointer();
             return;
         }
 
@@ -178,7 +186,7 @@ export default class Pointer {
         if (Pointer.grabbing.fromPosition) {
             const fromPosition = {...Pointer.grabbing.fromPosition};
             Pointer.cleanGrab();
-            Pointer.updateCursorAndServerPosition();
+            Pointer.refreshPointer();
 
             if (isSamePosition(fromPosition, toPosition)) {
                 return;
@@ -201,7 +209,7 @@ export default class Pointer {
         } else {
             const fromSlot = Pointer.grabbing.fromSlot;
             Pointer.cleanGrab();
-            Pointer.updateCursorAndServerPosition();
+            Pointer.refreshPointer();
             WebsocketRequest.moveItem({
                 action: 'drop',
                 itemId: item.id,
@@ -217,7 +225,7 @@ export default class Pointer {
         if (Pointer.grabbing.fromPosition) {
             const fromPosition = {...Pointer.grabbing.fromPosition};
             Pointer.cleanGrab();
-            Pointer.updateCursorAndServerPosition();
+            Pointer.refreshPointer();
             if (!item.isPickupable()) {
                 return;
             }
@@ -239,7 +247,7 @@ export default class Pointer {
         } else {
             const fromSlot = Pointer.grabbing.fromSlot;
             Pointer.cleanGrab();
-            Pointer.updateCursorAndServerPosition();
+            Pointer.refreshPointer();
             WebsocketRequest.moveItem({
                 action: 'swap',
                 itemId: item.id,

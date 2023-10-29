@@ -109,7 +109,7 @@ export default class Connector {
             SoundEffect.play('potion');
         }
 
-        Pointer.updateCursorAndServerPosition();
+        Pointer.refreshPointer();
     }
 
     static #requestTiles(params) {

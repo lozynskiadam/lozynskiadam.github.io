@@ -9,28 +9,25 @@ export default class Renderer {
 
     static renderTile(positionClient, positionServer, layer, tile) {
         if (layer === 'ground') {
-            tile.forEach((item) => {
-                if (item.getType() === 'ground') {
-                    Renderer.drawSprite(positionClient, item.getSprite());
-                }
+            tile.filter((item) => item.getType() === 'ground').forEach((item) => {
+                Renderer.drawSprite(positionClient, item.getSprite());
             });
+            return;
         }
 
         if (layer === 'objects') {
             let altitude = 0;
-            tile.forEach((item) => {
-                if (item.getType() === 'object') {
-                    Renderer.drawSprite(positionClient, item.getSprite(), altitude);
-                    altitude += item.getAltitude();
-                }
+            tile.filter((item) => item.getType() !== 'ground').forEach((item) => {
+                Renderer.drawSprite(positionClient, item.getSprite(), altitude);
+                altitude += item.getAltitude();
             });
 
-            Object.values(Board.creatures).forEach((creature) => {
-                if (isSamePosition(positionServer, creature.position)) {
-                    Renderer.drawCreature(positionClient, creature, altitude);
-                    Renderer.drawNickname(positionClient, creature, altitude);
-                    Renderer.drawHealthBar(positionClient, creature, altitude);
-                }
+            Object.values(Board.creatures)
+            .filter((creature) => isSamePosition(positionServer, creature.position))
+            .forEach((creature) => {
+                Renderer.drawCreature(positionClient, creature, altitude);
+                Renderer.drawNickname(positionClient, creature, altitude);
+                Renderer.drawHealthBar(positionClient, creature, altitude);
             });
 
             Board.getVisibleEffectsSprites(positionServer).forEach((sprite) => {
@@ -40,6 +37,7 @@ export default class Renderer {
                     Renderer.drawSprite(positionClient, sprite, altitude);
                 }
             });
+            return;
         }
     }
 
@@ -93,7 +91,7 @@ export default class Renderer {
         left = left + ((TILE_SIZE * Board.scale) / 2) - Math.ceil(image.width / 2);
         Board.hudCtx.fillStyle = "#000000";
         Board.hudCtx.globalAlpha = 0.5;
-        Board.hudCtx.fillRect(left-1, top-1, image.width+2, image.height+2);
+        Board.hudCtx.fillRect(left - 1, top - 1, image.width + 2, image.height + 2);
         Board.hudCtx.globalAlpha = 1;
         Board.hudCtx.drawImage(image, left, top, Math.ceil(image.width * creature.healthPercent / 100), image.height);
     }

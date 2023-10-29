@@ -53,6 +53,14 @@ body {
   cursor: url(assets/images/cursor-eye.png), help;
 }
 
+#app[cursor="hand"] {
+  cursor: url(assets/images/cursor-hand.png), help;
+}
+
+#app[cursor="gears"] {
+  cursor: url(assets/images/cursor-gears.png), help;
+}
+
 #board {
   position: absolute;
   image-rendering: pixelated;

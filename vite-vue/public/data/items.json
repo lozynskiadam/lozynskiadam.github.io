@@ -62,7 +62,7 @@
   {
     "id": 6,
     "name": "chest",
-    "type": "object",
+    "type": "chest",
     "sprite": "chest",
     "altitude": 0,
     "isUsable": true,
@@ -86,7 +86,7 @@
   {
     "id": 8,
     "name": "ore vein",
-    "type": "object",
+    "type": "ore",
     "sprite": "ore-vein",
     "altitude": 0,
     "isUsable": true,
