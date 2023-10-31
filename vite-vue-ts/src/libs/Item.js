@@ -2,8 +2,8 @@ import ItemStructure from "./ItemStructure.js";
 
 export default class Item {
 
-    id = null;
-    quantity = null;
+    id;
+    quantity;
 
     constructor(id, quantity = 1) {
         this.id = id;

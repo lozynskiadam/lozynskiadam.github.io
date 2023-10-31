@@ -5,16 +5,16 @@ export default class ItemStructure {
 
     static #instances = {};
 
-    id = null;
-    name = null;
-    type = null;
-    altitude = null;
-    sprite = null;
-    isUsable = null;
-    isMovable = null;
-    isPickupable = null;
-    isBlockingCreatures = null;
-    isBlockingItems = null;
+    id;
+    name;
+    type;
+    altitude;
+    sprite;
+    isUsable;
+    isMovable;
+    isPickupable;
+    isBlockingCreatures;
+    isBlockingItems;
 
     static async load() {
         try {

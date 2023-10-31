@@ -1,4 +1,4 @@
-# Vue 3 + Vite
+# Vue 3 + Vite + TypeScript
 
 Testowane na node v16.13.0 (npm v8.1.0)
 
