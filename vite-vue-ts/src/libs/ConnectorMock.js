@@ -4,7 +4,7 @@ import Pointer from "./Pointer.js";
 import {emit, rand, randomString, roll} from "../utils/common.js";
 import {isSamePosition} from "../utils/position.js";
 import SoundEffect from "./SoundEffect.js";
-import Item from "./Item.js";
+import Item from "./Item.ts";
 
 export default class Connector {
 

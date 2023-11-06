@@ -45,7 +45,7 @@
 import Slot from "./Slot.vue";
 import {globals} from "../utils/globals.js";
 import SoundEffect from "../libs/SoundEffect.js";
-import Item from "../libs/Item.js";
+import Item from "../libs/Item.ts";
 
 export default {
   name: 'Inventory',

@@ -14,8 +14,8 @@
 import {$hero, globals} from "./utils/globals.js";
 import {emit} from "./utils/common.js";
 import Sprite from "./libs/Sprite.js";
-import ItemStructure from "./libs/ItemStructure.js";
-import Effect from "./libs/Effect.js";
+import ItemStructure from "./libs/ItemStructure.ts";
+import Effect from "./libs/Effect.ts";
 import Keyboard from "./libs/Keyboard.js";
 import Pointer from "./libs/Pointer.js";
 import Movement from "./libs/Movement.js";

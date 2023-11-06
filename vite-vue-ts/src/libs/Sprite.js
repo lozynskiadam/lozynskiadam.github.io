@@ -17,6 +17,7 @@ export default class Sprite {
     currentState = null;
     currentFrame = null;
     lastFrame = null;
+    customData = {};
 
     static async load() {
         try {

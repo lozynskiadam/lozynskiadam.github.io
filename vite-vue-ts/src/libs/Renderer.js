@@ -4,6 +4,7 @@ import Pointer from "./Pointer.js";
 import Sprite from "./Sprite.js";
 import Board from "./Board.js";
 import {$hero} from "../utils/globals.js";
+import Effect from "./Effect.ts";
 
 export default class Renderer {
 
@@ -30,7 +31,7 @@ export default class Renderer {
                 Renderer.drawHealthBar(positionClient, creature, altitude);
             });
 
-            Board.getVisibleEffectsSprites(positionServer).forEach((sprite) => {
+            Effect.getRunning(positionServer).forEach((sprite) => {
                 if (sprite.customData.onCreature ?? false) {
                     Renderer.drawSprite(positionClient, sprite, altitude + Math.ceil(TILE_SIZE / 8));
                 } else {

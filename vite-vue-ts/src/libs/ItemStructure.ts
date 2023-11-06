@@ -1,26 +1,27 @@
 import Sprite from "./Sprite.js";
 import {ITEMS_PATH} from "../config.js";
+import {ItemStructureDto} from "../interfaces/ItemStructureDto.ts";
 
 export default class ItemStructure {
 
-    static #instances = {};
+    static #instances: {[p: number]: ItemStructure} = {};
 
-    id;
-    name;
-    type;
-    altitude;
-    sprite;
-    isUsable;
-    isMovable;
-    isPickupable;
-    isBlockingCreatures;
-    isBlockingItems;
+    id: number;
+    name: string;
+    type: string;
+    altitude: number;
+    sprite: Sprite;
+    isUsable: boolean;
+    isMovable: boolean;
+    isPickupable: boolean;
+    isBlockingCreatures: boolean;
+    isBlockingItems: boolean;
 
     static async load() {
         try {
             const response = await fetch(ITEMS_PATH);
-            const json = await response.json();
-            return new Promise((resolve) => {
+            const json: ItemStructureDto[] = await response.json();
+            return new Promise<void>((resolve) => {
                 Object.values(json).forEach((data) => new ItemStructure(data.id, data));
                 resolve();
             });
@@ -29,14 +30,14 @@ export default class ItemStructure {
         }
     }
 
-    static get(id) {
-        const structure = ItemStructure.#instances[id];
+    static get(id: number): ItemStructure {
+        const structure: ItemStructure = ItemStructure.#instances[id];
         if (!structure) throw `Could not load structure for item ${id}.`;
 
         return structure;
     }
 
-    constructor(id, data) {
+    constructor(id: number, data: ItemStructureDto) {
         ItemStructure.#instances[id] = this;
 
         this.id = data.id;

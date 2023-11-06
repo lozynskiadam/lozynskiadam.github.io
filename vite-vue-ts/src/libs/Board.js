@@ -1,7 +1,6 @@
 import {BOARD_HEIGHT, BOARD_WIDTH, DEVICE_BREAKPOINT, SCALE_DESKTOP, SCALE_MOBILE, TILE_SIZE} from "../config.js";
 import {$hero} from "../utils/globals.js";
 import WebsocketRequest from "./WebsocketRequest.js";
-import Effect from "./Effect.js";
 import Creature from "./Creature.js";
 import {randomString} from "../utils/common.js";
 
@@ -16,7 +15,6 @@ export default class Board {
     static firstTilePosition = {};
     static lastTilePosition = {};
     static tiles = {};
-    static effects = {};
     static creatures = {};
     static texts = {};
 
@@ -48,9 +46,6 @@ export default class Board {
 
         window.addEventListener("update-tile", (event) => {
             Board.updateTile(event.detail.position, event.detail.stack);
-        });
-        window.addEventListener("run-effect", (event) => {
-            Effect.get(event.detail.effect).run(event.detail.position, event.detail.onCreature ?? false);
         });
         window.addEventListener("add-creature", (event) => {
             new Creature(event.detail.name, event.detail.position)
@@ -143,14 +138,6 @@ export default class Board {
             x: position.x - Board.firstTilePosition.x,
             y: position.y - Board.firstTilePosition.y,
         }
-    }
-
-    static getVisibleEffectsSprites(position) {
-        if (Board.effects && Board.effects[position.y] && Board.effects[position.y][position.x]) {
-            return Object.values(this.effects[position.y][position.x]);
-        }
-
-        return [];
     }
 
     static onResize() {

@@ -19,7 +19,7 @@ import Movement from "../libs/Movement.js";
 import Board from "../libs/Board.js";
 import {$hero, globals} from "../utils/globals.js";
 import SoundEffect from "../libs/SoundEffect.js";
-import Effect from "../libs/Effect.js";
+import Effect from "../libs/Effect.ts";
 import Creature from "../libs/Creature.js";
 import {emit} from "../utils/common.js";
 

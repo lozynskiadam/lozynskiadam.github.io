@@ -8,7 +8,7 @@
 
 <script>
 import SoundEffect from "../libs/SoundEffect.js";
-import Item from "../libs/Item.js";
+import Item from "../libs/Item.ts";
 
 export default {
   name: 'Loot',

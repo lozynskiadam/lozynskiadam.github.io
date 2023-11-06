@@ -1,44 +1,45 @@
-import ItemStructure from "./ItemStructure.js";
+import ItemStructure from "./ItemStructure.ts";
+import Sprite from "./Sprite.js";
 
 export default class Item {
 
-    id;
-    quantity;
+    id: number;
+    quantity: number;
 
-    constructor(id, quantity = 1) {
+    constructor(id: number, quantity: number = 1) {
         this.id = id;
         this.quantity = quantity;
     }
 
-    getName() {
+    getName(): string {
         return ItemStructure.get(this.id).name;
     }
 
-    getType() {
+    getType(): string {
         return ItemStructure.get(this.id).type;
     }
 
-    getAltitude() {
+    getAltitude(): number {
         return ItemStructure.get(this.id).altitude;
     }
 
-    getSprite() {
+    getSprite(): Sprite {
         return ItemStructure.get(this.id).sprite;
     }
 
-    isUsable() {
+    isUsable(): boolean {
         return ItemStructure.get(this.id).isUsable;
     }
 
-    isMovable() {
+    isMovable(): boolean {
         return ItemStructure.get(this.id).isMovable;
     }
 
-    isPickupable() {
+    isPickupable(): boolean {
         return ItemStructure.get(this.id).isPickupable;
     }
 
-    isBlockingCreatures() {
+    isBlockingCreatures(): boolean {
         return ItemStructure.get(this.id).isBlockingCreatures;
     }
 
