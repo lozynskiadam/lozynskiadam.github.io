@@ -1,13 +1,12 @@
 import Sprite from "./Sprite.js";
 import {EFFECTS_PATH} from "../config.js";
-import {EffectDto} from "../interfaces/EffectDto.ts";
+import {EffectConfig} from "../interfaces/EffectConfig.ts";
 import {Position} from "../interfaces/Position.ts";
 
 export default class Effect {
 
     static #instances: { [p: number]: Effect } = {};
-    static #running: { [p: string]: { [p: number]: Sprite } } = {};
-    static #lastUID: number = 0;
+    static #running: { [p: string]: Sprite[] } = {};
 
     id: number;
     sprite: Sprite;
@@ -15,10 +14,10 @@ export default class Effect {
     static async load() {
         try {
             const response = await fetch(EFFECTS_PATH);
-            const json: EffectDto[] = await response.json();
+            const json: EffectConfig[] = await response.json();
             return new Promise<void>((resolve) => {
-                Object.values(json).forEach((data) => {
-                    new Effect(data.id, Sprite.get(data.sprite));
+                Object.values(json).forEach((config) => {
+                    new Effect(config);
                 });
                 window.addEventListener("run-effect", (event: any) => {
                     Effect.get(event.detail.effect).run(event.detail.position, event.detail.onCreature ?? false);
@@ -26,15 +25,15 @@ export default class Effect {
                 resolve();
             });
         } catch (error) {
-            console.error("Error loading effects:", error);
+            console.error("Error while loading effects:", error);
         }
     }
 
-    constructor(id: number, sprite: Sprite) {
-        Effect.#instances[id] = this;
+    constructor(config: EffectConfig) {
+        Effect.#instances[config.id] = this;
 
-        this.id = id;
-        this.sprite = sprite;
+        this.id = config.id;
+        this.sprite = Sprite.get(config.sprite);
     }
 
     static get(id: number): Effect {
@@ -45,25 +44,22 @@ export default class Effect {
     }
 
     static getRunning(position: Position) {
-        const positionString = JSON.stringify(position);
-
-        return Object.values(Effect.#running[positionString] ?? {});
+        return Effect.#running[JSON.stringify(position)] ?? [];
     }
 
     run(position: Position, onCreature: boolean = false) {
         const positionString = JSON.stringify(position);
-        const uid = ++Effect.#lastUID;
         const sprite = this.sprite.clone();
 
         if (!Effect.#running[positionString]) {
-            Effect.#running[positionString] = {};
+            Effect.#running[positionString] = [];
         }
-
         sprite.customData = {onCreature: onCreature};
-        Effect.#running[positionString][uid] = sprite;
+
+        Effect.#running[positionString].push(sprite);
         sprite.play().then(() => {
-            delete Effect.#running[positionString][uid];
-            if (Object.keys(Effect.#running[positionString]).length === 0) {
+            Effect.#running[positionString] = Effect.#running[positionString].filter((item) => item != sprite);
+            if (Effect.#running[positionString].length === 0) {
                 delete Effect.#running[positionString];
             }
         });

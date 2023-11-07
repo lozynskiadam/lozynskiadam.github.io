@@ -1,10 +1,10 @@
 import Sprite from "./Sprite.js";
 import {ITEMS_PATH} from "../config.js";
-import {ItemStructureDto} from "../interfaces/ItemStructureDto.ts";
+import {ItemStructureConfig} from "../interfaces/ItemStructureConfig.ts";
 
 export default class ItemStructure {
 
-    static #instances: {[p: number]: ItemStructure} = {};
+    static #instances: { [p: number]: ItemStructure } = {};
 
     id: number;
     name: string;
@@ -20,9 +20,9 @@ export default class ItemStructure {
     static async load() {
         try {
             const response = await fetch(ITEMS_PATH);
-            const json: ItemStructureDto[] = await response.json();
+            const json: ItemStructureConfig[] = await response.json();
             return new Promise<void>((resolve) => {
-                Object.values(json).forEach((data) => new ItemStructure(data.id, data));
+                Object.values(json).forEach((config) => new ItemStructure(config));
                 resolve();
             });
         } catch (error) {
@@ -37,20 +37,20 @@ export default class ItemStructure {
         return structure;
     }
 
-    constructor(id: number, data: ItemStructureDto) {
-        ItemStructure.#instances[id] = this;
+    constructor(config: ItemStructureConfig) {
+        ItemStructure.#instances[config.id] = this;
 
-        this.id = data.id;
-        this.name = data.name;
-        this.type = data.type;
-        this.altitude = data.altitude;
-        this.isUsable = data.isUsable;
-        this.isMovable = data.isMovable;
-        this.isPickupable = data.isPickupable;
-        this.isBlockingCreatures = data.isBlockingCreatures;
-        this.isBlockingItems = data.isBlockingItems;
+        this.id = config.id;
+        this.name = config.name;
+        this.type = config.type;
+        this.altitude = config.altitude;
+        this.isUsable = config.isUsable;
+        this.isMovable = config.isMovable;
+        this.isPickupable = config.isPickupable;
+        this.isBlockingCreatures = config.isBlockingCreatures;
+        this.isBlockingItems = config.isBlockingItems;
 
-        this.sprite = Sprite.get(data.sprite);
+        this.sprite = Sprite.get(config.sprite);
         this.sprite.loop();
     }
 }

@@ -1,4 +1,4 @@
-export interface ItemStructureDto
+export interface ItemStructureConfig
 {
     id: number;
     name: string;

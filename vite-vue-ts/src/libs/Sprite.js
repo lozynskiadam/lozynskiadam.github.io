@@ -3,7 +3,7 @@ import {SPRITES_PATH} from "../config.js";
 
 export default class Sprite {
 
-    static instances = {};
+    static #instances = {};
 
     id = null;
     image = null;
@@ -43,12 +43,12 @@ export default class Sprite {
     }
 
     static get(id) {
-        return Sprite.instances[id] ?? null;
+        return Sprite.#instances[id] ?? null;
     }
 
     constructor(id, data) {
         if (id) {
-            Sprite.instances[id] = this;
+            Sprite.#instances[id] = this;
         }
 
         this.id = id;
