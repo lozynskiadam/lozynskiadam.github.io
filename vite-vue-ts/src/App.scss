@@ -35,30 +35,30 @@ body {
   align-items: center;
   justify-content: center;
   cursor: url(assets/images/cursor.png), default;
-}
 
-#app[cursor="crosshair"] {
-  cursor: url(assets/images/cursor-crosshair.png) 11 11, crosshair;
-}
+  &[cursor="crosshair"] {
+    cursor: url(assets/images/cursor-crosshair.png) 11 11, crosshair;
+  }
 
-#app[cursor="pick"] {
-  cursor: url(assets/images/cursor-pick.png), pointer;
-}
+  &[cursor="pick"] {
+    cursor: url(assets/images/cursor-pick.png), pointer;
+  }
 
-#app[cursor="chest"] {
-  cursor: url(assets/images/cursor-chest.png), pointer;
-}
+  &[cursor="chest"] {
+    cursor: url(assets/images/cursor-chest.png), pointer;
+  }
 
-#app[cursor="eye"] {
-  cursor: url(assets/images/cursor-eye.png), help;
-}
+  &[cursor="eye"] {
+    cursor: url(assets/images/cursor-eye.png), help;
+  }
 
-#app[cursor="hand"] {
-  cursor: url(assets/images/cursor-hand.png), help;
-}
+  &[cursor="hand"] {
+    cursor: url(assets/images/cursor-hand.png), help;
+  }
 
-#app[cursor="gears"] {
-  cursor: url(assets/images/cursor-gears.png), help;
+  &[cursor="gears"] {
+    cursor: url(assets/images/cursor-gears.png), help;
+  }
 }
 
 #board {
