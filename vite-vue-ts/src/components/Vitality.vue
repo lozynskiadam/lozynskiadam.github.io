@@ -21,7 +21,7 @@
 
 <script>
 import {$hero, globals} from "../utils/globals.js";
-import Board from "../libs/Board.js";
+import Renderer from "../libs/Renderer.js";
 
 export default {
   name: 'Vitality',
@@ -42,7 +42,7 @@ export default {
       if (typeof event.detail.health !== 'undefined') {
         const changed = event.detail.health - this.health;
         if (changed) {
-          Board.addFloatingText(Math.abs(changed), changed > 0 ? '#00ff00' : '#ff0000');
+          Renderer.addFloatingText(Math.abs(changed), changed > 0 ? '#00ff00' : '#ff0000');
           this.health = event.detail.health;
         }
       }

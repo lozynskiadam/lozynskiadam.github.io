@@ -31,7 +31,7 @@ export default class Connector {
             stack.pop();
 
             SoundEffect.play('chest');
-            emit('update-tile', {position: params.position, stack: stack});
+            emit('update-tiles', {tiles: [{position: params.position, stack: stack}]});
             emit('run-effect', {position: params.position, effect: 'yellow-sparkles'});
 
             if (roll(2)) {
@@ -140,7 +140,7 @@ export default class Connector {
                 }
             }
 
-            emit('update-tile', {position: position, stack: stack});
+            emit('update-tiles', {tiles: [{position: position, stack: stack}]});
             if (roll(350)) {
                 emit('add-creature', {position: position, name: 'NPC #' + randomString(4)});
             }
@@ -178,14 +178,16 @@ export default class Connector {
         const stackTo = Board.getTileStack(params.toPosition);
         stackTo.push(new Item(params.itemId, params.quantity));
 
-        emit('update-tile', {position: params.fromPosition, stack: stackFrom});
-        emit('update-tile', {position: params.toPosition, stack: stackTo});
+        emit('update-tiles', {tiles: [
+            {position: params.fromPosition, stack: stackFrom},
+            {position: params.toPosition, stack: stackTo}
+        ]});
     }
 
     static #handleLoot(params) {
         const stack = Board.getTileStack(params.fromPosition);
         stack.pop();
-        emit('update-tile', {position: params.fromPosition, stack: stack});
+        emit('update-tiles', {tiles: [{position: params.fromPosition, stack: stack}]});
         params.toSlot = params.toSlot ?? $inventory.getFirstSlotWithItem(params.itemId) ?? $inventory.getFirstSlotWithItem(null);
         const inventorySlotItem = $inventory.getSlot(params.toSlot).item;
         if (inventorySlotItem) {
@@ -208,7 +210,7 @@ export default class Connector {
         const position = params.toPosition ?? $hero.position;
         const stack = Board.getTileStack(position);
         stack.push(new Item(params.itemId, params.quantity));
-        emit('update-tile', {position: position, stack: stack});
+        emit('update-tiles', {tiles: [{position: position, stack: stack}]});
     }
 
     static #handleSwap(params) {

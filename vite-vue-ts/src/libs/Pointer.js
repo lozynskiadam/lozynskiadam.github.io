@@ -5,6 +5,7 @@ import Movement from "./Movement.js";
 import Sprite from "./Sprite.js";
 import {$app, $hero, $inventory} from "../utils/globals.js";
 import WebsocketRequest from "./WebsocketRequest.js";
+import Renderer from "./Renderer.js";
 
 export default class Pointer {
 
@@ -52,7 +53,7 @@ export default class Pointer {
     }
 
     static recalcMousePosition(e) {
-        const rect = Board.ctx.canvas.getBoundingClientRect();
+        const rect = Renderer.ctx.canvas.getBoundingClientRect();
         const oldPositionClient = {...Pointer.positionClient};
 
         Pointer.positionWindow = {
@@ -61,8 +62,8 @@ export default class Pointer {
         };
 
         Pointer.positionCanvas = {
-            x: ((e.clientX - rect.left) / (rect.right - rect.left) * Board.ctx.canvas.width),
-            y: ((e.clientY - rect.top) / (rect.bottom - rect.top) * Board.ctx.canvas.height),
+            x: ((e.clientX - rect.left) / (rect.right - rect.left) * Renderer.ctx.canvas.width),
+            y: ((e.clientY - rect.top) / (rect.bottom - rect.top) * Renderer.ctx.canvas.height),
         };
 
         Pointer.positionClient = {

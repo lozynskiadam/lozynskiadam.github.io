@@ -1,56 +1,31 @@
-import {BOARD_HEIGHT, BOARD_WIDTH, DEVICE_BREAKPOINT, SCALE_DESKTOP, SCALE_MOBILE, TILE_SIZE} from "../config.js";
+import {BOARD_HEIGHT, BOARD_WIDTH, TILE_SIZE} from "../config.js";
 import {$hero} from "../utils/globals.js";
 import WebsocketRequest from "./WebsocketRequest.js";
 import Creature from "./Creature.js";
-import {randomString} from "../utils/common.js";
+import Pointer from "./Pointer.js";
 
 export default class Board {
 
-    static ctx = null;
-    static tempCtx = null;
-    static hudCtx = null;
-    static scale = window.innerWidth <= DEVICE_BREAKPOINT ? SCALE_MOBILE : SCALE_DESKTOP;
     static width = null;
     static height = null;
     static firstTilePosition = {};
     static lastTilePosition = {};
     static tiles = {};
     static creatures = {};
-    static texts = {};
 
     static init() {
-        const canvas = document.createElement('canvas');
-        canvas.id = 'board';
-        canvas.width = TILE_SIZE * BOARD_WIDTH;
-        canvas.height = TILE_SIZE * BOARD_HEIGHT;
-        canvas.style.transform = 'scale(' + Board.scale + ')';
-        document.querySelector('#app').append(canvas);
-
-        const hud = document.createElement('canvas');
-        hud.id = 'hud';
-        hud.width = TILE_SIZE * BOARD_WIDTH * Board.scale;
-        hud.height = TILE_SIZE * BOARD_HEIGHT * Board.scale;
-        document.querySelector('#app').append(hud);
-
-        const temp = document.createElement('canvas');
-        temp.width = TILE_SIZE * BOARD_WIDTH;
-        temp.height = TILE_SIZE * BOARD_HEIGHT;
-
-        Board.ctx = canvas.getContext("2d", {alpha: false});
-        Board.ctx.fillStyle = '#25131a';
-        Board.hudCtx = hud.getContext("2d");
-        Board.tempCtx = temp.getContext("2d");
-        Board.tempCtx.fillStyle = '#25131a';
         Board.width = BOARD_WIDTH;
         Board.height = BOARD_HEIGHT;
 
-        window.addEventListener("update-tile", (event) => {
-            Board.updateTile(event.detail.position, event.detail.stack);
+        window.addEventListener("update-tiles", (event) => {
+            event.detail.tiles.forEach((tile) => {
+                Board.updateTile(tile.position, tile.stack);
+            })
+            Pointer.refreshPointer();
         });
         window.addEventListener("add-creature", (event) => {
             new Creature(event.detail.name, event.detail.position)
         });
-        window.addEventListener("resize", Board.onResize);
         window.addEventListener("hero-position-changed", Board.update);
 
         Board.update();
@@ -138,35 +113,5 @@ export default class Board {
             x: position.x - Board.firstTilePosition.x,
             y: position.y - Board.firstTilePosition.y,
         }
-    }
-
-    static onResize() {
-        const scale = window.innerWidth <= DEVICE_BREAKPOINT ? SCALE_MOBILE : SCALE_DESKTOP;
-        if (Board.scale !== scale) {
-            Board.scale = scale;
-            Board.ctx.canvas.style.transform = 'scale(' + Board.scale + ')';
-            Board.hudCtx.canvas.width = TILE_SIZE * BOARD_WIDTH * Board.scale;
-            Board.hudCtx.canvas.height = TILE_SIZE * BOARD_HEIGHT * Board.scale;
-        }
-    }
-
-    static addFloatingText(content, color) {
-        const uid = randomString(8);
-
-        Board.texts[uid] = {
-            position: {...$hero.position},
-            content: content,
-            offset: {x: 0, y: -(TILE_SIZE / 2)},
-            color: color,
-            iteration: 0
-        };
-        const interval = setInterval(() => {
-            Board.texts[uid].offset.y--;
-            Board.texts[uid].iteration++;
-            if (Board.texts[uid].iteration >= 30) {
-                delete Board.texts[uid];
-                clearInterval(interval);
-            }
-        }, 25);
     }
 }

@@ -56,7 +56,7 @@ export default {
       Pointer.init();
       Movement.init();
       Board.init();
-      Renderer.render();
+      Renderer.init();
       Effect.get('energy').run($hero.position, true);
       SoundEffect.play('login');
     }

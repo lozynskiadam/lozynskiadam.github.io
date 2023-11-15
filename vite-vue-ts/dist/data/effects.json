@@ -9,15 +9,18 @@
     },
     {
         "id": "yellow-sparkles",
-        "sprite": "effect-sparkles-yellow"
+        "sprite": "effect-sparkles",
+        "colors": ["#ffd500"]
     },
     {
         "id": "red-sparkles",
-        "sprite": "effect-sparkles-red"
+        "sprite": "effect-sparkles",
+        "colors": ["#ff0000"]
     },
     {
         "id": "blue-sparkles",
-        "sprite": "effect-sparkles-blue"
+        "sprite": "effect-sparkles",
+        "colors": ["#0000ff"]
     },
     {
         "id": "blood",
