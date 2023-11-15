@@ -1,8 +1,8 @@
 import Board from "./Board.js";
 import {$hero, $inventory, $vitality} from "../utils/globals.ts";
 import Pointer from "./Pointer.js";
-import {emit, rand, randomString, roll} from "../utils/common.js";
-import {isSamePosition} from "../utils/position.js";
+import {emit, rand, randomString, roll} from "../utils/common.ts";
+import {isSamePosition} from "../utils/position.ts";
 import SoundEffect from "./SoundEffect.js";
 import Item from "./Item.ts";
 

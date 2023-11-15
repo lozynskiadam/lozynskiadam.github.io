@@ -1,5 +1,4 @@
 import Sprite from "./Sprite.js";
-import {ITEMS_PATH} from "../config.js";
 import {ItemStructureConfig} from "../interfaces/ItemStructureConfig.ts";
 
 export default class ItemStructure {
@@ -17,9 +16,9 @@ export default class ItemStructure {
     isBlockingCreatures: boolean;
     isBlockingItems: boolean;
 
-    static async load() {
+    static async load(src: string) {
         try {
-            const response = await fetch(ITEMS_PATH);
+            const response = await fetch(src);
             const json: ItemStructureConfig[] = await response.json();
             return new Promise<void>((resolve) => {
                 Object.values(json).forEach((config) => new ItemStructure(config));

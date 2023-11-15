@@ -1,11 +1,11 @@
 import {BOARD_HEIGHT, BOARD_WIDTH, DEVICE_BREAKPOINT, SCALE_DESKTOP, SCALE_MOBILE, TILE_SIZE} from "../config.js";
-import {isSamePosition} from "../utils/position.js";
+import {isSamePosition} from "../utils/position.ts";
 import Pointer from "./Pointer.js";
 import Sprite from "./Sprite.js";
 import Board from "./Board.js";
 import {$hero} from "../utils/globals.ts";
 import Effect from "./Effect.ts";
-import {randomString} from "../utils/common.js";
+import {randomString} from "../utils/common.ts";
 
 export default class Renderer {
 

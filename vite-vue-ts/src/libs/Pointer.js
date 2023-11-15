@@ -1,5 +1,5 @@
 import {TILE_SIZE} from "../config.js";
-import {isPositionInRange, isSamePosition} from "../utils/position.js";
+import {isPositionInRange, isSamePosition} from "../utils/position.ts";
 import Board from "./Board.js";
 import Movement from "./Movement.js";
 import Sprite from "./Sprite.js";

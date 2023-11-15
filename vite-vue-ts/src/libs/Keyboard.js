@@ -1,5 +1,5 @@
 import {bindKey, checkKey} from "@rwh/keystrokes";
-import {emit} from "../utils/common.js";
+import {emit} from "../utils/common.ts";
 
 export default class Keyboard {
 

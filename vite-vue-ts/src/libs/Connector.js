@@ -1,5 +1,5 @@
 import {WEBSOCKET_URL} from "../config.js";
-import {emit} from "../utils/common.js";
+import {emit} from "../utils/common.ts";
 
 export default class Connector {
 

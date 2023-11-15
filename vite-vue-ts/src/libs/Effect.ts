@@ -1,5 +1,4 @@
 import Sprite from "./Sprite.js";
-import {EFFECTS_PATH} from "../config.js";
 import {EffectConfig} from "../interfaces/EffectConfig.ts";
 import {Position} from "../interfaces/Position.ts";
 
@@ -11,9 +10,9 @@ export default class Effect {
     id: number;
     sprite: Sprite;
 
-    static async load() {
+    static async load(src: string) {
         try {
-            const response = await fetch(EFFECTS_PATH);
+            const response = await fetch(src);
             const json: EffectConfig[] = await response.json();
             return new Promise<void>((resolve) => {
                 Object.values(json).forEach((config) => {

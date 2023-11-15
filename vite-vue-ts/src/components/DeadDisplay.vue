@@ -21,7 +21,7 @@ import {$hero, globals} from "../utils/globals.ts";
 import SoundEffect from "../libs/SoundEffect.js";
 import Effect from "../libs/Effect.ts";
 import Creature from "../libs/Creature.js";
-import {emit} from "../utils/common.js";
+import {emit} from "../utils/common.ts";
 
 export default {
   name: 'DeadDisplay',

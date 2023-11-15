@@ -12,7 +12,7 @@
 
 <script>
 import {$hero, globals} from "./utils/globals.ts";
-import {emit} from "./utils/common.js";
+import {emit} from "./utils/common.ts";
 import Sprite from "./libs/Sprite.js";
 import ItemStructure from "./libs/ItemStructure.ts";
 import Effect from "./libs/Effect.ts";
@@ -29,6 +29,7 @@ import Vitality from "./components/Vitality.vue";
 import DeadDisplay from "./components/DeadDisplay.vue";
 import Loot from "./components/Loot.vue";
 import SoundEffect from "./libs/SoundEffect.js";
+import {EFFECTS_PATH, ITEMS_PATH, SPRITES_PATH} from "./config.js";
 
 export default {
   components: {DeadDisplay, Inventory, Equipment, Vitality, Loot},
@@ -41,9 +42,9 @@ export default {
 
     async load() {
       await SoundEffect.load();
-      await Sprite.load();
-      await ItemStructure.load();
-      await Effect.load();
+      await Sprite.load(SPRITES_PATH);
+      await ItemStructure.load(ITEMS_PATH);
+      await Effect.load(EFFECTS_PATH);
       await Connector.connect('token');
 
       this.loaded = true;

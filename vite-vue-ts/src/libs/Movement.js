@@ -1,11 +1,11 @@
 import {TILE_SIZE} from "../config.js";
 import Board from "./Board.js";
 import * as EasyStar from "easystarjs";
-import {isPositionInRange, isSamePosition} from "../utils/position.js";
+import {isPositionInRange, isSamePosition} from "../utils/position.ts";
 import Pointer from "./Pointer.js";
 import {$hero} from "../utils/globals.ts";
 import WebsocketRequest from "./WebsocketRequest.js";
-import {emit} from "../utils/common.js";
+import {emit} from "../utils/common.ts";
 import SoundEffect from "./SoundEffect.js";
 
 export default class Movement {

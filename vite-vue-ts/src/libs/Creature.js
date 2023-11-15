@@ -1,7 +1,7 @@
 import Board from "./Board.js";
 import Sprite from "./Sprite.js";
 import Movement from "./Movement.js";
-import {randomColor} from "../utils/common.js";
+import {randomColor} from "../utils/gfx.ts";
 import {$hero} from "../utils/globals.ts";
 
 export default class Creature {

@@ -1,5 +1,4 @@
-import {dye, loadImage} from "../utils/common.js";
-import {SPRITES_PATH} from "../config.js";
+import {dye, loadImage} from "../utils/gfx.ts";
 
 export default class Sprite {
 
@@ -19,9 +18,9 @@ export default class Sprite {
     lastFrame = null;
     customData = {};
 
-    static async load() {
+    static async load(src) {
         try {
-            const response = await fetch(SPRITES_PATH);
+            const response = await fetch(src);
             const json = await response.json();
             await Promise.all(Object.entries(json).map(async ([id, data]) => {
                 const image = await loadImage(data.base);

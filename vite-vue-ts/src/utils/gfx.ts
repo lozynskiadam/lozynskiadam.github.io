@@ -1,41 +1,27 @@
-export const rand = function (max) {
-    return Math.floor(Math.random() * (max + 1));
-}
-
-export const roll = function (max) {
-    return (Math.floor(Math.random() * (max)) + 1) === max;
-}
-
-export const randomString = function (length) {
-    return window.btoa(String.fromCharCode(...window.crypto.getRandomValues(new Uint8Array(length * 2)))).replace(/[+/]/g, "").substring(0, length);
-}
-
-export const randomColor = function () {
+export const randomColor = function (): string {
     return "#000000".replace(/0/g, function () {
         return (~~(Math.random() * 16)).toString(16);
     });
 }
 
-export const hexToRGB = function (hex) {
+export const hexToRGB = function (hex: string): [number, number, number] {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    if (!result) {
+        throw new Error('Could not convert hexToRGB');
+    }
 
-    return result ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)] : null;
+    return [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)];
 };
 
-export const areEqual = function (...objects) {
-    return objects.length >= 2 && objects.slice(1).every(obj =>
-        Object.keys(objects[0]).length === Object.keys(obj).length &&
-        Object.keys(objects[0]).every(key => objects[0][key] === obj[key])
-    );
-}
-
-export const replaceColors = function (image, colorMap) {
+export const replaceColors = function (image: HTMLImageElement, colorMap: {[p: string]: string}) {
+    const colorMapRGB: {[p: string]: [number, number, number]} = {};
     Object.keys(colorMap).forEach(key => {
-        colorMap[hexToRGB(key).toString()] = hexToRGB(colorMap[key])
-        delete colorMap[key];
+        colorMapRGB[hexToRGB(key).toString()] = hexToRGB(colorMap[key]);
     });
 
-    const ctx = document.createElement("canvas").getContext("2d");
+    const ctx: CanvasRenderingContext2D = document.createElement("canvas").getContext("2d") ?? (() => {
+        throw Error('Could not get canvas 2d context');
+    })();
     ctx.canvas.width = image.width;
     ctx.canvas.height = image.height;
     ctx.drawImage(image, 0, 0);
@@ -43,8 +29,8 @@ export const replaceColors = function (image, colorMap) {
     const imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
     for (let i = 0; i < imageData.data.length; i += 4) {
         const currentColor = [imageData.data[i], imageData.data[i + 1], imageData.data[i + 2]].toString();
-        if (currentColor in colorMap) {
-            const color = colorMap[currentColor];
+        if (currentColor in colorMapRGB) {
+            const color = colorMapRGB[currentColor];
             imageData.data[i] = color[0];
             imageData.data[i + 1] = color[1];
             imageData.data[i + 2] = color[2];
@@ -56,7 +42,7 @@ export const replaceColors = function (image, colorMap) {
     return ctx.canvas;
 }
 
-export const loadImage = async function (src) {
+export const loadImage = async function (src: string): Promise<HTMLImageElement> {
     return new Promise((resolve) => {
         const image = new Image();
         image.onload = () => resolve(image);
@@ -64,20 +50,22 @@ export const loadImage = async function (src) {
     });
 }
 
-export const dye = async function (image, mask, colors) {
+export const dye = async function (image: HTMLImageElement, mask: HTMLImageElement, colors: string[]): Promise<HTMLImageElement> {
     return new Promise(resolve => {
         if (!mask ?? false) {
             return image;
         }
 
         const placeholders = ['#ff0000', '#ff00ff', '#0000ff', '#ffff00', '#00ffff', '#ff00ff'];
-        const map = {};
+        const map: {[p: string]: string} = {};
         colors.forEach((color, index) => {
             map[placeholders[index]] = color;
         });
 
         const coloredMask = replaceColors(mask, map);
-        const ctx = document.createElement("canvas").getContext("2d");
+        const ctx: CanvasRenderingContext2D = document.createElement("canvas").getContext("2d") ?? (() => {
+            throw Error('Could not get canvas 2d context');
+        })();
 
         ctx.canvas.width = image.width;
         ctx.canvas.height = image.height;
@@ -89,8 +77,4 @@ export const dye = async function (image, mask, colors) {
         newImage.onload = () => resolve(newImage);
         newImage.src = ctx.canvas.toDataURL('image/png');
     });
-}
-
-export const emit = function (name, properties = {}) {
-    window.dispatchEvent(new CustomEvent(name, {detail: properties}));
 }
