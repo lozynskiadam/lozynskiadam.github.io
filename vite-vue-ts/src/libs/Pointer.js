@@ -3,7 +3,7 @@ import {isPositionInRange, isSamePosition} from "../utils/position.js";
 import Board from "./Board.js";
 import Movement from "./Movement.js";
 import Sprite from "./Sprite.js";
-import {$app, $hero, $inventory} from "../utils/globals.js";
+import {$app, $hero, $inventory} from "../utils/globals.ts";
 import WebsocketRequest from "./WebsocketRequest.js";
 import Renderer from "./Renderer.js";
 

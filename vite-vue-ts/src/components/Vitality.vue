@@ -19,8 +19,8 @@
   </div>
 </template>
 
-<script>
-import {$hero, globals} from "../utils/globals.js";
+<script lang="ts">
+import {$hero, globals} from "../utils/globals.ts";
 import Renderer from "../libs/Renderer.js";
 
 export default {
@@ -38,7 +38,7 @@ export default {
   },
   mounted() {
     globals().setVitality(this);
-    window.addEventListener("update-vitals", (event) => {
+    window.addEventListener("update-vitals", (event: any) => {
       if (typeof event.detail.health !== 'undefined') {
         const changed = event.detail.health - this.health;
         if (changed) {

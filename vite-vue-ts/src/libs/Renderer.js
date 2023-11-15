@@ -3,7 +3,7 @@ import {isSamePosition} from "../utils/position.js";
 import Pointer from "./Pointer.js";
 import Sprite from "./Sprite.js";
 import Board from "./Board.js";
-import {$hero} from "../utils/globals.js";
+import {$hero} from "../utils/globals.ts";
 import Effect from "./Effect.ts";
 import {randomString} from "../utils/common.js";
 

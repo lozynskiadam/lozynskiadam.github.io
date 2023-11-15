@@ -3,7 +3,7 @@ import Board from "./Board.js";
 import * as EasyStar from "easystarjs";
 import {isPositionInRange, isSamePosition} from "../utils/position.js";
 import Pointer from "./Pointer.js";
-import {$hero} from "../utils/globals.js";
+import {$hero} from "../utils/globals.ts";
 import WebsocketRequest from "./WebsocketRequest.js";
 import {emit} from "../utils/common.js";
 import SoundEffect from "./SoundEffect.js";

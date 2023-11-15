@@ -17,7 +17,7 @@
 <script>
 import Movement from "../libs/Movement.js";
 import Board from "../libs/Board.js";
-import {$hero, globals} from "../utils/globals.js";
+import {$hero, globals} from "../utils/globals.ts";
 import SoundEffect from "../libs/SoundEffect.js";
 import Effect from "../libs/Effect.ts";
 import Creature from "../libs/Creature.js";

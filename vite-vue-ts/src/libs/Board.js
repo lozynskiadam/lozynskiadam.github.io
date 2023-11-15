@@ -1,5 +1,5 @@
-import {BOARD_HEIGHT, BOARD_WIDTH, TILE_SIZE} from "../config.js";
-import {$hero} from "../utils/globals.js";
+import {BOARD_HEIGHT, BOARD_WIDTH} from "../config.js";
+import {$hero} from "../utils/globals.ts";
 import WebsocketRequest from "./WebsocketRequest.js";
 import Creature from "./Creature.js";
 import Pointer from "./Pointer.js";

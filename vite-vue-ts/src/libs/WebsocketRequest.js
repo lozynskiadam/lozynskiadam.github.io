@@ -1,6 +1,6 @@
 import {isPositionInRange, isSamePosition} from "../utils/position.js";
 import Board from "./Board.js";
-import {$hero} from "../utils/globals.js";
+import {$hero} from "../utils/globals.ts";
 import Connector from "./ConnectorMock.js";
 
 export default class WebsocketRequest {

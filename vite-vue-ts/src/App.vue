@@ -11,7 +11,7 @@
 </template>
 
 <script>
-import {$hero, globals} from "./utils/globals.js";
+import {$hero, globals} from "./utils/globals.ts";
 import {emit} from "./utils/common.js";
 import Sprite from "./libs/Sprite.js";
 import ItemStructure from "./libs/ItemStructure.ts";
