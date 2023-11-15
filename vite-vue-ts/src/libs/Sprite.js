@@ -66,7 +66,8 @@ export default class Sprite {
 
     clone() {
         return new Sprite(null, {
-            image: this.originImage,
+            originImage: this.originImage,
+            image: this.image,
             mask: this.mask,
             speed: this.speed,
             states: this.states,

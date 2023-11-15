@@ -33,7 +33,12 @@ export default class Effect {
         Effect.#instances[config.id] = this;
 
         this.id = config.id;
-        this.sprite = Sprite.get(config.sprite);
+        if (config.colors) {
+            this.sprite = Sprite.get(config.sprite).clone();
+            this.sprite.dye(config.colors);
+        } else {
+            this.sprite = Sprite.get(config.sprite);
+        }
     }
 
     static get(id: number): Effect {
