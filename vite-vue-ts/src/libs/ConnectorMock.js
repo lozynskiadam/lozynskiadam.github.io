@@ -39,11 +39,16 @@ export default class Connector {
                 let slot = $inventory.getFirstSlotWithItem(9) ?? $inventory.getFirstSlotWithItem(null);
                 let quantity = $inventory.getSlot(slot).item?.quantity ?? 0;
                 emit('update-inventory-slot', {slot: slot, itemId: 9, quantity: quantity + 1});
-            } else {
+            } else if (roll(2)) {
                 emit('loot', {itemId: 11, quantity: 1});
                 let slot = $inventory.getFirstSlotWithItem(11) ?? $inventory.getFirstSlotWithItem(null);
                 let quantity = $inventory.getSlot(slot).item?.quantity ?? 0;
                 emit('update-inventory-slot', {slot: slot, itemId: 11, quantity: quantity + 1});
+            } else {
+                emit('loot', {itemId: 14, quantity: 1});
+                let slot = $inventory.getFirstSlotWithItem(14) ?? $inventory.getFirstSlotWithItem(null);
+                let quantity = $inventory.getSlot(slot).item?.quantity ?? 0;
+                emit('update-inventory-slot', {slot: slot, itemId: 14, quantity: quantity + 1});
             }
         }
 

@@ -154,5 +154,18 @@
     "isPickupable": false,
     "isBlockingCreatures": true,
     "isBlockingItems": false
+  },
+  {
+    "id": 14,
+    "name": "plate armor",
+    "type": "equipment",
+    "sprite": "armor",
+    "altitude": 0,
+    "isUsable": false,
+    "isMovable": true,
+    "isPickupable": true,
+    "isBlockingCreatures": false,
+    "isBlockingItems": false,
+    "isEquipable": false
   }
 ]
