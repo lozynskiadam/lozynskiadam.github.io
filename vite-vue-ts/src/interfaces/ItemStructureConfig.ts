@@ -10,4 +10,5 @@ export interface ItemStructureConfig
     isPickupable: boolean;
     isBlockingCreatures: boolean;
     isBlockingItems: boolean;
+    isEquipable: boolean;
 }

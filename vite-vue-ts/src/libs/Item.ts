@@ -47,4 +47,8 @@ export default class Item {
         return ItemStructure.get(this.id).isBlockingItems;
     }
 
+    isEquipable() {
+        return ItemStructure.get(this.id).isEquipable;
+    }
+
 }

@@ -15,6 +15,7 @@ export default class ItemStructure {
     isPickupable: boolean;
     isBlockingCreatures: boolean;
     isBlockingItems: boolean;
+    isEquipable: boolean;
 
     static async load(src: string) {
         try {
@@ -48,6 +49,7 @@ export default class ItemStructure {
         this.isPickupable = config.isPickupable;
         this.isBlockingCreatures = config.isBlockingCreatures;
         this.isBlockingItems = config.isBlockingItems;
+        this.isEquipable = config.isEquipable;
 
         this.sprite = Sprite.get(config.sprite);
         this.sprite.loop();

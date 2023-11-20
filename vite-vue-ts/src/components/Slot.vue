@@ -3,7 +3,7 @@
 </style>
 
 <template>
-  <div class="slot" :data-slot-id="id" @click="use()">
+  <div class="slot" :data-slot-id="id" @click="onClick()">
     <div v-if="item" class="quantity">{{ item.quantity }}</div>
   </div>
 </template>
@@ -23,10 +23,16 @@ export default {
     }
   },
   methods: {
-    use() {
+    onClick() {
       if (!this.item) return;
-      if (!this.item.isUsable()) return;
-      WebsocketRequest.use(this.item.id, null, this.id);
+      if (this.item.isUsable()) {
+        WebsocketRequest.use(this.item.id, null, this.id);
+        return;
+      }
+      if (this.item.isEquipable()) {
+        console.log('Equipping...')
+        return;
+      }
     },
     set(item) {
       this.item = item;
