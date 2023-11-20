@@ -2,11 +2,25 @@
 
 Testowane na node v16.13.0 (npm v8.1.0)
 
-### TODO
+## TODO
 
+**Features**
+- MoveItem - split stacków
+- Equip & unequip
+- obsługa animate-in w sprite?
+- zadania z progressbarem (np. mining trwa 2 sekundy)
+
+**Optimisation**
+- clearing temp. canvas VS recreate temp. canvas object
+- strokeText() + fillText() VS text-to-image & draw from cache
+- avoid rendering tiles out of viewport
+
+**Enhance**
 - Jeśli `Tile` jest tym samym co `Stack` to ujednolicić.
+- draw cursor effects on hud
 
-### Kontrakty
+
+## Contracts
 
 #### MoveItem
 Podnoszenie, upuszczanie, przekładanie w ekwipunku oraz przemieszczanie po mapie.
