@@ -6,7 +6,7 @@ Testowane na node v16.13.0 (npm v8.1.0)
 
 **Features**
 - MoveItem - split stacków
-- Equip & unequip
+- isStackable()
 - obsługa animate-in w sprite?
 - zadania z progressbarem (np. mining trwa 2 sekundy)
 
@@ -18,7 +18,8 @@ Testowane na node v16.13.0 (npm v8.1.0)
 **Enhance**
 - Jeśli `Tile` jest tym samym co `Stack` to ujednolicić.
 - draw cursor effects on hud
-
+- equip/unequip sound effect
+- obsługa braku wolnego slota (przy pickup/unequip)
 
 ## Contracts
 

@@ -33,6 +33,7 @@
 import Slot from "./Slot.vue";
 import {globals} from "../utils/globals.ts";
 import SoundEffect from "../libs/SoundEffect.js";
+import Item from "../libs/Item.ts";
 
 export default {
   name: 'Equipment',
@@ -44,10 +45,10 @@ export default {
   },
   methods: {
     getSlot(slot) {
-      return this.$refs.slot[slot];
+      return this.$refs[slot];
     },
     getSlots() {
-      return this.$refs.slot;
+      return this.$refs;
     },
     toggle() {
       this.visible = !this.visible;
@@ -60,6 +61,13 @@ export default {
   },
   mounted() {
     globals().setEquipment(this);
+    window.addEventListener("update-equipment-slot", (event) => {
+      if (event.detail.itemId && event.detail.quantity > 0) {
+        this.getSlot(event.detail.slot).set(new Item(event.detail.itemId, event.detail.quantity));
+      } else {
+        this.getSlot(event.detail.slot).clear();
+      }
+    });
     window.addEventListener("equipment-toggle", this.toggle);
   }
 }

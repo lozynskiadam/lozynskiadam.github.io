@@ -1,5 +1,5 @@
 import Board from "./Board.js";
-import {$hero, $inventory, $vitality} from "../utils/globals.ts";
+import {$equipment, $hero, $inventory, $vitality} from "../utils/globals.ts";
 import Pointer from "./Pointer.js";
 import {emit, rand, randomString, roll} from "../utils/common.ts";
 import {isSamePosition} from "../utils/position.ts";
@@ -22,6 +22,8 @@ export default class Connector {
         if (event === 'use') return Connector.#use(params);
         if (event === 'request-tiles') return Connector.#requestTiles(params);
         if (event === 'MoveItem') return Connector.#MoveItem(params);
+        if (event === 'Equip') return Connector.#Equip(params);
+        if (event === 'Unequip') return Connector.#Unequip(params);
     }
 
     static #use(params) {
@@ -236,6 +238,35 @@ export default class Connector {
                 emit('update-inventory-slot', {slot: params.toSlot, itemId: itemSource, quantity: quantitySource});
             }
         }
+    }
+
+    static #Equip(params) {
+        const quantityLeft = $inventory.getSlot(params.fromSlot).item.quantity - 1;
+        if ($equipment.getSlot('equipment-armor').item?.id) {
+            return;
+        }
+        emit('update-inventory-slot', {slot: params.fromSlot, itemId: params.itemId, quantity: quantityLeft});
+        emit('update-equipment-slot', {
+            slot: 'equipment-armor',
+            itemId: params.itemId,
+            quantity: 1
+        });
+    }
+
+    static #Unequip(params) {
+        if (!$equipment.getSlot(params.fromSlot).item?.id) {
+            return;
+        }
+        const item = $equipment.getSlot(params.fromSlot).item;
+        emit('update-equipment-slot', {
+            slot: params.fromSlot,
+            itemId: null
+        });
+        emit('update-inventory-slot', {
+            slot: $inventory.getFirstSlotWithItem(null),
+            itemId: item.id,
+            quantity: 1
+        });
     }
 
 }

@@ -4,7 +4,7 @@
 
 <template>
   <div class="slot" :data-slot-id="id" @click="onClick()">
-    <div v-if="item" class="quantity">{{ item.quantity }}</div>
+    <div v-if="item && item.quantity > 1" class="quantity">{{ item.quantity }}</div>
   </div>
 </template>
 
@@ -30,7 +30,11 @@ export default {
         return;
       }
       if (this.item.isEquipable()) {
-        console.log('Equipping...')
+        if (this.id.includes('equipment-')) {
+          WebsocketRequest.unequip(this.id);
+        } else {
+          WebsocketRequest.equip(this.item.id, this.id);
+        }
         return;
       }
     },

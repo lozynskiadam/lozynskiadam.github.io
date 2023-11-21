@@ -59,4 +59,17 @@ export default class WebsocketRequest {
         })
     }
 
+    static equip(itemId, fromSlot) {
+        Connector.emit('Equip', {
+            itemId: itemId,
+            fromSlot: fromSlot,
+        })
+    }
+
+    static unequip(fromSlot) {
+        Connector.emit('Unequip', {
+            fromSlot: fromSlot,
+        })
+    }
+
 }
