@@ -4,6 +4,8 @@ Testowane na node v16.13.0 (npm v8.1.0)
 
 ## TODO
 
+Instalacja Vuex i przetrzymywanie w nim stanu gracza oraz informacji o innych graczach na ekranie, aktualizacja stanu poprzez WS i pobieranie tych informacji do renderera bezpośrednio z Vuexa
+
 **Features**
 - MoveItem - split stacków
 - isStackable()
