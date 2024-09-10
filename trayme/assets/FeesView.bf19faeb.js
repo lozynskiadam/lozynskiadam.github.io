@@ -1,0 +1,1 @@
+import{_ as e,a as t,o as c}from"./index.8bfaa31f.js";import{V as a}from"./VEmptyState.fb5f284f.js";const o={};function s(n,r){return c(),t(a,{icon:"mdi-cash-check",headline:"Jeste\u015B na czysto!",title:"Nie masz ju\u017C \u017Cadnych op\u0142at na ten miesi\u0105c"})}const _=e(o,[["render",s]]);export{_ as default};
