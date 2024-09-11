@@ -1,1 +1,0 @@
-import{_ as e,c,o as n}from"./index.2551b754.js";const o={};function t(s,r){return n(),c("div",null,"shopping list")}const _=e(o,[["render",t]]);export{_ as default};

@@ -1,0 +1,1 @@
+import{_ as e,c as o,V as t,o as n}from"./index.a302e520.js";const s={};function a(c,r){return n(),o(t,{headline:"Whoops, 404",title:"Page not found",text:"The page you were looking for does not exist",image:"https://vuetifyjs.b-cdn.net/docs/images/logos/v.png"})}const d=e(s,[["render",a]]);export{d as default};
