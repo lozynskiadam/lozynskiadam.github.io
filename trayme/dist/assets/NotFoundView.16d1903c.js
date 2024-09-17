@@ -1,0 +1,1 @@
+import{_ as e,k as o,ah as t}from"./index.d0e08cdc.js";import{V as n}from"./VEmptyState.e98cdd84.js";const s={};function a(r,c){return o(),t(n,{headline:"Whoops, 404",title:"Page not found",text:"The page you were looking for does not exist",image:"https://vuetifyjs.b-cdn.net/docs/images/logos/v.png"})}const p=e(s,[["render",a]]);export{p as default};
