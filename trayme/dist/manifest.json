@@ -6,8 +6,8 @@
     "window-controls-overlay"
   ],
   "dir": "ltr",
-  "background_color": "#121212",
-  "theme_color": "#212121",
+  "background_color": "#000000",
+  "theme_color": "#000000",
   "orientation": "any",
   "start_url": "https://lozynskiadam.github.io/trayme/dist/",
   "scope": "https://lozynskiadam.github.io/trayme/dist/",
