@@ -1,1 +1,0 @@
-import{_ as e}from"./_plugin-vue_export-helper.cdc0426e.js";import{k as o,l as t}from"./index.74c815e2.js";const n={};function r(c,s){return o(),t("div",null," Shopping list ")}const _=e(n,[["render",r]]);export{_ as default};
