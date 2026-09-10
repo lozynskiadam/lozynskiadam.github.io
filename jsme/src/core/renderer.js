@@ -131,6 +131,7 @@ export class MapRenderer {
     }
     this.rulerH?.resize(width, RULER_SIZE);
     this.rulerV?.resize(RULER_SIZE, height);
+    this.store.setViewportSize(width, height);
     // Resizing blanks the canvas, so paint right away rather than leaving a frame of nothing.
     this.pendingAll = true;
     this.renderNow();

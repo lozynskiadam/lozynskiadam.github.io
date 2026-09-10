@@ -1,6 +1,8 @@
 import { reactive, shallowRef, computed } from '../vendor/vue.esm-browser.prod.js';
 import { createMapData, cellKey } from './mapData.js';
+import { createHistory } from './history.js';
 import { EMPTY_CATALOG, loadCatalog } from './catalog.js';
+import { isValidRespawnPoint } from './mapFile.js';
 
 // Keys of a placed map entry that belong to the editor itself; everything
 // else on the entry is a user-defined property (see setEntryProperty).
@@ -38,9 +40,15 @@ export function toCamelCase(raw) {
  * that, together with the view-related fields of `state`, to schedule a
  * frame. Adding a new action therefore never requires remembering to
  * repaint - mutate the map through the helpers below and the screen follows.
+ *
+ * The same helpers also feed undo/redo: call recordTile() before changing
+ * a tile and the change becomes undoable. Mutations made synchronously by
+ * one action collapse into one undo step; a mouse gesture (press to
+ * release) is one step too, see beginGesture/endGesture.
  */
 export function createStore(config) {
   const map = createMapData();
+  const history = createHistory(map);
 
   // The catalog holds decoded Image objects - large and non-serializable -
   // so it is a shallowRef: components react to the whole thing being
@@ -50,6 +58,9 @@ export function createStore(config) {
   const state = reactive({
     loading: true,
     loadError: null,
+    name: config.name, // map name, saved in the file envelope
+    respawnPoint: [...config.respawnPoint], // [x, y, z] - where the view centers after new/open
+    viewport: { width: 0, height: 0 }, // map canvas size in px, reported by the renderer
     selectedLayer: null,
     selectedTool: 'pointer',
     selectedItemId: null,
@@ -66,6 +77,8 @@ export function createStore(config) {
     contextMenu: null, // { screenX, screenY, itemId, x, y, z } - right-click menu for the topmost item on a tile
     dialog: null, // { name, props } - the one modal dialog that can be open at a time (see components/App.js)
     mapRevision: 0, // bumped on every map mutation; the renderer's cue to repaint floors
+    undoDepth: 0, // mirrors history for the UI (undo/redo buttons, menu items)
+    redoDepth: 0,
   });
 
   /* ---- invalidation ------------------------------------------------- */
@@ -88,6 +101,75 @@ export function createStore(config) {
     dirty.all = false;
     dirty.floors.clear();
     return result;
+  }
+
+  /* ---- undo / redo ----------------------------------------------------- */
+
+  let gestureOpen = false;
+  let autoCommitScheduled = false;
+
+  function syncHistoryState() {
+    state.undoDepth = history.undoDepth;
+    state.redoDepth = history.redoDepth;
+  }
+
+  function commitHistory() {
+    autoCommitScheduled = false;
+    if (gestureOpen) return;
+    if (history.commit()) syncHistoryState();
+  }
+
+  /**
+   * Marks a tile as about to change. Outside a gesture the step closes
+   * itself in a microtask, i.e. once the current action has finished all
+   * its synchronous mutations.
+   */
+  function recordTile(x, y, z) {
+    history.record(x, y, z);
+    if (!gestureOpen && !autoCommitScheduled) {
+      autoCommitScheduled = true;
+      queueMicrotask(commitHistory);
+    }
+  }
+
+  /** Records every tile a rectangle covers (empty ones included - stamping may fill them). */
+  function recordArea(x1, y1, x2, y2, z) {
+    for (let y = Math.max(y1, 0); y <= y2; y++) {
+      for (let x = Math.max(x1, 0); x <= x2; x++) recordTile(x, y, z);
+    }
+  }
+
+  /** Groups every mutation until endGesture() into one undo step (mouse press to release). */
+  function beginGesture() {
+    gestureOpen = true;
+  }
+
+  function endGesture() {
+    if (!gestureOpen) return;
+    gestureOpen = false;
+    commitHistory();
+  }
+
+  function isGestureOpen() {
+    return gestureOpen;
+  }
+
+  function applyHistory(floors) {
+    if (!floors) return false;
+    for (const z of floors) touchFloor(z);
+    clearHighlight();
+    syncHistoryState();
+    return true;
+  }
+
+  function undo() {
+    if (gestureOpen) return false;
+    return applyHistory(history.undo());
+  }
+
+  function redo() {
+    if (gestureOpen) return false;
+    return applyHistory(history.redo());
   }
 
   /* ---- catalog -------------------------------------------------------- */
@@ -163,6 +245,36 @@ export function createStore(config) {
     state.highlightedItem = null;
   }
 
+  function setViewportSize(width, height) {
+    if (state.viewport.width === width && state.viewport.height === height) return;
+    state.viewport = { width, height };
+  }
+
+  function clampFloor(z) {
+    return Math.min(config.maxFloor, Math.max(config.minFloor, Math.round(z)));
+  }
+
+  /**
+   * Shows floor z scrolled so that tile (x, y) sits in the middle of the
+   * viewport. Every pan step moves the view by exactly one tile (whether
+   * it is eating into a floor's parallax margin or revealing new tiles,
+   * see pointer.js), so the pan amount that puts a tile at column c is
+   * simply `x + baseOffset - c`.
+   */
+  function centerOn(x, y, z) {
+    setCurrentFloor(clampFloor(z));
+    const baseOffset = config.maxFloor - state.currentFloor;
+    const centerCol = Math.floor(state.viewport.width / config.tileSize / 2);
+    const centerRow = Math.floor(state.viewport.height / config.tileSize / 2);
+    state.renderFromX = Math.max(0, Math.round(x) + baseOffset - centerCol);
+    state.renderFromY = Math.max(0, Math.round(y) + baseOffset - centerRow);
+  }
+
+  function centerOnRespawn() {
+    const [x, y, z] = state.respawnPoint;
+    centerOn(x, y, z);
+  }
+
   function pan(dx, dy) {
     const nextX = state.renderFromX + dx;
     const nextY = state.renderFromY + dy;
@@ -208,6 +320,7 @@ export function createStore(config) {
     const item = getItem(itemId);
     if (!item || !isValidPosition(x, y, z)) return;
 
+    recordTile(x, y, z);
     const tile = map.ensureTile(x, y, z);
     const sameLayerIndex = tile.findIndex((entry) => getItem(entry.id)?.layer === item.layer);
     if (sameLayerIndex !== -1) {
@@ -231,6 +344,7 @@ export function createStore(config) {
   function insertEntryOnTile(x, y, z, entry) {
     const item = getItem(entry.id);
     if (!item || !isValidPosition(x, y, z)) return;
+    recordTile(x, y, z);
     pushEntry(map.ensureTile(x, y, z), entry, item.layer);
     touchFloor(z);
   }
@@ -243,6 +357,7 @@ export function createStore(config) {
     // a one-shot allowance, consumed by the very next tile that gets drawn.
     if (state.shiftDown) {
       state.shiftDown = false;
+      recordTile(x, y, z);
       map.ensureTile(x, y, z).push(createEntry(item.id));
       touchFloor(z);
       return;
@@ -258,6 +373,7 @@ export function createStore(config) {
     const topItem = getItem(tile[tile.length - 1].id);
     if (!hardClear && topItem?.layer === 'ground' && !state.highlightedItem) return;
 
+    recordTile(x, y, z);
     if (hardClear) tile.length = 0;
     else tile.pop();
 
@@ -338,6 +454,7 @@ export function createStore(config) {
     const entry = getPlacedEntry(x, y, z, itemId);
     const key = toCamelCase(rawKey);
     if (!entry || !key || RESERVED_ENTRY_KEYS.has(key)) return false;
+    recordTile(x, y, z);
     entry[key] = value;
     touchFloor(z);
     return true;
@@ -346,6 +463,7 @@ export function createStore(config) {
   function removeEntryProperty(x, y, z, itemId, key) {
     const entry = getPlacedEntry(x, y, z, itemId);
     if (!entry || RESERVED_ENTRY_KEYS.has(key)) return false;
+    recordTile(x, y, z);
     delete entry[key];
     touchFloor(z);
     return true;
@@ -382,6 +500,7 @@ export function createStore(config) {
   }
 
   function clearArea(x1, y1, x2, y2, z) {
+    map.forEachTile(z, x1, y1, x2, y2, (tile, x, y) => recordTile(x, y, z));
     map.clear(x1, y1, x2, y2, z);
     const h = state.highlightedItem;
     if (h && h.z === z && h.x >= x1 && h.x <= x2 && h.y >= y1 && h.y <= y2) clearHighlight();
@@ -390,6 +509,7 @@ export function createStore(config) {
 
   function stampArea(originX, originY, z, block) {
     if (!isValidFloor(z)) return;
+    recordArea(originX, originY, originX + block.width - 1, originY + block.height - 1, z);
     map.stamp(originX, originY, z, block);
     touchFloor(z);
   }
@@ -432,6 +552,7 @@ export function createStore(config) {
     const tile = getTile(x, y, z);
     if (!tile || tile.length === 0) return null;
 
+    recordTile(x, y, z);
     const entry = tile.pop(); // moved, not cloned, so its properties travel with it
     map.pruneTile(x, y, z);
     if (isHighlighted(x, y, z)) clearHighlight();
@@ -466,31 +587,47 @@ export function createStore(config) {
     return !map.isEmpty();
   }
 
-  /** Resets everything that refers to map content - shared by "new" and "open". */
+  function setMapName(name) {
+    state.name = String(name);
+  }
+
+  function setRespawnPoint(point) {
+    if (!isValidRespawnPoint(point)) return false;
+    state.respawnPoint = [point[0], point[1], clampFloor(point[2])];
+    return true;
+  }
+
+  /** Resets everything that refers to map content and centers on the respawn point - shared by "new" and "open". */
   function resetView() {
-    state.renderFromX = 0;
-    state.renderFromY = 0;
+    centerOnRespawn();
     state.clipboard = null;
     clearHighlight();
     clearSelection();
     closeContextMenu();
     closeDialog();
+    history.clear();
+    syncHistoryState();
     touchAll();
   }
 
   function newMap() {
     map.reset();
+    setMapName(config.name);
+    setRespawnPoint(config.respawnPoint);
     resetView();
   }
 
-  /** Replaces the map with validated file content (see mapFile.readMapFile). */
-  function loadMapData(data) {
+  /** Replaces the map with a validated file envelope (see mapFile.readMapFile); missing fields fall back to the config defaults. */
+  function loadMapFile({ name = config.name, respawnPoint = config.respawnPoint, map: data }) {
     map.replace(data);
+    setMapName(name);
+    setRespawnPoint(respawnPoint);
     resetView();
   }
 
-  function exportMapData() {
-    return map.toJSON();
+  /** The file envelope as saved to disk. */
+  function exportMapFile() {
+    return { name: state.name, respawnPoint: [...state.respawnPoint], map: map.toJSON() };
   }
 
   return {
@@ -501,6 +638,11 @@ export function createStore(config) {
     selectedItem,
     secondaryItem,
     takeDirtyFloors,
+    beginGesture,
+    endGesture,
+    isGestureOpen,
+    undo,
+    redo,
     getItem,
     loadItems,
     selectTool,
@@ -510,6 +652,9 @@ export function createStore(config) {
     swapItems,
     setBrushSize,
     setCurrentFloor,
+    setViewportSize,
+    centerOn,
+    centerOnRespawn,
     pan,
     setCursorPosition,
     getTile,
@@ -539,8 +684,10 @@ export function createStore(config) {
     beginItemMove,
     finishItemMove,
     hasMapContent,
+    setMapName,
+    setRespawnPoint,
     newMap,
-    loadMapData,
-    exportMapData,
+    loadMapFile,
+    exportMapFile,
   };
 }

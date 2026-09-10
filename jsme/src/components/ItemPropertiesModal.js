@@ -115,9 +115,7 @@ export default defineComponent({
             <dl class="item-properties-details">
               <dt>Name</dt><dd>{{ item.name }}</dd>
               <dt>ID</dt><dd>{{ item.id }}</dd>
-              <dt>X</dt><dd>{{ x }}</dd>
-              <dt>Y</dt><dd>{{ y }}</dd>
-              <dt>Z</dt><dd>{{ z }}</dd>
+              <dt>Pos</dt><dd>{{ x }}, {{ y }}, {{ z }}</dd>
             </dl>
           </div>
 

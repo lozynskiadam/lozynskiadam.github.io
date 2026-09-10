@@ -123,6 +123,12 @@ button {
 .ui-icon[data-icon='save'] { background-position: 0 -114px; }
 .ui-icon[data-icon='sampler'] { background-position: 0 -132px; }
 .ui-icon[data-icon='help'] { background-position: 0 -148px; }
+.ui-icon[data-icon='undo'] {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='17' height='15' viewBox='0 0 17 15'><path d='M1 5.5l5-4v3h4.5a4.5 4.5 0 0 1 0 9H6v-2h4.5a2.5 2.5 0 0 0 0-5H6v3z' fill='%23e0e0e0'/></svg>");
+}
+.ui-icon[data-icon='redo'] {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='17' height='15' viewBox='0 0 17 15'><path d='M16 5.5l-5-4v3H6.5a4.5 4.5 0 0 0 0 9H11v-2H6.5a2.5 2.5 0 0 1 0-5H11v3z' fill='%23e0e0e0'/></svg>");
+}
 .ui-icon[data-icon='select'] {
   background-image: none;
   width: 11px;
@@ -256,6 +262,10 @@ button {
   background: var(--hover-gradient);
   border-color: var(--control-border);
 }
+.toolbar-button:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
 .toolbar-button.active {
   background: var(--control-gradient);
   border-color: var(--control-border);
@@ -290,16 +300,9 @@ button {
   cursor: pointer;
 }
 .toolbar-position {
-  display: flex;
-  gap: 4px;
-}
-.toolbar-position div {
-  width: 55px;
-  padding: 2px 4px;
   color: var(--text);
-  background: var(--control-gradient);
-  border: 1px solid var(--control-border);
-  border-radius: 2px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 /* ------------------------------------------------------------------ */
@@ -502,7 +505,7 @@ button {
 }
 label.key {
   display: inline-block;
-  width: 42px;
+  min-width: 42px;
   background-color: #333;
   border: 1px solid #222;
   border-bottom: 2px solid #111;

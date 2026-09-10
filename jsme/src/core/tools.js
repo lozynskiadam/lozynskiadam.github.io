@@ -6,12 +6,18 @@ function forEachBrushCell(size, callback) {
   }
 }
 
+/**
+ * A 1px colored frame on the tile's outermost pixels with a 1px black frame
+ * just inside it for contrast. Both rectangles sit on whole pixel rings
+ * (the +0.5 centers a 1px stroke on a pixel) - the painter does not
+ * antialias, so any half-pixel overlap would let black win over the color.
+ */
 function drawCellOutline(ctx, x, y, tileSize, outerColor) {
   ctx.lineWidth = 1;
   ctx.strokeStyle = outerColor;
   ctx.strokeRect(x + 0.5, y + 0.5, tileSize - 1, tileSize - 1);
   ctx.strokeStyle = '#000000';
-  ctx.strokeRect(x + 1, y + 1, tileSize - 1, tileSize - 1);
+  ctx.strokeRect(x + 1.5, y + 1.5, tileSize - 3, tileSize - 3);
 }
 
 /**

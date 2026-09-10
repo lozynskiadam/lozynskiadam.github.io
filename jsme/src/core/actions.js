@@ -10,7 +10,8 @@ import { pickMapFile, readMapFile, downloadMapFile } from './mapFile.js';
  * An action has:
  *   label      - text for menus and the help dialog
  *   run()      - what it does; may be async
- *   shortcut   - optional key combo in shortcuts.js notation
+ *   shortcut   - optional key combo in shortcuts.js notation, or a list of
+ *                alternatives (the first one is the displayed one)
  *   icon       - optional sprite name from app.css `[data-icon]`
  *   enabled()  - optional predicate; a disabled action is greyed out in
  *                menus and its shortcut is ignored
@@ -44,7 +45,7 @@ export function createActions({ store, tools }) {
       const file = await pickMapFile();
       if (!file) return;
       try {
-        store.loadMapData(await readMapFile(file));
+        store.loadMapFile(await readMapFile(file));
       } catch (error) {
         alert(error.message);
       }
@@ -56,7 +57,7 @@ export function createActions({ store, tools }) {
     icon: 'save',
     shortcut: 'Ctrl+S',
     run() {
-      downloadMapFile(store.exportMapData());
+      downloadMapFile(store.exportMapFile());
     },
   });
 
@@ -84,6 +85,26 @@ export function createActions({ store, tools }) {
   }
 
   /* ---- edit --------------------------------------------------------- */
+
+  define('edit.undo', {
+    label: 'Undo',
+    icon: 'undo',
+    shortcut: 'Ctrl+Z',
+    enabled: () => state.undoDepth > 0 && !store.isGestureOpen(),
+    run() {
+      store.undo();
+    },
+  });
+
+  define('edit.redo', {
+    label: 'Redo',
+    icon: 'redo',
+    shortcut: ['Ctrl+Y', 'Ctrl+Shift+Z'],
+    enabled: () => state.redoDepth > 0 && !store.isGestureOpen(),
+    run() {
+      store.redo();
+    },
+  });
 
   define('edit.copy', {
     label: 'Copy selection',
@@ -161,16 +182,17 @@ export function createActions({ store, tools }) {
     },
   });
 
+  // Arrow keys and WASD both scroll the map.
   const PAN = [
-    ['Up', 'ArrowUp', 0, -1],
-    ['Down', 'ArrowDown', 0, 1],
-    ['Left', 'ArrowLeft', -1, 0],
-    ['Right', 'ArrowRight', 1, 0],
+    ['Up', ['ArrowUp', 'W'], 0, -1],
+    ['Down', ['ArrowDown', 'S'], 0, 1],
+    ['Left', ['ArrowLeft', 'A'], -1, 0],
+    ['Right', ['ArrowRight', 'D'], 1, 0],
   ];
-  for (const [name, shortcut, dx, dy] of PAN) {
+  for (const [name, shortcuts, dx, dy] of PAN) {
     define(`view.pan${name}`, {
       label: `Scroll map ${name.toLowerCase()}`,
-      shortcut,
+      shortcut: shortcuts,
       run() {
         store.pan(dx, dy);
       },

@@ -1,14 +1,14 @@
 import { defineComponent } from '../vendor/vue.esm-browser.prod.js';
 import { store, actions } from '../editor.js';
 import { HOLD_KEYS } from '../core/actions.js';
-import { formatShortcut } from '../core/shortcuts.js';
+import { allShortcutsLabel } from '../core/shortcuts.js';
 import { useDraggable } from '../composables/useDraggable.js';
 
 // Built once from the action registry, so a new shortcut documents itself.
 const SHORTCUTS = [
   ...Object.values(actions)
     .filter((action) => action.shortcut)
-    .map((action) => [formatShortcut(action.shortcut), action.hint ? `${action.label} (${action.hint})` : action.label]),
+    .map((action) => [allShortcutsLabel(action), action.hint ? `${action.label} (${action.hint})` : action.label]),
   ...HOLD_KEYS,
 ];
 

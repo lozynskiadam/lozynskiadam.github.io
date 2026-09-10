@@ -70,6 +70,17 @@ export function createMapData() {
     return true;
   }
 
+  /** Replaces a tile's whole content (an empty list removes the tile). Used by undo/redo. */
+  function setTile(x, y, z, entries) {
+    if (entries.length === 0) {
+      clearTile(x, y, z);
+      return;
+    }
+    const tile = ensureTile(x, y, z);
+    tile.length = 0;
+    tile.push(...entries);
+  }
+
   /** Visits every non-empty tile of a floor inside an inclusive rectangle, skipping absent rows wholesale. */
   function forEachTile(z, x1, y1, x2, y2, callback) {
     const floor = floors[z];
@@ -141,6 +152,7 @@ export function createMapData() {
     ensureTile,
     pruneTile,
     clearTile,
+    setTile,
     forEachTile,
     snapshot,
     clear,

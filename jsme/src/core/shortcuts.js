@@ -3,11 +3,12 @@
  *
  * Shortcuts are written the way they are displayed - "Ctrl+S", "PageUp",
  * "Delete", "+", "X" - using KeyboardEvent.key names for the key part.
- * Shift is deliberately not a modifier here: "+" already needs it on many
- * layouts, and the editor uses a held Shift as a mode (see useKeyboard).
+ * Shift only counts as a modifier together with Ctrl ("Ctrl+Shift+Z"):
+ * on its own "+" already needs it on many layouts, and the editor uses a
+ * held Shift as a mode (see useKeyboard).
  */
 
-const MODIFIERS = new Set(['ctrl', 'alt']);
+const MODIFIERS = new Set(['alt', 'ctrl', 'shift']);
 
 // Friendlier spellings for the help dialog and menu hints.
 const DISPLAY_NAMES = {
@@ -35,7 +36,25 @@ export function shortcutFromEvent(event) {
   const modifiers = [];
   if (event.altKey) modifiers.push('alt');
   if (event.ctrlKey || event.metaKey) modifiers.push('ctrl');
+  if (event.shiftKey && modifiers.includes('ctrl')) modifiers.push('shift');
   return [...modifiers, event.key.toLowerCase()].join('+');
+}
+
+/** An action's shortcuts as a list: `shortcut` may be a string, a list of alternatives, or absent. */
+export function shortcutsOf(action) {
+  if (!action.shortcut) return [];
+  return Array.isArray(action.shortcut) ? action.shortcut : [action.shortcut];
+}
+
+/** The display form of an action's primary shortcut ("" when it has none). */
+export function primaryShortcutLabel(action) {
+  const [first] = shortcutsOf(action);
+  return first ? formatShortcut(first) : '';
+}
+
+/** Every shortcut of an action for display: "↑ / W". */
+export function allShortcutsLabel(action) {
+  return shortcutsOf(action).map(formatShortcut).join(' / ');
 }
 
 /** "PageUp" -> "PgUp", "Ctrl+ArrowUp" -> "Ctrl+↑"; anything else passes through. */

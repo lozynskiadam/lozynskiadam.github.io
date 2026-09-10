@@ -1,6 +1,6 @@
 import { onMounted, onUnmounted } from '../vendor/vue.esm-browser.prod.js';
 import { store, actions } from '../editor.js';
-import { normalizeShortcut, shortcutFromEvent } from '../core/shortcuts.js';
+import { normalizeShortcut, shortcutFromEvent, shortcutsOf } from '../core/shortcuts.js';
 
 // Held-key modes that don't fit the "press = run an action" model.
 const SAMPLER_HOLD_KEY = 'Tab';
@@ -16,10 +16,11 @@ export function useKeyboardShortcuts() {
   // Built once: normalized shortcut -> action.
   const bindings = new Map();
   for (const action of Object.values(actions)) {
-    if (!action.shortcut) continue;
-    const key = normalizeShortcut(action.shortcut);
-    if (bindings.has(key)) throw new Error(`Shortcut "${action.shortcut}" is bound twice`);
-    bindings.set(key, action);
+    for (const shortcut of shortcutsOf(action)) {
+      const key = normalizeShortcut(shortcut);
+      if (bindings.has(key)) throw new Error(`Shortcut "${shortcut}" is bound twice`);
+      bindings.set(key, action);
+    }
   }
 
   // The tool to restore when Tab is released, or null while Tab is not held.

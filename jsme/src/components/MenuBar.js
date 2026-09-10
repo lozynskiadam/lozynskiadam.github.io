@@ -1,7 +1,7 @@
 import { defineComponent, ref, watch, onUnmounted } from '../vendor/vue.esm-browser.prod.js';
 import { actions } from '../editor.js';
 import { MENUS } from '../core/menus.js';
-import { formatShortcut } from '../core/shortcuts.js';
+import { primaryShortcutLabel } from '../core/shortcuts.js';
 
 /**
  * Classic application menu bar. Click a title to open its menu; while one
@@ -21,7 +21,7 @@ export default defineComponent({
         if (actionId === null) return { key: `separator-${index}`, separator: true };
         const action = actions[actionId];
         if (!action) throw new Error(`Menu "${menu.id}" references unknown action "${actionId}"`);
-        return { key: action.id, action, shortcut: action.shortcut ? formatShortcut(action.shortcut) : '' };
+        return { key: action.id, action, shortcut: primaryShortcutLabel(action) };
       }),
     }));
 

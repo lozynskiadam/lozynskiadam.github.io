@@ -51,6 +51,8 @@ export default defineComponent({
       }
       if (event.button !== 0) return;
 
+      // Everything the tool does until the button is released is one undo step.
+      store.beginGesture();
       activeTool.value.onClick?.(cursorTile());
       // Flipped after onClick so the cursor computed sees the tool's drag state (e.g. an item already picked up).
       dragging.value = true;
@@ -60,6 +62,7 @@ export default defineComponent({
       if (!dragging.value) return;
       dragging.value = false;
       activeTool.value.onRelease?.(cursorTile());
+      store.endGesture();
     }
 
     function handleWheel(event) {
@@ -70,6 +73,8 @@ export default defineComponent({
     onMounted(() => {
       try {
         renderer.attach({ canvas: canvasEl.value, rulerH: rulerHEl.value, rulerV: rulerVEl.value });
+        // attach() measured the viewport, so the respawn point can be centered now.
+        store.centerOnRespawn();
       } catch (error) {
         console.error('Failed to initialise the WebGL renderer', error);
         renderError.value = error.message;
