@@ -10,12 +10,15 @@ export default defineComponent({
     const rulerVEl = ref(null);
     // Set when the GPU refuses to give us a WebGL context - the map cannot be drawn without one.
     const renderError = ref(null);
-    // Local, non-reactive: only ever read inside this component's own event
-    // handlers, so it doesn't need to trigger a re-render by itself.
-    let dragging = false;
+    // Reactive so the cursor can switch to a grabbing hand while a drag is in progress.
+    const dragging = ref(false);
 
     const activeTool = computed(() => tools[store.state.selectedTool]);
     const cursorStyle = computed(() => {
+      if (dragging.value) {
+        const dragCursor = activeTool.value.dragCursor?.();
+        if (dragCursor) return dragCursor;
+      }
       if (store.state.shiftDown) return 'alias';
       return activeTool.value.cursor || 'default';
     });
@@ -25,7 +28,7 @@ export default defineComponent({
       const changed = store.setCursorPosition(tile.x, tile.y);
       if (!changed) return;
 
-      if (dragging && activeTool.value.onDrag) {
+      if (dragging.value && activeTool.value.onDrag) {
         activeTool.value.onDrag({ x: tile.x, y: tile.y, z: store.state.currentFloor });
         renderer.render('current');
       } else {
@@ -45,15 +48,16 @@ export default defineComponent({
       }
       if (event.button !== 0) return;
 
-      dragging = true;
       const { x, y } = store.state.cursorPosition;
       activeTool.value.onClick?.({ x, y, z: store.state.currentFloor });
+      // Flipped after onClick so the cursor computed sees the tool's drag state (e.g. an item already picked up).
+      dragging.value = true;
       renderer.render('current');
     }
 
     function handleMouseUp() {
-      if (!dragging) return;
-      dragging = false;
+      if (!dragging.value) return;
+      dragging.value = false;
       const { x, y } = store.state.cursorPosition;
       activeTool.value.onRelease?.({ x, y, z: store.state.currentFloor });
       renderer.render('current');

@@ -426,18 +426,27 @@ export function createStore(config) {
   }
 
   /**
-   * Drops an item grabbed by beginItemMove() at its new position and
-   * highlights it there, same as a plain click would. Uses insertEntryOnTile
-   * (add, don't replace) so dropping onto an occupied tile never deletes an
-   * existing item of the same layer, and keeps the moved entry exactly as
-   * it was (not just re-created from its catalog id).
+   * Drops an item grabbed by beginItemMove() at its new position. Uses
+   * insertEntryOnTile (add, don't replace) so dropping onto an occupied
+   * tile never deletes an existing item of the same layer, and keeps the
+   * moved entry exactly as it was (not just re-created from its catalog id).
+   *
+   * Only a drop back onto the original tile highlights the item - that is
+   * what a plain click (press and release without moving) boils down to.
+   * An actual move leaves nothing highlighted, so the "lifted" glow does
+   * not linger on the item at its new spot.
    */
   function finishItemMove(draft, targetX, targetY) {
     const x = Math.max(targetX, 0);
     const y = Math.max(targetY, 0);
     const [entry] = draft.block.cells['0,0'];
     insertEntryOnTile(x, y, draft.z, entry);
-    highlightOnTile(x, y, draft.z);
+
+    if (x === draft.originalX1 && y === draft.originalY1) {
+      highlightOnTile(x, y, draft.z);
+    } else {
+      clearHighlight();
+    }
   }
 
   function newMap() {

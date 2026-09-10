@@ -71,6 +71,10 @@ export function createTools(store, config) {
       title: 'Pointer (Q)',
       sizing: false,
       cursor: 'default',
+      /** Cursor to show mid-drag: a closed hand while something is actually being carried, otherwise the normal one. */
+      dragCursor() {
+        return moveDraft ? 'grabbing' : null;
+      },
       onClick({ x, y, z }) {
         if (store.isInsideSelection(x, y, z)) {
           const draft = store.beginMoveSelection();
