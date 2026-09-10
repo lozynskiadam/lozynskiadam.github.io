@@ -639,6 +639,22 @@ export class GLPainter {
     for (const subpath of this.subpaths) this.strokePolyline(subpath, subpath.closed === true);
   }
 
+  /** Fills each subpath as a convex polygon, fan-triangulated from its first point. */
+  fill() {
+    const [r, g, b, a] = this.premultiplied(this.fillStyle);
+    const white = this.atlas.white();
+    for (const points of this.subpaths) {
+      for (let i = 1; i + 1 < points.length; i++) {
+        const [x0, y0] = points[0];
+        const [x1, y1] = points[i];
+        const [x2, y2] = points[i + 1];
+        // A quad whose last corner folds back onto the first is a triangle:
+        // its second (zero-area) triangle rasterizes nothing.
+        this.pushCorners(white, x0, y0, x1, y1, x2, y2, x0, y0, r, g, b, a);
+      }
+    }
+  }
+
   /** Strokes a polyline segment by segment, honouring the current dash pattern (butt caps, no joins - fine for axis-aligned lines). */
   strokePolyline(points, closed) {
     if (points.length < 2) return;

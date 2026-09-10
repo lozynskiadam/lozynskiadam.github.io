@@ -1,5 +1,28 @@
 import { reactive, shallowRef, computed } from '../vendor/vue.esm-browser.prod.js';
 
+// Keys of a placed map item that belong to the editor itself; everything
+// else on the entry is a user-defined property (see setEntryProperty).
+const RESERVED_ENTRY_KEYS = new Set(['id']);
+
+/**
+ * Normalizes a user-typed property key into camelCase: "Door ID", "door_id",
+ * "door-id" and "DoorID" all become "doorId". Returns an empty string when
+ * nothing usable is left (e.g. only punctuation or digits were typed).
+ */
+export function toCamelCase(raw) {
+  const words = String(raw)
+    .replace(/[^0-9A-Za-z]+/g, ' ')
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  return words
+    .map((word, index) => (index === 0 ? word.toLowerCase() : word[0].toUpperCase() + word.slice(1).toLowerCase()))
+    .join('')
+    .replace(/^[0-9]+/, '');
+}
+
 /**
  * Central, framework-light state container for the map editor.
  *
@@ -288,6 +311,47 @@ export function createStore(config) {
     state.itemProperties = null;
   }
 
+  /** The topmost placed instance of `itemId` on a tile - the one the context menu and the properties dialog are about. */
+  function getPlacedEntry(x, y, z, itemId) {
+    const tile = getTile(x, y, z);
+    if (!tile) return null;
+    const key = String(itemId);
+    for (let i = tile.length - 1; i >= 0; i--) {
+      if (String(tile[i].id) === key) return tile[i];
+    }
+    return null;
+  }
+
+  /** User-defined [key, value] pairs stored on a placed item, i.e. everything on it apart from the editor's own keys. */
+  function getEntryProperties(entry) {
+    return Object.entries(entry).filter(([key]) => !RESERVED_ENTRY_KEYS.has(key));
+  }
+
+  function hasEntryProperties(entry) {
+    return Object.keys(entry).some((key) => !RESERVED_ENTRY_KEYS.has(key));
+  }
+
+  /**
+   * Stores a custom property straight on the placed item's entry (next to
+   * its id), so it travels with the entry through moves, copy/paste and the
+   * map file without any extra bookkeeping. The key is camelCased first;
+   * returns false when it ends up empty or reserved, or the item is gone.
+   */
+  function setEntryProperty(x, y, z, itemId, rawKey, value) {
+    const entry = getPlacedEntry(x, y, z, itemId);
+    const key = toCamelCase(rawKey);
+    if (!entry || !key || RESERVED_ENTRY_KEYS.has(key)) return false;
+    entry[key] = value;
+    return true;
+  }
+
+  function removeEntryProperty(x, y, z, itemId, key) {
+    const entry = getPlacedEntry(x, y, z, itemId);
+    if (!entry || RESERVED_ENTRY_KEYS.has(key)) return false;
+    delete entry[key];
+    return true;
+  }
+
   function beginSelection(x, y, z) {
     state.selection = { z, x1: x, y1: y, x2: x, y2: y };
   }
@@ -523,6 +587,11 @@ export function createStore(config) {
     closeContextMenu,
     openItemProperties,
     closeItemProperties,
+    getPlacedEntry,
+    getEntryProperties,
+    hasEntryProperties,
+    setEntryProperty,
+    removeEntryProperty,
     beginSelection,
     updateSelection,
     clearSelection,

@@ -6,6 +6,8 @@ const RULER_SIZE = 20;
 const MAJOR_TICK_EVERY = 5;
 // Rulers only ever hold a few tiny tick labels, so their glyph atlas can stay small.
 const RULER_ATLAS_SIZE = 256;
+// Leg length (px) of the corner triangle marking items that carry custom properties.
+const BADGE_SIZE = 7;
 
 /**
  * Imperative WebGL renderer for the map editor.
@@ -136,11 +138,16 @@ export class MapRenderer {
     const { highlightedItem } = store.state;
     const colsVisible = layer.width / config.tileSize;
     const rowsVisible = layer.height / config.tileSize;
+    const badgedTiles = [];
 
     for (let y = originY; y <= originY + rowsVisible; y++) {
       for (let x = originX; x <= originX + colsVisible; x++) {
         const tile = store.getTile(x, y, z);
         if (!tile) continue;
+
+        if (tile.some(store.hasEntryProperties)) {
+          badgedTiles.push([(x - originX) * config.tileSize, (y - originY) * config.tileSize]);
+        }
 
         tile.forEach((entry, index) => {
           const item = store.getItem(entry.id);
@@ -167,6 +174,31 @@ export class MapRenderer {
         });
       }
     }
+
+    // Badges go on after every sprite of the floor: a tall item on the tile
+    // below/right is drawn later and would otherwise cover them.
+    for (const [x, y] of badgedTiles) {
+      this.renderPropertiesBadge(ctx, x, y);
+    }
+  }
+
+  /** Small blue triangle in a tile's top-right corner - the item there carries custom properties (see store.setEntryProperty). */
+  renderPropertiesBadge(ctx, x, y) {
+    const right = x + this.config.tileSize;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(right - BADGE_SIZE, y);
+    ctx.lineTo(right, y);
+    ctx.lineTo(right, y + BADGE_SIZE);
+    ctx.closePath();
+    ctx.fillStyle = '#00aaff';
+    ctx.fill();
+    // A soft black outline keeps the badge readable on light sprites without making it heavy.
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([]);
+    ctx.stroke();
+    ctx.restore();
   }
 
   renderHud() {

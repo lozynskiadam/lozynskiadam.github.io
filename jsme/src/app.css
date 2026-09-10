@@ -458,3 +458,66 @@ label.key {
 .item-properties-details dd {
   margin: 0;
 }
+.item-properties-custom {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid #454545;
+}
+.item-properties-custom-title {
+  color: #bbb;
+  margin-bottom: 6px;
+}
+.item-properties-custom-empty {
+  color: #999;
+  font-style: italic;
+  margin-bottom: 6px;
+}
+.item-properties-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 28px;
+  gap: 4px;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.item-properties-row input {
+  min-width: 0;
+  padding: 3px 5px;
+  border: 1px solid #2c2c2c;
+  border-radius: 2px;
+  background: #3f3f3f;
+  color: #fafafa;
+  font: inherit;
+}
+.item-properties-row input:focus {
+  outline: 1px solid #00aaff;
+}
+.item-properties-key {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #8fd3ff;
+}
+.item-properties-row button {
+  height: 24px;
+  padding: 0 4px;
+  border: 1px solid #2c2c2c;
+  border-radius: 2px;
+  background: #3f3f3f;
+  color: #fafafa;
+  cursor: pointer;
+  font: inherit;
+}
+.item-properties-row button:hover {
+  background: #4a4a4a;
+}
+.item-properties-hint {
+  color: #999;
+  margin-top: 2px;
+}
+.item-properties-hint code {
+  color: #8fd3ff;
+}
+.item-properties-error {
+  color: #ffb3b3;
+  margin-top: 2px;
+}
