@@ -1,65 +1,81 @@
+import { GLPainter } from './painter.js';
 import { pixelToTile, tileToPixel, marginTiles, visibleOrigin } from './pointer.js';
 
 // Ruler strip thickness in px, and how often (in tiles) a tick gets a label.
 const RULER_SIZE = 20;
 const MAJOR_TICK_EVERY = 5;
+// Rulers only ever hold a few tiny tick labels, so their glyph atlas can stay small.
+const RULER_ATLAS_SIZE = 256;
 
 /**
- * Imperative canvas renderer for the map editor.
+ * Imperative WebGL renderer for the map editor.
  *
  * Canvas drawing does not benefit from Vue's reactivity (it is thousands
- * of drawImage calls per frame, not DOM diffing), so this stays a plain
- * class that reads from the store/tools on demand. Components explicitly
- * call render(mode) after an action that changes what's on screen -
- * mirroring how the store makes no assumption about when a redraw is due.
+ * of sprites per frame, not DOM diffing), so this stays a plain class
+ * that reads from the store/tools on demand. Components explicitly call
+ * render(mode) after an action that changes what's on screen - mirroring
+ * how the store makes no assumption about when a redraw is due.
+ *
+ * Drawing goes through GLPainter (see painter.js), which batches sprites
+ * into a handful of GPU draw calls behind a Canvas 2D-like API. Every
+ * floor is rendered into its own Layer (an offscreen framebuffer) and the
+ * visible ones are stacked onto the canvas in composite(), so a redraw of
+ * just the HUD ('gui' mode) never has to walk the map again.
  */
 export class MapRenderer {
   constructor(store, tools, config) {
     this.store = store;
     this.tools = tools;
     this.config = config;
-    this.canvas = null;
-    this.rulerH = null;
-    this.rulerV = null;
-    this.hud = document.createElement('canvas');
-    this.floors = {};
-    for (let z = config.minFloor; z <= config.maxFloor; z++) {
-      this.floors[z] = document.createElement('canvas');
-    }
+    this.painter = null; // GLPainter for the map canvas
+    this.rulerH = null; // GLPainter for the horizontal ruler
+    this.rulerV = null; // GLPainter for the vertical ruler
+    this.hud = null; // Layer, current floor's tool/selection overlay
+    this.floors = {}; // z -> Layer, created the first time that floor is rendered
   }
 
   attach({ canvas, rulerH = null, rulerV = null }) {
-    this.canvas = canvas;
-    this.rulerH = rulerH;
-    this.rulerV = rulerV;
+    this.detach();
+    this.painter = new GLPainter(canvas);
+    // A lost GPU context wipes every texture and layer; once the browser
+    // hands it back, rebuild the whole picture from the store.
+    this.painter.onContextRestored = () => this.render('all');
+    this.hud = this.painter.createLayer(1, 1);
+    this.floors = {};
+    this.rulerH = rulerH ? new GLPainter(rulerH, { atlasSize: RULER_ATLAS_SIZE }) : null;
+    this.rulerV = rulerV ? new GLPainter(rulerV, { atlasSize: RULER_ATLAS_SIZE }) : null;
     this.resize();
   }
 
+  detach() {
+    this.painter?.dispose();
+    this.rulerH?.dispose();
+    this.rulerV?.dispose();
+    this.painter = null;
+    this.rulerH = null;
+    this.rulerV = null;
+    this.hud = null;
+    this.floors = {};
+  }
+
   resize() {
-    if (!this.canvas) return;
-    const { width, height } = this.canvas.parentElement.getBoundingClientRect();
-    this.canvas.width = width;
-    this.canvas.height = height;
-    this.hud.width = width;
-    this.hud.height = height;
-    for (const canvas of Object.values(this.floors)) {
-      canvas.width = width;
-      canvas.height = height;
+    if (!this.painter) return;
+    const bounds = this.painter.canvas.parentElement.getBoundingClientRect();
+    const width = Math.floor(bounds.width);
+    const height = Math.floor(bounds.height);
+    this.painter.resize(width, height);
+    this.hud.resize(width, height);
+    for (const layer of Object.values(this.floors)) {
+      layer.resize(width, height);
     }
-    if (this.rulerH) {
-      this.rulerH.width = width;
-      this.rulerH.height = RULER_SIZE;
-    }
-    if (this.rulerV) {
-      this.rulerV.width = RULER_SIZE;
-      this.rulerV.height = height;
-    }
+    this.rulerH?.resize(width, RULER_SIZE);
+    this.rulerV?.resize(RULER_SIZE, height);
     this.render('all');
   }
 
   /** mode: 'all' (regenerate every floor), 'current' (only the active floor), or 'gui' (HUD + composite only). */
   render(mode = 'all') {
-    if (!this.canvas) return;
+    if (!this.painter) return;
     const { store, config } = this;
 
     if (mode === 'all' || mode === 'current') {
@@ -99,22 +115,27 @@ export class MapRenderer {
     };
   }
 
+  floorLayer(z) {
+    this.floors[z] ??= this.painter.createLayer(this.painter.width, this.painter.height);
+    return this.floors[z];
+  }
+
   renderFloor(z) {
-    const { store, config } = this;
-    const canvas = this.floors[z];
-    const ctx = canvas.getContext('2d');
+    const { store, config, painter: ctx } = this;
+    const layer = this.floorLayer(z);
+    ctx.setTarget(layer);
 
     ctx.lineWidth = 1;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, layer.width, layer.height);
     ctx.globalAlpha = z !== 0 && z !== config.minFloor ? 0.5 : 1;
     ctx.fillStyle = '#000000';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, layer.width, layer.height);
     ctx.globalAlpha = 1;
 
     const { originX, originY } = this.floorGeometry(z);
     const { highlightedItem } = store.state;
-    const colsVisible = canvas.width / config.tileSize;
-    const rowsVisible = canvas.height / config.tileSize;
+    const colsVisible = layer.width / config.tileSize;
+    const rowsVisible = layer.height / config.tileSize;
 
     for (let y = originY; y <= originY + rowsVisible; y++) {
       for (let x = originX; x <= originX + colsVisible; x++) {
@@ -149,8 +170,8 @@ export class MapRenderer {
   }
 
   renderHud() {
-    const { store, tools, config } = this;
-    const ctx = this.hud.getContext('2d');
+    const { store, tools, config, painter: ctx } = this;
+    ctx.setTarget(this.hud);
     ctx.clearRect(0, 0, this.hud.width, this.hud.height);
 
     this.renderSelectionOverlay(ctx);
@@ -186,22 +207,25 @@ export class MapRenderer {
     ctx.restore();
   }
 
-  /** Draws each visible floor's offscreen canvas at its own margin (see floorGeometry), topped by the HUD. */
+  /** Stacks each visible floor's layer at its own margin (see floorGeometry) onto the canvas, topped by the HUD. */
   composite() {
-    const { store, config } = this;
-    const ctx = this.canvas.getContext('2d');
-    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    const { store, config, painter: ctx } = this;
+    ctx.setTarget(null);
+    ctx.clearRect(0, 0, ctx.width, ctx.height);
 
     for (let z = config.minFloor; z <= config.maxFloor; z++) {
       if (this.isFloorVisible(z)) {
         const { marginPxX, marginPxY } = this.floorGeometry(z);
-        ctx.drawImage(this.floors[z], marginPxX, marginPxY);
+        const layer = this.floors[z];
+        if (layer) ctx.drawImage(layer, marginPxX, marginPxY);
         if (z === store.state.currentFloor) {
           ctx.drawImage(this.hud, marginPxX, marginPxY);
         }
       }
       if (z === store.state.currentFloor) break;
     }
+
+    ctx.flush();
   }
 
   /** Draws the two position rulers flanking the map, with a marker for the current cursor tile. */
@@ -214,14 +238,13 @@ export class MapRenderer {
     this.renderRulerAxis(this.rulerV, 'y', originY, marginPxY, store.state.cursorPosition.y);
   }
 
-  renderRulerAxis(canvas, axis, origin, marginPx, cursorTile) {
+  renderRulerAxis(ctx, axis, origin, marginPx, cursorTile) {
     const { config } = this;
-    const ctx = canvas.getContext('2d');
-    const length = axis === 'x' ? canvas.width : canvas.height;
+    const length = axis === 'x' ? ctx.width : ctx.height;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, ctx.width, ctx.height);
     ctx.fillStyle = '#353535';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, ctx.width, ctx.height);
 
     ctx.strokeStyle = '#6a6a6a';
     ctx.fillStyle = '#aaaaaa';
@@ -268,5 +291,7 @@ export class MapRenderer {
         }
       }
     }
+
+    ctx.flush();
   }
 }

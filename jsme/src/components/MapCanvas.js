@@ -8,6 +8,8 @@ export default defineComponent({
     const canvasEl = ref(null);
     const rulerHEl = ref(null);
     const rulerVEl = ref(null);
+    // Set when the GPU refuses to give us a WebGL context - the map cannot be drawn without one.
+    const renderError = ref(null);
     // Local, non-reactive: only ever read inside this component's own event
     // handlers, so it doesn't need to trigger a re-render by itself.
     let dragging = false;
@@ -68,7 +70,12 @@ export default defineComponent({
     }
 
     onMounted(() => {
-      renderer.attach({ canvas: canvasEl.value, rulerH: rulerHEl.value, rulerV: rulerVEl.value });
+      try {
+        renderer.attach({ canvas: canvasEl.value, rulerH: rulerHEl.value, rulerV: rulerVEl.value });
+      } catch (error) {
+        console.error('Failed to initialise the WebGL renderer', error);
+        renderError.value = error.message;
+      }
       window.addEventListener('resize', handleResize);
       // Bound to window (not the canvas) so a drag that ends outside the
       // canvas still stops instead of getting stuck.
@@ -78,12 +85,14 @@ export default defineComponent({
     onBeforeUnmount(() => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('mouseup', handleMouseUp);
+      renderer.detach();
     });
 
     return {
       canvasEl,
       rulerHEl,
       rulerVEl,
+      renderError,
       cursorStyle,
       handleMouseMove,
       handleMouseDown,
@@ -97,6 +106,7 @@ export default defineComponent({
       <canvas ref="rulerVEl" class="ruler ruler-vertical"></canvas>
       <div class="map-viewport" :style="{ cursor: cursorStyle }" @wheel="handleWheel">
         <canvas ref="canvasEl" id="map" @mousemove="handleMouseMove" @mousedown="handleMouseDown"></canvas>
+        <div v-if="renderError" class="render-error">{{ renderError }}</div>
       </div>
     </div>
   `,

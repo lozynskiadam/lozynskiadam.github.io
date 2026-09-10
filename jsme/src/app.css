@@ -98,6 +98,17 @@ body {
 .map-viewport canvas#map {
   display: block;
 }
+.render-error {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  color: #ffb3b3;
+  background-color: #282828;
+  text-align: center;
+}
 .layer-list {
   width: calc(100% - 6px);
   padding: 2px;
