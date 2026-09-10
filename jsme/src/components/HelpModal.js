@@ -1,23 +1,15 @@
 import { defineComponent } from '../vendor/vue.esm-browser.prod.js';
-import { store } from '../editor.js';
+import { store, actions } from '../editor.js';
+import { HOLD_KEYS } from '../core/actions.js';
+import { formatShortcut } from '../core/shortcuts.js';
 import { useDraggable } from '../composables/useDraggable.js';
 
+// Built once from the action registry, so a new shortcut documents itself.
 const SHORTCUTS = [
-  ['1', 'pointer tool'],
-  ['2', 'select tool'],
-  ['3', 'brush tool'],
-  ['4', 'eraser tool'],
-  ['5', 'sampler tool'],
-  ['TAB', 'sampler tool (alt.)'],
-  ['Ctrl+C', 'copy selection'],
-  ['Ctrl+V', 'paste at cursor'],
-  ['+', 'enlarge brush size'],
-  ['-', 'decrease brush size'],
-  ['X', 'toggle primary/secondary object'],
-  ['Del', 'remove highlighted object'],
-  ['PgUp', 'higher floor'],
-  ['PgDn', 'lower floor'],
-  ['Shift', 'hold to allow stacking same layer objects'],
+  ...Object.values(actions)
+    .filter((action) => action.shortcut)
+    .map((action) => [formatShortcut(action.shortcut), action.hint ? `${action.label} (${action.hint})` : action.label]),
+  ...HOLD_KEYS,
 ];
 
 export default defineComponent({
@@ -25,7 +17,7 @@ export default defineComponent({
   setup() {
     const { box, style, startDrag } = useDraggable();
     function close() {
-      store.state.showHelp = false;
+      store.closeDialog();
     }
     return { shortcuts: SHORTCUTS, close, box, style, startDrag };
   },

@@ -1,14 +1,20 @@
 import { defineComponent, computed, ref, watch } from '../vendor/vue.esm-browser.prod.js';
-import { store, renderer } from '../editor.js';
+import { store } from '../editor.js';
 import { toCamelCase } from '../core/store.js';
 import { useDraggable } from '../composables/useDraggable.js';
 
+/** "Properties" dialog for one placed item, opened via store.openDialog('itemProperties', { itemId, x, y, z }). */
 export default defineComponent({
   name: 'ItemPropertiesModal',
-  setup() {
+  props: {
+    itemId: { type: [Number, String], required: true },
+    x: { type: Number, required: true },
+    y: { type: Number, required: true },
+    z: { type: Number, required: true },
+  },
+  setup(props) {
     const { box, style, startDrag } = useDraggable();
-    const info = computed(() => store.state.itemProperties);
-    const item = computed(() => (info.value ? store.getItem(info.value.itemId) : null));
+    const item = computed(() => store.getItem(props.itemId));
 
     // The map data itself is not reactive (see store.js), so the custom
     // property list is a snapshot re-read after every edit.
@@ -25,19 +31,16 @@ export default defineComponent({
     }
 
     function refresh() {
-      const target = info.value;
-      const entry = target ? store.getPlacedEntry(target.x, target.y, target.z, target.itemId) : null;
+      const entry = store.getPlacedEntry(props.x, props.y, props.z, props.itemId);
       properties.value = entry
         ? store.getEntryProperties(entry).map(([key, value]) => ({ key, value: displayValue(value) }))
         : [];
     }
 
-    watch(info, refresh, { immediate: true });
+    watch(() => [props.itemId, props.x, props.y, props.z], refresh, { immediate: true });
 
-    function commit() {
-      refresh();
-      renderer.render('current');
-    }
+    // Mutations go through the store, which flags the floor for the renderer; only the local snapshot needs refreshing.
+    const commit = refresh;
 
     function addProperty() {
       const key = keyPreview.value;
@@ -49,7 +52,7 @@ export default defineComponent({
         error.value = '"id" is reserved for the item type.';
         return;
       }
-      const { x, y, z, itemId } = info.value;
+      const { x, y, z, itemId } = props;
       if (!store.setEntryProperty(x, y, z, itemId, key, newValue.value)) {
         error.value = 'This item is no longer on the map.';
         return;
@@ -61,13 +64,13 @@ export default defineComponent({
     }
 
     function updateProperty(property, event) {
-      const { x, y, z, itemId } = info.value;
+      const { x, y, z, itemId } = props;
       store.setEntryProperty(x, y, z, itemId, property.key, event.target.value);
       commit();
     }
 
     function removeProperty(property) {
-      const { x, y, z, itemId } = info.value;
+      const { x, y, z, itemId } = props;
       store.removeEntryProperty(x, y, z, itemId, property.key);
       commit();
     }
@@ -77,11 +80,10 @@ export default defineComponent({
     }
 
     function close() {
-      store.closeItemProperties();
+      store.closeDialog();
     }
 
     return {
-      info,
       item,
       properties,
       newKey,
@@ -113,9 +115,9 @@ export default defineComponent({
             <dl class="item-properties-details">
               <dt>Name</dt><dd>{{ item.name }}</dd>
               <dt>ID</dt><dd>{{ item.id }}</dd>
-              <dt>X</dt><dd>{{ info.x }}</dd>
-              <dt>Y</dt><dd>{{ info.y }}</dd>
-              <dt>Z</dt><dd>{{ info.z }}</dd>
+              <dt>X</dt><dd>{{ x }}</dd>
+              <dt>Y</dt><dd>{{ y }}</dd>
+              <dt>Z</dt><dd>{{ z }}</dd>
             </dl>
           </div>
 

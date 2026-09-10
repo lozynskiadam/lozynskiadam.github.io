@@ -19,8 +19,8 @@ export default defineComponent({
     function showProperties() {
       if (!menu.value) return;
       const { itemId, x, y, z } = menu.value;
-      store.openItemProperties(itemId, x, y, z);
       store.closeContextMenu();
+      store.openDialog('itemProperties', { itemId, x, y, z });
     }
 
     function handleOutsideMouseDown(event) {

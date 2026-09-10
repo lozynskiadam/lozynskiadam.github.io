@@ -1,3 +1,4 @@
+import { watch } from '../vendor/vue.esm-browser.prod.js';
 import { GLPainter } from './painter.js';
 import { pixelToTile, tileToPixel, marginTiles, visibleOrigin } from './pointer.js';
 
@@ -13,16 +14,20 @@ const BADGE_SIZE = 7;
  * Imperative WebGL renderer for the map editor.
  *
  * Canvas drawing does not benefit from Vue's reactivity (it is thousands
- * of sprites per frame, not DOM diffing), so this stays a plain class
- * that reads from the store/tools on demand. Components explicitly call
- * render(mode) after an action that changes what's on screen - mirroring
- * how the store makes no assumption about when a redraw is due.
+ * of sprites per frame, not DOM diffing), so this stays a plain class that
+ * reads from the store/tools on demand. What it does borrow from Vue is
+ * change detection: attach() watches the store and schedules a frame
+ * whenever something visible changes - map edits via `state.mapRevision`
+ * (with the store keeping track of which floors were touched), the view
+ * geometry, and the HUD-related fields. Nothing else in the app ever asks
+ * for a repaint; every request within one animation frame collapses into
+ * a single render.
  *
  * Drawing goes through GLPainter (see painter.js), which batches sprites
  * into a handful of GPU draw calls behind a Canvas 2D-like API. Every
  * floor is rendered into its own Layer (an offscreen framebuffer) and the
- * visible ones are stacked onto the canvas in composite(), so a redraw of
- * just the HUD ('gui' mode) never has to walk the map again.
+ * visible ones are stacked onto the canvas in composite(), so a frame that
+ * only moves the cursor never has to walk the map again.
  */
 export class MapRenderer {
   constructor(store, tools, config) {
@@ -34,6 +39,10 @@ export class MapRenderer {
     this.rulerV = null; // GLPainter for the vertical ruler
     this.hud = null; // Layer, current floor's tool/selection overlay
     this.floors = {}; // z -> Layer, created the first time that floor is rendered
+    this.frame = 0; // pending requestAnimationFrame handle
+    this.pendingAll = false; // whether the pending frame must redraw every floor
+    this.dirtyFloors = new Set(); // floors the pending frame must redraw (besides what the store reports)
+    this.stopWatchers = [];
   }
 
   attach({ canvas, rulerH = null, rulerV = null }) {
@@ -41,15 +50,20 @@ export class MapRenderer {
     this.painter = new GLPainter(canvas);
     // A lost GPU context wipes every texture and layer; once the browser
     // hands it back, rebuild the whole picture from the store.
-    this.painter.onContextRestored = () => this.render('all');
+    this.painter.onContextRestored = () => this.invalidate('all');
     this.hud = this.painter.createLayer(1, 1);
     this.floors = {};
     this.rulerH = rulerH ? new GLPainter(rulerH, { atlasSize: RULER_ATLAS_SIZE }) : null;
     this.rulerV = rulerV ? new GLPainter(rulerV, { atlasSize: RULER_ATLAS_SIZE }) : null;
+    this.subscribe();
     this.resize();
   }
 
   detach() {
+    for (const stop of this.stopWatchers) stop();
+    this.stopWatchers = [];
+    if (this.frame) cancelAnimationFrame(this.frame);
+    this.frame = 0;
     this.painter?.dispose();
     this.rulerH?.dispose();
     this.rulerV?.dispose();
@@ -58,6 +72,51 @@ export class MapRenderer {
     this.rulerV = null;
     this.hud = null;
     this.floors = {};
+  }
+
+  /**
+   * Maps store changes onto render work. This is the one place to extend
+   * when a new piece of state affects the picture: floor content goes
+   * through `mapRevision`, anything that shifts the whole view needs 'all',
+   * and anything the HUD draws just needs a frame.
+   */
+  subscribe() {
+    const { state } = this.store;
+    this.stopWatchers = [
+      watch(() => state.mapRevision, () => this.invalidate()),
+      watch(() => this.store.catalog.value, () => this.invalidate('all')),
+      watch(
+        () => [state.renderFromX, state.renderFromY, state.currentFloor],
+        () => this.invalidate('all'),
+      ),
+      watch(
+        () => [state.cursorPosition, state.selectedTool, state.brushSize, state.selectedItemId, state.selection, state.shiftDown],
+        () => this.invalidate(),
+      ),
+      // The "lifted" glow is baked into the floor layer, so both the floor
+      // that lost the highlight and the one that gained it need a redraw.
+      watch(
+        () => state.highlightedItem,
+        (current, previous) => {
+          if (previous) this.dirtyFloors.add(previous.z);
+          if (current) this.dirtyFloors.add(current.z);
+          this.invalidate();
+        },
+      ),
+    ];
+  }
+
+  /**
+   * Requests a frame. Floors the store marked dirty are always redrawn;
+   * pass 'all' when every visible floor has to be (view moved, resize).
+   */
+  invalidate(mode = 'dirty') {
+    if (mode === 'all') this.pendingAll = true;
+    if (this.frame || !this.painter) return;
+    this.frame = requestAnimationFrame(() => {
+      this.frame = 0;
+      this.renderNow();
+    });
   }
 
   resize() {
@@ -72,19 +131,32 @@ export class MapRenderer {
     }
     this.rulerH?.resize(width, RULER_SIZE);
     this.rulerV?.resize(RULER_SIZE, height);
-    this.render('all');
+    // Resizing blanks the canvas, so paint right away rather than leaving a frame of nothing.
+    this.pendingAll = true;
+    this.renderNow();
   }
 
-  /** mode: 'all' (regenerate every floor), 'current' (only the active floor), or 'gui' (HUD + composite only). */
-  render(mode = 'all') {
+  /** Paints immediately, consuming everything queued by invalidate() and the store. */
+  renderNow() {
     if (!this.painter) return;
+    if (this.frame) {
+      cancelAnimationFrame(this.frame);
+      this.frame = 0;
+    }
     const { store, config } = this;
+    const dirty = store.takeDirtyFloors();
+    const floors = new Set([...dirty.floors, ...this.dirtyFloors]);
+    this.dirtyFloors.clear();
 
-    if (mode === 'all' || mode === 'current') {
+    if (this.pendingAll || dirty.all) {
+      this.pendingAll = false;
       for (let z = config.minFloor; z <= config.maxFloor; z++) {
-        if (mode === 'current' && z !== store.state.currentFloor) continue;
-        if (!this.isFloorVisible(z)) continue;
-        this.renderFloor(z);
+        if (this.isFloorVisible(z)) this.renderFloor(z);
+      }
+    } else {
+      for (const z of floors) {
+        // An invisible floor gets its turn when a floor change reveals it - that triggers 'all'.
+        if (this.isFloorVisible(z)) this.renderFloor(z);
       }
     }
 
@@ -136,44 +208,42 @@ export class MapRenderer {
 
     const { originX, originY } = this.floorGeometry(z);
     const { highlightedItem } = store.state;
-    const colsVisible = layer.width / config.tileSize;
-    const rowsVisible = layer.height / config.tileSize;
+    const colsVisible = Math.ceil(layer.width / config.tileSize);
+    const rowsVisible = Math.ceil(layer.height / config.tileSize);
     const badgedTiles = [];
 
-    for (let y = originY; y <= originY + rowsVisible; y++) {
-      for (let x = originX; x <= originX + colsVisible; x++) {
-        const tile = store.getTile(x, y, z);
-        if (!tile) continue;
+    store.forEachTile(z, originX, originY, originX + colsVisible, originY + rowsVisible, (tile, x, y) => {
+      const tileX = (x - originX) * config.tileSize;
+      const tileY = (y - originY) * config.tileSize;
 
-        if (tile.some(store.hasEntryProperties)) {
-          badgedTiles.push([(x - originX) * config.tileSize, (y - originY) * config.tileSize]);
+      if (tile.some(store.hasEntryProperties)) badgedTiles.push([tileX, tileY]);
+
+      // Only the topmost entry of a tile can be the highlighted one.
+      const highlightedIndex =
+        highlightedItem &&
+        highlightedItem.x === x &&
+        highlightedItem.y === y &&
+        highlightedItem.z === z &&
+        highlightedItem.itemId === tile[tile.length - 1].id
+          ? tile.length - 1
+          : -1;
+
+      for (let index = 0; index < tile.length; index++) {
+        const item = store.getItem(tile[index].id);
+        if (!item) continue;
+
+        const drawX = tileX + (config.tileSize - item.image.width);
+        const drawY = tileY + (config.tileSize - item.image.height);
+        if (index === highlightedIndex) {
+          ctx.drawImage(item.image, drawX - 6, drawY - 6);
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.drawImage(item.image, drawX - 6, drawY - 6);
+          ctx.globalCompositeOperation = 'source-over';
+        } else {
+          ctx.drawImage(item.image, drawX, drawY);
         }
-
-        tile.forEach((entry, index) => {
-          const item = store.getItem(entry.id);
-          if (!item) return;
-
-          const drawX = (x - originX) * config.tileSize + (config.tileSize - item.image.width);
-          const drawY = (y - originY) * config.tileSize + (config.tileSize - item.image.height);
-          const isHighlighted =
-            highlightedItem &&
-            highlightedItem.x === x &&
-            highlightedItem.y === y &&
-            highlightedItem.z === z &&
-            highlightedItem.itemId === entry.id &&
-            index === tile.length - 1;
-
-          if (isHighlighted) {
-            ctx.drawImage(item.image, drawX - 6, drawY - 6);
-            ctx.globalCompositeOperation = 'lighter';
-            ctx.drawImage(item.image, drawX - 6, drawY - 6);
-            ctx.globalCompositeOperation = 'source-over';
-          } else {
-            ctx.drawImage(item.image, drawX, drawY);
-          }
-        });
       }
-    }
+    });
 
     // Badges go on after every sprite of the floor: a tall item on the tile
     // below/right is drawn later and would otherwise cover them.

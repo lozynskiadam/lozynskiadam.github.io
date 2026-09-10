@@ -2,16 +2,26 @@ import { defineComponent, onMounted } from '../vendor/vue.esm-browser.prod.js';
 import { store } from '../editor.js';
 import { useKeyboardShortcuts } from '../composables/useKeyboard.js';
 import LoadingOverlay from './LoadingOverlay.js';
+import MenuBar from './MenuBar.js';
 import Sidebar from './Sidebar.js';
-import Navbar from './Navbar.js';
+import Toolbar from './Toolbar.js';
 import MapCanvas from './MapCanvas.js';
 import HelpModal from './HelpModal.js';
 import ContextMenu from './ContextMenu.js';
 import ItemPropertiesModal from './ItemPropertiesModal.js';
 
+/**
+ * Modal dialogs by name - `store.openDialog(name, props)` renders the
+ * matching component with `props` bound. Register new dialogs here.
+ */
+const DIALOGS = {
+  help: HelpModal,
+  itemProperties: ItemPropertiesModal,
+};
+
 export default defineComponent({
   name: 'App',
-  components: { LoadingOverlay, Sidebar, Navbar, MapCanvas, HelpModal, ContextMenu, ItemPropertiesModal },
+  components: { LoadingOverlay, MenuBar, Sidebar, Toolbar, MapCanvas, ContextMenu },
   setup() {
     useKeyboardShortcuts();
 
@@ -21,17 +31,17 @@ export default defineComponent({
       });
     });
 
-    return { state: store.state };
+    return { state: store.state, dialogs: DIALOGS };
   },
   template: `
     <div class="app-root" @contextmenu.prevent>
       <LoadingOverlay v-if="state.loading" />
       <template v-else>
+        <MenuBar />
         <Sidebar />
-        <Navbar />
+        <Toolbar />
         <MapCanvas />
-        <HelpModal v-if="state.showHelp" />
-        <ItemPropertiesModal v-if="state.itemProperties" />
+        <component v-if="state.dialog" :is="dialogs[state.dialog.name]" v-bind="state.dialog.props" />
         <ContextMenu />
       </template>
     </div>

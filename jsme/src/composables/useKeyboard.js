@@ -1,153 +1,68 @@
 import { onMounted, onUnmounted } from '../vendor/vue.esm-browser.prod.js';
-import { store, renderer } from '../editor.js';
+import { store, actions } from '../editor.js';
+import { normalizeShortcut, shortcutFromEvent } from '../core/shortcuts.js';
+
+// Held-key modes that don't fit the "press = run an action" model.
+const SAMPLER_HOLD_KEY = 'Tab';
+const STACK_MODE_KEY = 'Shift';
+
+/** Where typing must win over editor shortcuts (the layer <select> is not one: it blurs itself after a change). */
+function isTypingTarget(target) {
+  return target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA)$/.test(target.tagName));
+}
 
 /** Wires up every keyboard shortcut for the lifetime of the component that calls this. */
 export function useKeyboardShortcuts() {
+  // Built once: normalized shortcut -> action.
+  const bindings = new Map();
+  for (const action of Object.values(actions)) {
+    if (!action.shortcut) continue;
+    const key = normalizeShortcut(action.shortcut);
+    if (bindings.has(key)) throw new Error(`Shortcut "${action.shortcut}" is bound twice`);
+    bindings.set(key, action);
+  }
+
+  // The tool to restore when Tab is released, or null while Tab is not held.
+  let toolBeforeSampler = null;
+
   function handleKeyDown(event) {
-    if (store.state.showHelp) {
+    // A dialog owns the keyboard: Escape closes it, everything else is left alone.
+    if (store.state.dialog) {
       if (event.key === 'Escape') {
         event.preventDefault();
-        store.state.showHelp = false;
+        store.closeDialog();
       }
       return;
     }
+    if (isTypingTarget(event.target)) return;
 
-    if (store.state.itemProperties) {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        store.closeItemProperties();
-      }
+    if (event.key === STACK_MODE_KEY) {
+      store.state.shiftDown = true;
       return;
     }
-
-    switch (event.key) {
-      case 'ArrowUp':
-        event.preventDefault();
-        store.pan(0, -1);
-        renderer.render('all');
-        break;
-      case 'ArrowDown':
-        event.preventDefault();
-        store.pan(0, 1);
-        renderer.render('all');
-        break;
-      case 'ArrowLeft':
-        event.preventDefault();
-        store.pan(-1, 0);
-        renderer.render('all');
-        break;
-      case 'ArrowRight':
-        event.preventDefault();
-        store.pan(1, 0);
-        renderer.render('all');
-        break;
-
-      case '1':
-        event.preventDefault();
-        store.selectTool('pointer');
-        renderer.render('current');
-        break;
-      case '2':
-        event.preventDefault();
-        store.selectTool('select');
-        renderer.render('current');
-        break;
-      case '3':
-        event.preventDefault();
-        store.selectTool('brush');
-        renderer.render('current');
-        break;
-      case '4':
-        event.preventDefault();
-        store.selectTool('eraser');
-        renderer.render('current');
-        break;
-      case '5':
-        event.preventDefault();
+    if (event.key === SAMPLER_HOLD_KEY) {
+      event.preventDefault();
+      if (toolBeforeSampler === null) {
+        toolBeforeSampler = store.state.selectedTool;
         store.selectTool('sampler');
-        renderer.render('current');
-        break;
-      case 'c':
-      case 'C':
-        if (!event.ctrlKey && !event.metaKey) break;
-        event.preventDefault();
-        store.copySelection();
-        break;
-      case 'v':
-      case 'V':
-        if (!event.ctrlKey && !event.metaKey) break;
-        event.preventDefault();
-        store.pasteClipboard(store.state.cursorPosition.x, store.state.cursorPosition.y, store.state.currentFloor);
-        renderer.render('current');
-        break;
-      case 'Tab':
-        event.preventDefault();
-        if (!store.state.tabDown) {
-          store.state.tabDown = true;
-          store.selectTool('sampler');
-          renderer.render('current');
-        }
-        break;
-
-      case 'x':
-      case 'X':
-        event.preventDefault();
-        store.swapItems();
-        break;
-
-      case 'PageUp':
-        event.preventDefault();
-        store.setCurrentFloor(store.state.currentFloor + 1);
-        renderer.render('all');
-        break;
-      case 'PageDown':
-        event.preventDefault();
-        store.setCurrentFloor(store.state.currentFloor - 1);
-        renderer.render('all');
-        break;
-
-      case '+':
-        event.preventDefault();
-        store.setBrushSize(store.state.brushSize + 1);
-        renderer.render('current');
-        break;
-      case '-':
-        event.preventDefault();
-        store.setBrushSize(store.state.brushSize - 1);
-        renderer.render('current');
-        break;
-
-      case 'Shift':
-        store.state.shiftDown = true;
-        break;
-
-      case 'Delete':
-        event.preventDefault();
-        if (store.state.highlightedItem) {
-          const { x, y, z } = store.state.highlightedItem;
-          store.eraseOnTile(x, y, z);
-          store.clearHighlight();
-        } else {
-          store.eraseOnTile(store.state.cursorPosition.x, store.state.cursorPosition.y, store.state.currentFloor);
-        }
-        renderer.render('current');
-        break;
-
-      default:
-        break;
+      }
+      return;
     }
+
+    const action = bindings.get(shortcutFromEvent(event));
+    if (!action || (action.enabled && !action.enabled())) return;
+    event.preventDefault();
+    action.run();
   }
 
   function handleKeyUp(event) {
-    if (event.key === 'Shift') {
-      event.preventDefault();
+    if (event.key === STACK_MODE_KEY) {
       store.state.shiftDown = false;
     }
-    if (event.key === 'Tab') {
+    if (event.key === SAMPLER_HOLD_KEY && toolBeforeSampler !== null) {
       event.preventDefault();
-      store.state.tabDown = false;
-      store.selectTool('brush');
-      renderer.render('current');
+      store.selectTool(toolBeforeSampler);
+      toolBeforeSampler = null;
     }
   }
 

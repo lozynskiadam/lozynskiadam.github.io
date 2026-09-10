@@ -1,5 +1,5 @@
 import { defineComponent, computed, ref, watch, nextTick } from '../vendor/vue.esm-browser.prod.js';
-import { store, renderer } from '../editor.js';
+import { store } from '../editor.js';
 
 export default defineComponent({
   name: 'Palette',
@@ -8,15 +8,16 @@ export default defineComponent({
 
     function selectLayer(event) {
       store.state.selectedLayer = event.target.value;
+      // Hand the keyboard back to the editor, so arrow keys pan the map instead of cycling layers.
+      event.target.blur();
     }
 
     function pickItem(item) {
       store.selectItem(item.id);
       store.selectTool('brush');
-      renderer.render('current');
     }
 
-    // Whenever the selected item changes (sampler, "Wybierz" in the context
+    // Whenever the selected item changes (sampler, "Select" in the context
     // menu, or a direct palette click), scroll it into view - selectedLayer
     // is always updated in the same tick by callers that need this, so by
     // the time nextTick() resolves the palette is already showing the right
@@ -32,6 +33,7 @@ export default defineComponent({
 
     return {
       state: store.state,
+      layers: store.layers,
       visibleItems: computed(() => store.itemsByLayer.value[store.state.selectedLayer] ?? []),
       paletteEl,
       selectLayer,
@@ -40,7 +42,7 @@ export default defineComponent({
   },
   template: `
     <select class="layer-list" :value="state.selectedLayer" @change="selectLayer">
-      <option v-for="layer in state.layers" :key="layer" :value="layer">{{ layer }}</option>
+      <option v-for="layer in layers" :key="layer" :value="layer">{{ layer }}</option>
     </select>
     <div class="palette" ref="paletteEl">
       <div

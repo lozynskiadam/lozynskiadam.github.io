@@ -16,8 +16,18 @@ function drawCellOutline(ctx, x, y, tileSize, outerColor) {
 
 /**
  * Builds the editor's toolset. Each tool reacts to pointer input
- * (onClick/onDrag) and draws its own HUD feedback (onRender), operating
- * purely through the store so this module never touches the DOM itself.
+ * (onClick/onDrag/onRelease) and draws its own HUD feedback (onRender),
+ * operating purely through the store so this module never touches the DOM.
+ *
+ * A tool is plain data plus callbacks:
+ *   name      - id, also used for its toolbar icon (see app.css `[data-icon]`)
+ *   title     - human label; `shortcut` (a key name) and optional `hint`
+ *               feed the toolbar tooltip, the keyboard map and the help dialog
+ *   sizing    - whether the brush-size slider applies
+ *   cursor    - CSS cursor over the map; `dragCursor()` may override it mid-drag
+ *
+ * To add a tool, append an entry here - the toolbar, shortcuts and help
+ * dialog pick it up automatically (see actions.js).
  */
 export function createTools(store, config) {
   function sampleTile(x, y, z) {
@@ -68,7 +78,8 @@ export function createTools(store, config) {
   return {
     pointer: {
       name: 'pointer',
-      title: 'Pointer (1)',
+      title: 'Pointer',
+      shortcut: '1',
       sizing: false,
       cursor: 'default',
       /** Cursor to show mid-drag: a closed hand while something is actually being carried, otherwise the normal one. */
@@ -126,7 +137,8 @@ export function createTools(store, config) {
 
     select: {
       name: 'select',
-      title: 'Select (2)',
+      title: 'Select',
+      shortcut: '2',
       sizing: false,
       cursor: 'crosshair',
       onClick({ x, y, z }) {
@@ -147,7 +159,8 @@ export function createTools(store, config) {
 
     brush: {
       name: 'brush',
-      title: 'Brush (3)',
+      title: 'Brush',
+      shortcut: '3',
       sizing: true,
       cursor: 'default',
       onClick({ x, y, z }) {
@@ -170,7 +183,8 @@ export function createTools(store, config) {
 
     eraser: {
       name: 'eraser',
-      title: 'Eraser (4)',
+      title: 'Eraser',
+      shortcut: '4',
       sizing: true,
       cursor: 'default',
       onClick({ x, y, z }) {
@@ -190,7 +204,9 @@ export function createTools(store, config) {
 
     sampler: {
       name: 'sampler',
-      title: 'Sampler (5 / hold TAB)',
+      title: 'Sampler',
+      shortcut: '5',
+      hint: 'hold Tab',
       sizing: false,
       cursor: 'crosshair',
       onClick({ x, y, z }) {

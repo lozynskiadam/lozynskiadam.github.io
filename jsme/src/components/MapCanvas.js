@@ -2,9 +2,15 @@ import { defineComponent, onMounted, onBeforeUnmount, ref, computed } from '../v
 import { store, renderer, tools, config } from '../editor.js';
 import { screenToTile } from '../core/pointer.js';
 
+/**
+ * The map viewport: owns the WebGL canvases and translates mouse input
+ * into tool callbacks. It never asks for a repaint - the renderer watches
+ * the store and redraws on its own.
+ */
 export default defineComponent({
   name: 'MapCanvas',
   setup() {
+    const viewportEl = ref(null);
     const canvasEl = ref(null);
     const rulerHEl = ref(null);
     const rulerVEl = ref(null);
@@ -12,6 +18,7 @@ export default defineComponent({
     const renderError = ref(null);
     // Reactive so the cursor can switch to a grabbing hand while a drag is in progress.
     const dragging = ref(false);
+    let resizeObserver = null;
 
     const activeTool = computed(() => tools[store.state.selectedTool]);
     const cursorStyle = computed(() => {
@@ -23,54 +30,41 @@ export default defineComponent({
       return activeTool.value.cursor || 'default';
     });
 
+    function cursorTile() {
+      const { x, y } = store.state.cursorPosition;
+      return { x, y, z: store.state.currentFloor };
+    }
+
     function handleMouseMove(event) {
       const tile = screenToTile(event, canvasEl.value, store, config);
-      const changed = store.setCursorPosition(tile.x, tile.y);
-      if (!changed) return;
-
-      if (dragging.value && activeTool.value.onDrag) {
-        activeTool.value.onDrag({ x: tile.x, y: tile.y, z: store.state.currentFloor });
-        renderer.render('current');
-      } else {
-        renderer.render('gui');
-      }
+      if (!store.setCursorPosition(tile.x, tile.y)) return;
+      if (dragging.value) activeTool.value.onDrag?.(cursorTile());
     }
 
     function handleMouseDown(event) {
       if (event.button === 2) {
         store.selectTool('pointer');
-        const { x, y } = store.state.cursorPosition;
-        const z = store.state.currentFloor;
+        const { x, y, z } = cursorTile();
         store.highlightOnTile(x, y, z);
         store.openContextMenu(event.clientX, event.clientY, x, y, z);
-        renderer.render('current');
         return;
       }
       if (event.button !== 0) return;
 
-      const { x, y } = store.state.cursorPosition;
-      activeTool.value.onClick?.({ x, y, z: store.state.currentFloor });
+      activeTool.value.onClick?.(cursorTile());
       // Flipped after onClick so the cursor computed sees the tool's drag state (e.g. an item already picked up).
       dragging.value = true;
-      renderer.render('current');
     }
 
     function handleMouseUp() {
       if (!dragging.value) return;
       dragging.value = false;
-      const { x, y } = store.state.cursorPosition;
-      activeTool.value.onRelease?.({ x, y, z: store.state.currentFloor });
-      renderer.render('current');
+      activeTool.value.onRelease?.(cursorTile());
     }
 
     function handleWheel(event) {
       event.preventDefault();
       store.setBrushSize(store.state.brushSize + (event.deltaY < 0 ? 1 : -1));
-      renderer.render('current');
-    }
-
-    function handleResize() {
-      renderer.resize();
     }
 
     onMounted(() => {
@@ -80,19 +74,22 @@ export default defineComponent({
         console.error('Failed to initialise the WebGL renderer', error);
         renderError.value = error.message;
       }
-      window.addEventListener('resize', handleResize);
+      // Observing the viewport (not the window) also catches layout changes that don't resize the window.
+      resizeObserver = new ResizeObserver(() => renderer.resize());
+      resizeObserver.observe(viewportEl.value);
       // Bound to window (not the canvas) so a drag that ends outside the
       // canvas still stops instead of getting stuck.
       window.addEventListener('mouseup', handleMouseUp);
     });
 
     onBeforeUnmount(() => {
-      window.removeEventListener('resize', handleResize);
+      resizeObserver?.disconnect();
       window.removeEventListener('mouseup', handleMouseUp);
       renderer.detach();
     });
 
     return {
+      viewportEl,
       canvasEl,
       rulerHEl,
       rulerVEl,
@@ -108,8 +105,8 @@ export default defineComponent({
       <div class="ruler-corner"></div>
       <canvas ref="rulerHEl" class="ruler ruler-horizontal"></canvas>
       <canvas ref="rulerVEl" class="ruler ruler-vertical"></canvas>
-      <div class="map-viewport" :style="{ cursor: cursorStyle }" @wheel="handleWheel">
-        <canvas ref="canvasEl" id="map" @mousemove="handleMouseMove" @mousedown="handleMouseDown"></canvas>
+      <div ref="viewportEl" class="map-viewport" :style="{ cursor: cursorStyle }" @wheel="handleWheel">
+        <canvas ref="canvasEl" class="map-canvas" @mousemove="handleMouseMove" @mousedown="handleMouseDown"></canvas>
         <div v-if="renderError" class="render-error">{{ renderError }}</div>
       </div>
     </div>
