@@ -68,7 +68,7 @@ export function createTools(store, config) {
   return {
     pointer: {
       name: 'pointer',
-      title: 'Pointer (Q)',
+      title: 'Pointer (1)',
       sizing: false,
       cursor: 'default',
       /** Cursor to show mid-drag: a closed hand while something is actually being carried, otherwise the normal one. */
@@ -126,7 +126,7 @@ export function createTools(store, config) {
 
     select: {
       name: 'select',
-      title: 'Select (S)',
+      title: 'Select (2)',
       sizing: false,
       cursor: 'crosshair',
       onClick({ x, y, z }) {
@@ -147,7 +147,7 @@ export function createTools(store, config) {
 
     brush: {
       name: 'brush',
-      title: 'Brush (W)',
+      title: 'Brush (3)',
       sizing: true,
       cursor: 'default',
       onClick({ x, y, z }) {
@@ -170,7 +170,7 @@ export function createTools(store, config) {
 
     eraser: {
       name: 'eraser',
-      title: 'Eraser (E)',
+      title: 'Eraser (4)',
       sizing: true,
       cursor: 'default',
       onClick({ x, y, z }) {
@@ -190,7 +190,7 @@ export function createTools(store, config) {
 
     sampler: {
       name: 'sampler',
-      title: 'Sampler (R / hold TAB)',
+      title: 'Sampler (5 / hold TAB)',
       sizing: false,
       cursor: 'crosshair',
       onClick({ x, y, z }) {

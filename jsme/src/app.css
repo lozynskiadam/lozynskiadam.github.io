@@ -372,6 +372,12 @@ label.key {
   border-bottom: 1px solid #282828;
   padding: 6px 6px 6px 12px;
   font-size: 12px;
+  cursor: move;
+  user-select: none;
+  touch-action: none;
+}
+.modal-header.dragging {
+  cursor: grabbing;
 }
 .modal-close {
   width: 24px;
@@ -462,15 +468,6 @@ label.key {
   margin-top: 14px;
   padding-top: 10px;
   border-top: 1px solid #454545;
-}
-.item-properties-custom-title {
-  color: #bbb;
-  margin-bottom: 6px;
-}
-.item-properties-custom-empty {
-  color: #999;
-  font-style: italic;
-  margin-bottom: 6px;
 }
 .item-properties-row {
   display: grid;

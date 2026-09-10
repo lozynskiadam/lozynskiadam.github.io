@@ -1,10 +1,12 @@
 import { defineComponent, computed, ref, watch } from '../vendor/vue.esm-browser.prod.js';
 import { store, renderer } from '../editor.js';
 import { toCamelCase } from '../core/store.js';
+import { useDraggable } from '../composables/useDraggable.js';
 
 export default defineComponent({
   name: 'ItemPropertiesModal',
   setup() {
+    const { box, style, startDrag } = useDraggable();
     const info = computed(() => store.state.itemProperties);
     const item = computed(() => (info.value ? store.getItem(info.value.itemId) : null));
 
@@ -91,12 +93,15 @@ export default defineComponent({
       removeProperty,
       normalizeKey,
       close,
+      box,
+      style,
+      startDrag,
     };
   },
   template: `
     <div class="modal-overlay" @click.self="close">
-      <div class="modal">
-        <div class="modal-header">
+      <div class="modal" ref="box" :style="style">
+        <div class="modal-header" @pointerdown="startDrag">
           <span>Item properties</span>
           <button type="button" class="modal-close" title="Close" @click="close"></button>
         </div>
@@ -115,8 +120,6 @@ export default defineComponent({
           </div>
 
           <div class="item-properties-custom">
-            <div class="item-properties-custom-title">Custom properties</div>
-            <div v-if="properties.length === 0" class="item-properties-custom-empty">None yet.</div>
             <div v-for="property in properties" :key="property.key" class="item-properties-row">
               <code class="item-properties-key" :title="property.key">{{ property.key }}</code>
               <input type="text" :value="property.value" @change="updateProperty(property, $event)" />

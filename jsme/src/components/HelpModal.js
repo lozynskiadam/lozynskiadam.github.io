@@ -1,13 +1,14 @@
 import { defineComponent } from '../vendor/vue.esm-browser.prod.js';
 import { store } from '../editor.js';
+import { useDraggable } from '../composables/useDraggable.js';
 
 const SHORTCUTS = [
-  ['Q', 'pointer tool'],
-  ['W', 'brush tool'],
-  ['E', 'eraser tool'],
-  ['R', 'sampler tool'],
+  ['1', 'pointer tool'],
+  ['2', 'select tool'],
+  ['3', 'brush tool'],
+  ['4', 'eraser tool'],
+  ['5', 'sampler tool'],
   ['TAB', 'sampler tool (alt.)'],
-  ['S', 'select tool'],
   ['Ctrl+C', 'copy selection'],
   ['Ctrl+V', 'paste at cursor'],
   ['+', 'enlarge brush size'],
@@ -22,15 +23,16 @@ const SHORTCUTS = [
 export default defineComponent({
   name: 'HelpModal',
   setup() {
+    const { box, style, startDrag } = useDraggable();
     function close() {
       store.state.showHelp = false;
     }
-    return { shortcuts: SHORTCUTS, close };
+    return { shortcuts: SHORTCUTS, close, box, style, startDrag };
   },
   template: `
     <div class="modal-overlay" @click.self="close">
-      <div class="modal">
-        <div class="modal-header">
+      <div class="modal" ref="box" :style="style">
+        <div class="modal-header" @pointerdown="startDrag">
           <span>Keyboard shortcuts</span>
           <button type="button" class="modal-close" title="Close" @click="close"></button>
         </div>

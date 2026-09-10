@@ -42,34 +42,29 @@ export function useKeyboardShortcuts() {
         renderer.render('all');
         break;
 
-      case 'q':
-      case 'Q':
+      case '1':
         event.preventDefault();
         store.selectTool('pointer');
         renderer.render('current');
         break;
-      case 'w':
-      case 'W':
+      case '2':
+        event.preventDefault();
+        store.selectTool('select');
+        renderer.render('current');
+        break;
+      case '3':
         event.preventDefault();
         store.selectTool('brush');
         renderer.render('current');
         break;
-      case 'e':
-      case 'E':
+      case '4':
         event.preventDefault();
         store.selectTool('eraser');
         renderer.render('current');
         break;
-      case 'r':
-      case 'R':
+      case '5':
         event.preventDefault();
         store.selectTool('sampler');
-        renderer.render('current');
-        break;
-      case 's':
-      case 'S':
-        event.preventDefault();
-        store.selectTool('select');
         renderer.render('current');
         break;
       case 'c':
