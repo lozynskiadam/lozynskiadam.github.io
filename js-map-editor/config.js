@@ -1,6 +1,6 @@
-var Config = {
-  ItemsURL: 'items.json',
-  TileSize: 32,
-  MinFloor: -2,
-  MaxFloor: 2
+export default {
+  itemsUrl: 'items.json',
+  tileSize: 32,
+  minFloor: -7,
+  maxFloor: 7,
 };
