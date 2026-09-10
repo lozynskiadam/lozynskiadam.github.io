@@ -23,8 +23,9 @@ export function useKeyboardShortcuts() {
     }
   }
 
-  // The tool to restore when Tab is released, or null while Tab is not held.
-  let toolBeforeSampler = null;
+  // Whether Tab is currently holding the sampler; releasing it always lands on the brush
+  // (the natural next step after picking an item is painting with it).
+  let samplerHeld = false;
 
   function handleKeyDown(event) {
     // A dialog owns the keyboard: Escape closes it, everything else is left alone.
@@ -43,8 +44,8 @@ export function useKeyboardShortcuts() {
     }
     if (event.key === SAMPLER_HOLD_KEY) {
       event.preventDefault();
-      if (toolBeforeSampler === null) {
-        toolBeforeSampler = store.state.selectedTool;
+      if (!samplerHeld) {
+        samplerHeld = true;
         store.selectTool('sampler');
       }
       return;
@@ -60,10 +61,10 @@ export function useKeyboardShortcuts() {
     if (event.key === STACK_MODE_KEY) {
       store.state.shiftDown = false;
     }
-    if (event.key === SAMPLER_HOLD_KEY && toolBeforeSampler !== null) {
+    if (event.key === SAMPLER_HOLD_KEY && samplerHeld) {
       event.preventDefault();
-      store.selectTool(toolBeforeSampler);
-      toolBeforeSampler = null;
+      samplerHeld = false;
+      store.selectTool('brush');
     }
   }
 
