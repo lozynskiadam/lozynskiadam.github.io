@@ -47,21 +47,24 @@ export function createTools(store, config) {
   // rather than making every mid-drag frame reactive.
   let selectionAnchor = null; // { x, y, z } captured when a "select" drag starts
   let moveDraft = null; // { block, z, originalX1, originalY1, grabOffsetX, grabOffsetY } while dragging a selection with "pointer"
+  let pendingGrab = null; // { x, y, z } pressed on with "pointer" but not yet dragged - becomes a moveDraft in onDragStart
 
   function renderMovePreview(ctx, cursorX, cursorY) {
     const blockX = cursorX - moveDraft.grabOffsetX * config.tileSize;
     const blockY = cursorY - moveDraft.grabOffsetY * config.tileSize;
 
-    // Drawn with the same "lifted" glow used for a highlighted item on the
-    // map itself (see MapRenderer.renderFloor), so a drag reads as picking
-    // the thing up rather than just previewing a paste.
+    // Drawn with the same glow used for a highlighted item on the map
+    // itself (see MapRenderer.renderFloor), plus a small up-left shift, so
+    // a drag reads as picking the thing up rather than just previewing a paste.
     for (const [key, entries] of Object.entries(moveDraft.block.cells)) {
       const [dx, dy] = key.split(',').map(Number);
+      let lift = 0;
       for (const entry of entries) {
         const item = store.getItem(entry.id);
         if (!item) continue;
-        const drawX = blockX + dx * config.tileSize + (config.tileSize - item.image.width) - 6;
-        const drawY = blockY + dy * config.tileSize + (config.tileSize - item.image.height) - 6;
+        const drawX = blockX + dx * config.tileSize + (config.tileSize - item.image.width) - 6 - lift;
+        const drawY = blockY + dy * config.tileSize + (config.tileSize - item.image.height) - 6 - lift;
+        lift = Math.min(lift + (item.altitude ?? 0), config.maxAltitude);
         ctx.drawImage(item.image, drawX, drawY);
         ctx.globalCompositeOperation = 'lighter';
         ctx.drawImage(item.image, drawX, drawY);
@@ -108,20 +111,23 @@ export function createTools(store, config) {
 
         if (store.state.selection) store.clearSelection();
 
-        // No selection to grab: pick up whatever single item is on this
-        // tile (if any) so it can be dragged elsewhere, exactly like a
-        // normal drag&drop. Releasing without moving the mouse just drops
-        // it back where it was and highlights it - indistinguishable from
-        // a plain click.
-        const draft = store.beginItemMove(x, y, z);
-        if (draft) {
-          moveDraft = { kind: 'item', ...draft, grabOffsetX: 0, grabOffsetY: 0 };
-          return;
-        }
-
+        // A press only highlights the tile's top item. The actual pick-up
+        // waits for the mouse to move with the button held (see
+        // onDragStart), so a plain click never disturbs the map.
         store.highlightOnTile(x, y, z);
+        const tile = store.getTile(x, y, z);
+        pendingGrab = tile && tile.length > 0 ? { x, y, z } : null;
+      },
+      onDragStart() {
+        if (!pendingGrab) return;
+        // The cursor moved after pressing on an item: lift it off its tile
+        // so it follows the cursor like a normal drag&drop.
+        const draft = store.beginItemMove(pendingGrab.x, pendingGrab.y, pendingGrab.z);
+        pendingGrab = null;
+        if (draft) moveDraft = { kind: 'item', ...draft, grabOffsetX: 0, grabOffsetY: 0 };
       },
       onRelease({ x, y, z }) {
+        pendingGrab = null;
         if (!moveDraft) return;
         const targetX = x - moveDraft.grabOffsetX;
         const targetY = y - moveDraft.grabOffsetY;
@@ -175,12 +181,17 @@ export function createTools(store, config) {
       onDrag({ x, y, z }) {
         forEachBrushCell(store.state.brushSize, (dx, dy) => store.drawOnTile(x + dx, y + dy, z));
       },
-      onRender({ ctx, x, y }) {
+      onRender({ ctx, x, y, z, tileX, tileY }) {
         const item = store.selectedItem.value;
         if (!item) return;
         forEachBrushCell(store.state.brushSize, (dx, dy) => {
-          const drawX = x + config.tileSize - item.image.width + dx * config.tileSize;
-          const drawY = y + config.tileSize - item.image.height + dy * config.tileSize;
+          // Preview the sprite where it will land: in its layer's slot when the
+          // tile already has one (the brush replaces it), else on top of the stack.
+          const tile = store.getTile(tileX + dx, tileY + dy, z) ?? [];
+          const slot = tile.findIndex((entry) => store.getItem(entry.id)?.layer === item.layer);
+          const lift = store.stackAltitude(tile, slot === -1 ? tile.length : slot);
+          const drawX = x + config.tileSize - item.image.width + dx * config.tileSize - lift;
+          const drawY = y + config.tileSize - item.image.height + dy * config.tileSize - lift;
           ctx.drawImage(item.image, drawX, drawY);
           drawCellOutline(ctx, x + dx * config.tileSize, y + dy * config.tileSize, config.tileSize, '#ffffff');
         });

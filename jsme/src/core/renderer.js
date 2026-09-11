@@ -93,7 +93,7 @@ export class MapRenderer {
         () => [state.cursorPosition, state.selectedTool, state.brushSize, state.selectedItemId, state.selection, state.shiftDown],
         () => this.invalidate(),
       ),
-      // The "lifted" glow is baked into the floor layer, so both the floor
+      // The highlight glow is baked into the floor layer, so both the floor
       // that lost the highlight and the one that gained it need a redraw.
       watch(
         () => state.highlightedItem,
@@ -229,19 +229,21 @@ export class MapRenderer {
           ? tile.length - 1
           : -1;
 
+      // Every item under this one lifts it by its altitude (up and left), up to config.maxAltitude.
+      let lift = 0;
       for (let index = 0; index < tile.length; index++) {
         const item = store.getItem(tile[index].id);
         if (!item) continue;
 
-        const drawX = tileX + (config.tileSize - item.image.width);
-        const drawY = tileY + (config.tileSize - item.image.height);
+        const drawX = tileX + (config.tileSize - item.image.width) - lift;
+        const drawY = tileY + (config.tileSize - item.image.height) - lift;
+        lift = Math.min(lift + (item.altitude ?? 0), config.maxAltitude);
+        // The highlighted item stays in place; the second, additive pass only brightens it.
+        ctx.drawImage(item.image, drawX, drawY);
         if (index === highlightedIndex) {
-          ctx.drawImage(item.image, drawX - 6, drawY - 6);
           ctx.globalCompositeOperation = 'lighter';
-          ctx.drawImage(item.image, drawX - 6, drawY - 6);
-          ctx.globalCompositeOperation = 'source-over';
-        } else {
           ctx.drawImage(item.image, drawX, drawY);
+          ctx.globalCompositeOperation = 'source-over';
         }
       }
     });
@@ -283,9 +285,10 @@ export class MapRenderer {
     if (!tool?.onRender) return;
 
     const { originX, originY } = this.floorGeometry(store.state.currentFloor);
-    const x = (store.state.cursorPosition.x - originX) * config.tileSize;
-    const y = (store.state.cursorPosition.y - originY) * config.tileSize;
-    tool.onRender({ ctx, x, y, z: store.state.currentFloor });
+    const { x: tileX, y: tileY } = store.state.cursorPosition;
+    const x = (tileX - originX) * config.tileSize;
+    const y = (tileY - originY) * config.tileSize;
+    tool.onRender({ ctx, x, y, z: store.state.currentFloor, tileX, tileY });
   }
 
   /** Draws the marquee rectangle for the current selection - only while looking at the floor it was made on. */

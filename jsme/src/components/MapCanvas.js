@@ -18,11 +18,18 @@ export default defineComponent({
     const renderError = ref(null);
     // Reactive so the cursor can switch to a grabbing hand while a drag is in progress.
     const dragging = ref(false);
+    // Whether the mouse has moved (by any amount) since the button went down;
+    // the first such move is reported to the tool as onDragStart.
+    let dragStarted = false;
+    // Bumped after every tool callback made mid-drag: tools keep their drag
+    // state outside the store, so this is what makes cursorStyle re-read it.
+    const dragTick = ref(0);
     let resizeObserver = null;
 
     const activeTool = computed(() => tools[store.state.selectedTool]);
     const cursorStyle = computed(() => {
       if (dragging.value) {
+        void dragTick.value; // read only to register the dependency
         const dragCursor = activeTool.value.dragCursor?.();
         if (dragCursor) return dragCursor;
       }
@@ -37,8 +44,18 @@ export default defineComponent({
 
     function handleMouseMove(event) {
       const tile = screenToTile(event, canvasEl.value, store, config);
+      if (dragging.value && !dragStarted) {
+        // Any pointer movement while the button is held starts the drag,
+        // even before the cursor reaches another tile.
+        dragStarted = true;
+        activeTool.value.onDragStart?.(cursorTile());
+        dragTick.value++;
+      }
       if (!store.setCursorPosition(tile.x, tile.y)) return;
-      if (dragging.value) activeTool.value.onDrag?.(cursorTile());
+      if (dragging.value) {
+        activeTool.value.onDrag?.(cursorTile());
+        dragTick.value++;
+      }
     }
 
     function handleMouseDown(event) {
@@ -54,13 +71,15 @@ export default defineComponent({
       // Everything the tool does until the button is released is one undo step.
       store.beginGesture();
       activeTool.value.onClick?.(cursorTile());
-      // Flipped after onClick so the cursor computed sees the tool's drag state (e.g. an item already picked up).
+      // Flipped after onClick so the cursor computed sees the tool's drag state (e.g. a selection already picked up).
+      dragStarted = false;
       dragging.value = true;
     }
 
     function handleMouseUp() {
       if (!dragging.value) return;
       dragging.value = false;
+      dragStarted = false;
       activeTool.value.onRelease?.(cursorTile());
       store.endGesture();
     }

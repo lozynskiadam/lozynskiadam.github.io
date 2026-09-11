@@ -183,6 +183,20 @@ export function createStore(config) {
     return catalog.value.get(id);
   }
 
+  /**
+   * How many px the entry at `index` of a tile stack is lifted by the
+   * items under it: the sum of their `altitude` (catalog field, px). A
+   * lifted sprite is drawn that much further up and left, so a tall
+   * bottom item visibly carries whatever gets stacked on top of it. With
+   * no index, returns the elevation of the next item put on the stack.
+   * The total is capped at `config.maxAltitude`.
+   */
+  function stackAltitude(entries, index = entries.length) {
+    let altitude = 0;
+    for (let i = 0; i < index; i++) altitude += getItem(entries[i].id)?.altitude ?? 0;
+    return Math.min(altitude, config.maxAltitude);
+  }
+
   async function loadItems() {
     state.loading = true;
     state.loadError = null;
@@ -391,11 +405,6 @@ export function createStore(config) {
     state.highlightedItem = null;
   }
 
-  function isHighlighted(x, y, z) {
-    const h = state.highlightedItem;
-    return !!h && h.x === x && h.y === y && h.z === z;
-  }
-
   /* ---- context menu & dialogs ------------------------------------------- */
 
   /** Opens the right-click context menu for the topmost item on a tile; closes it (rather than leaving a stale one) if the tile is empty. */
@@ -532,6 +541,7 @@ export function createStore(config) {
     if (!s) return null;
     const block = map.snapshot(s.x1, s.y1, s.x2, s.y2, s.z);
     clearArea(s.x1, s.y1, s.x2, s.y2, s.z);
+    clearHighlight(); // see beginItemMove - a drag takes over from any earlier highlight
     return { block, z: s.z, originalX1: s.x1, originalY1: s.y1 };
   }
 
@@ -555,7 +565,9 @@ export function createStore(config) {
     recordTile(x, y, z);
     const entry = tile.pop(); // moved, not cloned, so its properties travel with it
     map.pruneTile(x, y, z);
-    if (isHighlighted(x, y, z)) clearHighlight();
+    // Grabbing anything ends the previous highlight, wherever it was - only
+    // the item being dragged should draw attention now.
+    clearHighlight();
     touchFloor(z);
 
     return { block: { width: 1, height: 1, cells: { [cellKey(0, 0)]: [entry] } }, z, originalX1: x, originalY1: y };
@@ -566,10 +578,9 @@ export function createStore(config) {
    * insertEntryOnTile (add, don't replace) so dropping onto an occupied
    * tile never deletes an existing item of the same layer.
    *
-   * Only a drop back onto the original tile highlights the item - that is
-   * what a plain click (press and release without moving) boils down to.
-   * An actual move leaves nothing highlighted, so the "lifted" glow does
-   * not linger on the item at its new spot.
+   * Only a drop back onto the original tile highlights the item, as if it
+   * had just been clicked. An actual move leaves nothing highlighted, so
+   * the highlight glow does not linger on the item at its new spot.
    */
   function finishItemMove(draft, targetX, targetY) {
     const x = Math.max(targetX, 0);
@@ -644,6 +655,7 @@ export function createStore(config) {
     undo,
     redo,
     getItem,
+    stackAltitude,
     loadItems,
     selectTool,
     selectItem,

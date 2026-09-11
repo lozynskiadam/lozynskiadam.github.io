@@ -9,6 +9,7 @@ import MapCanvas from './MapCanvas.js';
 import HelpModal from './HelpModal.js';
 import ContextMenu from './ContextMenu.js';
 import ItemPropertiesModal from './ItemPropertiesModal.js';
+import ProjectPropertiesModal from './ProjectPropertiesModal.js';
 
 /**
  * Modal dialogs by name - `store.openDialog(name, props)` renders the
@@ -17,6 +18,7 @@ import ItemPropertiesModal from './ItemPropertiesModal.js';
 const DIALOGS = {
   help: HelpModal,
   itemProperties: ItemPropertiesModal,
+  projectProperties: ProjectPropertiesModal,
 };
 
 export default defineComponent({

@@ -8,7 +8,7 @@ export const MENUS = [
   {
     id: 'file',
     label: 'File',
-    items: ['file.new', 'file.open', 'file.save', null, 'help.shortcuts'],
+    items: ['file.new', 'file.open', 'file.save', null, 'file.properties', null, 'help.shortcuts'],
   },
   {
     id: 'edit',

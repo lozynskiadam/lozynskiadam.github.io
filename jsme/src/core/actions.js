@@ -61,6 +61,13 @@ export function createActions({ store, tools }) {
     },
   });
 
+  define('file.properties', {
+    label: 'Properties…',
+    run() {
+      store.toggleDialog('projectProperties');
+    },
+  });
+
   define('help.shortcuts', {
     label: 'Help',
     icon: 'help',

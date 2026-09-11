@@ -14,7 +14,7 @@ UI / klawiatura  →  actions.js / tools.js  →  store.js  →  renderer.js
 
 | Plik | Rola |
 | --- | --- |
-| `config.js` | Stałe edytora (URL katalogu itemów, rozmiar kafelka, zakres pięter). |
+| `config.js` | Stałe edytora (URL katalogu itemów, rozmiar kafelka, maks. wysokość stosu, zakres pięter). |
 | `src/editor.js` | Singleton: tworzy store, narzędzia, akcje i renderer, z których korzystają komponenty. |
 | `src/core/mapData.js` | Czysty model mapy (piętro → wiersz → kolumna → stos wpisów) i operacje blokowe. Bez wiedzy o UI. |
 | `src/core/catalog.js` | Ładowanie katalogu itemów; indeks `Map` po id i podział na warstwy. |
@@ -42,7 +42,7 @@ na widok i skleja wszystkie żądania z jednej klatki w jeden render.
 - **Pozycja w menu** – dopisz id akcji do listy w `menus.js` (`null` = separator).
   Nowe menu to nowy obiekt w `MENUS`.
 - **Nowe narzędzie** – dodaj obiekt w `tools.js` (`name`, `title`, `shortcut`, `sizing`,
-  `cursor`, `onClick/onDrag/onRelease/onRender`). Pasek narzędzi, skrót i Help
+  `cursor`, `onClick/onDragStart/onDrag/onRelease/onRender`). Pasek narzędzi, skrót i Help
   podpinają się same; ikonę dodaj w `app.css` jako `.ui-icon[data-icon='nazwa']`.
 - **Nowy dialog** – komponent + wpis w `DIALOGS` w `App.js`; otwieranie przez
   `store.openDialog('nazwa', props)`.
@@ -59,8 +59,19 @@ na widok i skleja wszystkie żądania z jednej klatki w jeden render.
 { "name": "Untitled", "respawnPoint": [100, 100, 0], "map": { … } }
 ```
 
+`name` i `respawnPoint` edytuje się w oknie File → Properties….
 `map` to `{ [z]: { [y]: { [x]: [ { id, ...właściwości }, … ] } } }`. `id` to numer
 itemu z katalogu; pozostałe klucze wpisu to własne właściwości ustawione w
 dialogu „Properties” (klucze normalizowane do camelCase). Po New/Open widok
 centruje się na `respawnPoint` i przełącza na jego piętro. Stare pliki (goły
 obiekt `map`) nadal się otwierają z domyślnymi `name`/`respawnPoint` z `config.js`.
+
+## Katalog itemów (`items.json`)
+
+Tablica wpisów `{ id, name, layer, altitude, image }`. `image` to PNG w base64,
+`layer` decyduje o zakładce w palecie i o tym, który wpis na kafelku zastępuje
+pędzel. `altitude` to wysokość itemu w px: każdy wpis leżący wyżej na stosie
+kafelka jest rysowany przesunięty w górę i w lewo o sumę `altitude` wpisów pod
+nim (`store.stackAltitude`), więc np. skrzynia o wysokości 8 „unosi” to, co na
+niej stoi. Suma jest przycinana do `config.maxAltitude` (64 px). Renderer, podgląd pędzla i podgląd przenoszenia zaznaczenia liczą
+to tak samo.
