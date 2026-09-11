@@ -10,6 +10,9 @@ const RESERVED_ENTRY_KEYS = new Set(['id']);
 
 export const MIN_BRUSH_SIZE = 1;
 export const MAX_BRUSH_SIZE = 4;
+// View scale steps, largest first. 1 is the sprites' native size and also the
+// upper limit: the editor only ever zooms out, never blows pixel art up.
+export const ZOOM_LEVELS = [1, 0.75, 0.5, 0.25];
 
 /**
  * Normalizes a user-typed property key into camelCase: "Door ID", "door_id",
@@ -71,6 +74,7 @@ export function createStore(config) {
     cursorPosition: { x: 0, y: 0 },
     renderFromX: 0,
     renderFromY: 0,
+    zoom: 1, // view scale, one of ZOOM_LEVELS
     shiftDown: false,
     selection: null, // { z, x1, y1, x2, y2 } - rectangular, restricted to a single floor
     clipboard: null, // { width, height, cells } - cells keyed "dx,dy" -> [entry, ...], floor-agnostic
@@ -278,10 +282,37 @@ export function createStore(config) {
   function centerOn(x, y, z) {
     setCurrentFloor(clampFloor(z));
     const baseOffset = config.maxFloor - state.currentFloor;
-    const centerCol = Math.floor(state.viewport.width / config.tileSize / 2);
-    const centerRow = Math.floor(state.viewport.height / config.tileSize / 2);
+    const centerCol = Math.floor(state.viewport.width / tilePx() / 2);
+    const centerRow = Math.floor(state.viewport.height / tilePx() / 2);
     state.renderFromX = Math.max(0, Math.round(x) + baseOffset - centerCol);
     state.renderFromY = Math.max(0, Math.round(y) + baseOffset - centerRow);
+  }
+
+  /** On-screen size of one tile in px at the current zoom. */
+  function tilePx() {
+    return config.tileSize * state.zoom;
+  }
+
+  /** Switches to a zoom level, keeping whatever was in the middle of the viewport there. */
+  function setZoom(zoom) {
+    if (!ZOOM_LEVELS.includes(zoom) || zoom === state.zoom) return;
+    const centerCol = state.renderFromX + Math.floor(state.viewport.width / tilePx() / 2);
+    const centerRow = state.renderFromY + Math.floor(state.viewport.height / tilePx() / 2);
+    state.zoom = zoom;
+    state.renderFromX = Math.max(0, centerCol - Math.floor(state.viewport.width / tilePx() / 2));
+    state.renderFromY = Math.max(0, centerRow - Math.floor(state.viewport.height / tilePx() / 2));
+  }
+
+  /** Steps through ZOOM_LEVELS: +1 zooms in (towards native size), -1 zooms out. */
+  function stepZoom(direction) {
+    const index = ZOOM_LEVELS.indexOf(state.zoom) - direction;
+    if (index < 0 || index >= ZOOM_LEVELS.length) return;
+    setZoom(ZOOM_LEVELS[index]);
+  }
+
+  function canZoom(direction) {
+    const index = ZOOM_LEVELS.indexOf(state.zoom) - direction;
+    return index >= 0 && index < ZOOM_LEVELS.length;
   }
 
   function centerOnRespawn() {
@@ -666,6 +697,10 @@ export function createStore(config) {
     centerOn,
     centerOnRespawn,
     pan,
+    tilePx,
+    setZoom,
+    stepZoom,
+    canZoom,
     setCursorPosition,
     getTile,
     forEachTile: map.forEachTile,

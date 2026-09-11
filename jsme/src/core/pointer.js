@@ -33,14 +33,16 @@ export function pixelToTile(pixel, origin, marginPx, tileSize) {
 export function screenToTile(event, canvasEl, store, config) {
   const bounds = canvasEl.getBoundingClientRect();
   const baseOffset = config.maxFloor - store.state.currentFloor;
+  // Everything below works in unscaled ("world") pixels; the canvas shows them at state.zoom.
+  const { zoom } = store.state;
 
   const originX = visibleOrigin(baseOffset, store.state.renderFromX);
   const originY = visibleOrigin(baseOffset, store.state.renderFromY);
   const marginPxX = marginTiles(baseOffset, store.state.renderFromX) * config.tileSize;
   const marginPxY = marginTiles(baseOffset, store.state.renderFromY) * config.tileSize;
 
-  const rawX = pixelToTile(event.clientX - bounds.left, originX, marginPxX, config.tileSize);
-  const rawY = pixelToTile(event.clientY - bounds.top, originY, marginPxY, config.tileSize);
+  const rawX = pixelToTile((event.clientX - bounds.left) / zoom, originX, marginPxX, config.tileSize);
+  const rawY = pixelToTile((event.clientY - bounds.top) / zoom, originY, marginPxY, config.tileSize);
 
   return {
     x: Math.max(rawX, originX),

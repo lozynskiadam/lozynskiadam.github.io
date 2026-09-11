@@ -75,12 +75,13 @@ export default defineComponent({
       panLastY = event.clientY;
 
       // Dragging the map right reveals what lies to the left, hence the sign flip.
-      const stepsX = Math.trunc(panRestX / config.tileSize);
-      const stepsY = Math.trunc(panRestY / config.tileSize);
+      const tilePx = store.tilePx();
+      const stepsX = Math.trunc(panRestX / tilePx);
+      const stepsY = Math.trunc(panRestY / tilePx);
       if (stepsX === 0 && stepsY === 0) return;
       store.pan(-stepsX, -stepsY);
-      panRestX -= stepsX * config.tileSize;
-      panRestY -= stepsY * config.tileSize;
+      panRestX -= stepsX * tilePx;
+      panRestY -= stepsY * tilePx;
       // At the map's edge the pointer keeps moving but the map cannot follow;
       // drop that surplus so the map does not lag behind when the drag reverses.
       if (store.state.renderFromX === 0 && panRestX > 0) panRestX = 0;
@@ -129,7 +130,16 @@ export default defineComponent({
 
     function handleWheel(event) {
       event.preventDefault();
-      store.setBrushSize(store.state.brushSize + (event.deltaY < 0 ? 1 : -1));
+      const direction = event.deltaY < 0 ? 1 : -1;
+      // Ctrl+wheel zooms (also swallowing the browser's page zoom), as does the
+      // wheel while the middle button is held for panning - the hand is already
+      // on the map, so it reads as "move around", not as a brush change.
+      // A plain wheel sizes the brush.
+      if (event.ctrlKey || event.metaKey || panning.value) {
+        store.stepZoom(direction);
+        return;
+      }
+      store.setBrushSize(store.state.brushSize + direction);
     }
 
     onMounted(() => {

@@ -85,7 +85,10 @@ export default defineComponent({
         />
       </div>
 
-      <div class="toolbar-position">Pos: {{ state.cursorPosition.x }},{{ state.cursorPosition.y }},{{ state.currentFloor }}</div>
+      <div class="toolbar-status">
+        <span title="Zoom (Ctrl+wheel, Ctrl++ / Ctrl+-)">Zoom: {{ Math.round(state.zoom * 100) }}%</span>
+        <span class="toolbar-position">Pos: {{ state.cursorPosition.x }},{{ state.cursorPosition.y }},{{ state.currentFloor }}</span>
+      </div>
     </div>
   `,
 });

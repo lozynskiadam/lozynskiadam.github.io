@@ -147,13 +147,18 @@ function createProgram(gl, vertexSource, fragmentSource) {
   return program;
 }
 
-/** Empty RGBA texture with pixel-art friendly sampling (no filtering, no wrapping - also what NPOT sizes require in WebGL 1). */
-function createTexture(gl, width, height) {
+/**
+ * Empty RGBA texture with no wrapping (what NPOT sizes require in WebGL 1).
+ * Sprites are sampled NEAREST for crisp pixel art; a Layer asks for LINEAR
+ * because it is drawn scaled down when the view is zoomed out, and dropping
+ * pixels there would make thin lines flicker.
+ */
+function createTexture(gl, width, height, filter = gl.NEAREST) {
   const texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   return texture;
@@ -301,7 +306,7 @@ export class Layer {
 
   allocate() {
     const { gl } = this.painter;
-    this.texture = createTexture(gl, this.width, this.height);
+    this.texture = createTexture(gl, this.width, this.height, gl.LINEAR);
     this.framebuffer = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.texture, 0);

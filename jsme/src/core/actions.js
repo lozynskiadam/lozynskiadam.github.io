@@ -189,6 +189,34 @@ export function createActions({ store, tools }) {
     },
   });
 
+  // "+" needs Shift on most layouts, so Ctrl+Shift++ has to count too (see shortcuts.js).
+  define('view.zoomIn', {
+    label: 'Zoom in',
+    shortcut: ['Ctrl++', 'Ctrl+Shift++', 'Ctrl+='],
+    enabled: () => store.canZoom(1),
+    run() {
+      store.stepZoom(1);
+    },
+  });
+
+  define('view.zoomOut', {
+    label: 'Zoom out',
+    shortcut: 'Ctrl+-',
+    enabled: () => store.canZoom(-1),
+    run() {
+      store.stepZoom(-1);
+    },
+  });
+
+  define('view.zoomReset', {
+    label: 'Actual size',
+    shortcut: 'Ctrl+0',
+    enabled: () => state.zoom !== 1,
+    run() {
+      store.setZoom(1);
+    },
+  });
+
   // Arrow keys and WASD both scroll the map.
   const PAN = [
     ['Up', ['ArrowUp', 'W'], 0, -1],
@@ -214,4 +242,5 @@ export const HOLD_KEYS = [
   ['Shift', 'hold to allow stacking same layer objects'],
   ['Tab', 'hold for the sampler tool'],
   ['Middle mouse button', 'hold and drag to scroll the map'],
+  ['Ctrl+mouse wheel', 'zoom the map in/out (also the wheel while the middle button is held)'],
 ];

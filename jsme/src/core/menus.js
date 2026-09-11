@@ -15,6 +15,11 @@ export const MENUS = [
     label: 'Edit',
     items: ['edit.undo', 'edit.redo'],
   },
+  {
+    id: 'view',
+    label: 'View',
+    items: ['view.zoomIn', 'view.zoomOut', 'view.zoomReset', null, 'view.floorUp', 'view.floorDown'],
+  },
 ];
 
 /** Action buttons shown in the toolbar, left of the tools. */

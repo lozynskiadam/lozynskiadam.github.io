@@ -28,6 +28,12 @@ const BADGE_SIZE = 7;
  * floor is rendered into its own Layer (an offscreen framebuffer) and the
  * visible ones are stacked onto the canvas in composite(), so a frame that
  * only moves the cursor never has to walk the map again.
+ *
+ * Zoom: floors and the HUD are always drawn at the sprites' native size
+ * into layers covering `viewport / zoom` px, and composite() scales those
+ * layers onto the canvas. Everything that touches the canvas directly (the
+ * composite and the rulers) works in screen px, everything else in
+ * unscaled "world" px - see worldSize() and tilePx().
  */
 export class MapRenderer {
   constructor(store, tools, config) {
@@ -89,6 +95,14 @@ export class MapRenderer {
         () => [state.renderFromX, state.renderFromY, state.currentFloor],
         () => this.invalidate('all'),
       ),
+      // A new zoom changes how many tiles fit, so the layers have to be re-cut.
+      watch(
+        () => state.zoom,
+        () => {
+          this.layoutLayers();
+          this.invalidate('all');
+        },
+      ),
       watch(
         () => [state.cursorPosition, state.selectedTool, state.brushSize, state.selectedItemId, state.selection, state.shiftDown],
         () => this.invalidate(),
@@ -125,16 +139,29 @@ export class MapRenderer {
     const width = Math.floor(bounds.width);
     const height = Math.floor(bounds.height);
     this.painter.resize(width, height);
+    this.rulerH?.resize(width, RULER_SIZE);
+    this.rulerV?.resize(RULER_SIZE, height);
+    this.store.setViewportSize(width, height);
+    this.layoutLayers();
+    // Resizing blanks the canvas, so paint right away rather than leaving a frame of nothing.
+    this.pendingAll = true;
+    this.renderNow();
+  }
+
+  /** Unscaled px the layers must cover so that, scaled by the zoom, they fill the canvas. */
+  worldSize() {
+    const { zoom } = this.store.state;
+    return { width: Math.ceil(this.painter.width / zoom), height: Math.ceil(this.painter.height / zoom) };
+  }
+
+  /** Sizes the HUD and every floor layer to worldSize() (a no-op for layers already that size). */
+  layoutLayers() {
+    if (!this.painter) return;
+    const { width, height } = this.worldSize();
     this.hud.resize(width, height);
     for (const layer of Object.values(this.floors)) {
       layer.resize(width, height);
     }
-    this.rulerH?.resize(width, RULER_SIZE);
-    this.rulerV?.resize(RULER_SIZE, height);
-    this.store.setViewportSize(width, height);
-    // Resizing blanks the canvas, so paint right away rather than leaving a frame of nothing.
-    this.pendingAll = true;
-    this.renderNow();
   }
 
   /** Paints immediately, consuming everything queued by invalidate() and the store. */
@@ -191,7 +218,10 @@ export class MapRenderer {
   }
 
   floorLayer(z) {
-    this.floors[z] ??= this.painter.createLayer(this.painter.width, this.painter.height);
+    if (!this.floors[z]) {
+      const { width, height } = this.worldSize();
+      this.floors[z] = this.painter.createLayer(width, height);
+    }
     return this.floors[z];
   }
 
@@ -313,19 +343,24 @@ export class MapRenderer {
     ctx.restore();
   }
 
-  /** Stacks each visible floor's layer at its own margin (see floorGeometry) onto the canvas, topped by the HUD. */
+  /** Stacks each visible floor's layer at its own margin (see floorGeometry) onto the canvas, scaled by the zoom and topped by the HUD. */
   composite() {
     const { store, config, painter: ctx } = this;
+    const { zoom } = store.state;
     ctx.setTarget(null);
     ctx.clearRect(0, 0, ctx.width, ctx.height);
+
+    const blit = (layer, marginPxX, marginPxY) => {
+      ctx.drawImage(layer, marginPxX * zoom, marginPxY * zoom, layer.width * zoom, layer.height * zoom);
+    };
 
     for (let z = config.minFloor; z <= config.maxFloor; z++) {
       if (this.isFloorVisible(z)) {
         const { marginPxX, marginPxY } = this.floorGeometry(z);
         const layer = this.floors[z];
-        if (layer) ctx.drawImage(layer, marginPxX, marginPxY);
+        if (layer) blit(layer, marginPxX, marginPxY);
         if (z === store.state.currentFloor) {
-          ctx.drawImage(this.hud, marginPxX, marginPxY);
+          blit(this.hud, marginPxX, marginPxY);
         }
       }
       if (z === store.state.currentFloor) break;
@@ -339,13 +374,15 @@ export class MapRenderer {
     if (!this.rulerH || !this.rulerV) return;
     const { store } = this;
     const { originX, originY, marginPxX, marginPxY } = this.floorGeometry(store.state.currentFloor);
+    // Rulers sit next to the canvas, so they measure in screen px.
+    const { zoom } = store.state;
 
-    this.renderRulerAxis(this.rulerH, 'x', originX, marginPxX, store.state.cursorPosition.x);
-    this.renderRulerAxis(this.rulerV, 'y', originY, marginPxY, store.state.cursorPosition.y);
+    this.renderRulerAxis(this.rulerH, 'x', originX, marginPxX * zoom, store.state.cursorPosition.x);
+    this.renderRulerAxis(this.rulerV, 'y', originY, marginPxY * zoom, store.state.cursorPosition.y);
   }
 
   renderRulerAxis(ctx, axis, origin, marginPx, cursorTile) {
-    const { config } = this;
+    const tileSize = this.store.tilePx();
     const length = axis === 'x' ? ctx.width : ctx.height;
 
     ctx.clearRect(0, 0, ctx.width, ctx.height);
@@ -358,8 +395,8 @@ export class MapRenderer {
     ctx.lineWidth = 1;
 
     // No ticks inside the still-reserved margin - it has no tile to label yet.
-    for (let pixel = marginPx; pixel <= length; pixel += config.tileSize) {
-      const tile = pixelToTile(pixel, origin, marginPx, config.tileSize);
+    for (let pixel = marginPx; pixel <= length; pixel += tileSize) {
+      const tile = pixelToTile(pixel, origin, marginPx, tileSize);
       const isMajor = tile % MAJOR_TICK_EVERY === 0;
       const tickSize = isMajor ? 8 : 4;
 
@@ -387,13 +424,13 @@ export class MapRenderer {
     }
 
     if (Number.isFinite(cursorTile)) {
-      const markerPixel = tileToPixel(cursorTile, origin, marginPx, config.tileSize);
+      const markerPixel = tileToPixel(cursorTile, origin, marginPx, tileSize);
       if (markerPixel >= 0 && markerPixel <= length) {
         ctx.fillStyle = 'rgba(255, 203, 0, 0.85)';
         if (axis === 'x') {
-          ctx.fillRect(markerPixel, RULER_SIZE - 3, config.tileSize, 3);
+          ctx.fillRect(markerPixel, RULER_SIZE - 3, tileSize, 3);
         } else {
-          ctx.fillRect(RULER_SIZE - 3, markerPixel, 3, config.tileSize);
+          ctx.fillRect(RULER_SIZE - 3, markerPixel, 3, tileSize);
         }
       }
     }
