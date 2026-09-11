@@ -213,4 +213,5 @@ export function createActions({ store, tools }) {
 export const HOLD_KEYS = [
   ['Shift', 'hold to allow stacking same layer objects'],
   ['Tab', 'hold for the sampler tool'],
+  ['Middle mouse button', 'hold and drag to scroll the map'],
 ];

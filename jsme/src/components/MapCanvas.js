@@ -18,6 +18,14 @@ export default defineComponent({
     const renderError = ref(null);
     // Reactive so the cursor can switch to a grabbing hand while a drag is in progress.
     const dragging = ref(false);
+    // Middle-button drag scrolls the map: the pointer "grabs" the map and
+    // pulls it along. The view only moves in whole tiles, so pointer
+    // movement is accumulated here until a full tile's worth is collected.
+    const panning = ref(false);
+    let panLastX = 0;
+    let panLastY = 0;
+    let panRestX = 0;
+    let panRestY = 0;
     // Whether the mouse has moved (by any amount) since the button went down;
     // the first such move is reported to the tool as onDragStart.
     let dragStarted = false;
@@ -28,6 +36,7 @@ export default defineComponent({
 
     const activeTool = computed(() => tools[store.state.selectedTool]);
     const cursorStyle = computed(() => {
+      if (panning.value) return 'grabbing';
       if (dragging.value) {
         void dragTick.value; // read only to register the dependency
         const dragCursor = activeTool.value.dragCursor?.();
@@ -58,7 +67,37 @@ export default defineComponent({
       }
     }
 
+    function handlePanMove(event) {
+      if (!panning.value) return;
+      panRestX += event.clientX - panLastX;
+      panRestY += event.clientY - panLastY;
+      panLastX = event.clientX;
+      panLastY = event.clientY;
+
+      // Dragging the map right reveals what lies to the left, hence the sign flip.
+      const stepsX = Math.trunc(panRestX / config.tileSize);
+      const stepsY = Math.trunc(panRestY / config.tileSize);
+      if (stepsX === 0 && stepsY === 0) return;
+      store.pan(-stepsX, -stepsY);
+      panRestX -= stepsX * config.tileSize;
+      panRestY -= stepsY * config.tileSize;
+      // At the map's edge the pointer keeps moving but the map cannot follow;
+      // drop that surplus so the map does not lag behind when the drag reverses.
+      if (store.state.renderFromX === 0 && panRestX > 0) panRestX = 0;
+      if (store.state.renderFromY === 0 && panRestY > 0) panRestY = 0;
+    }
+
     function handleMouseDown(event) {
+      if (event.button === 1) {
+        // Also keeps the browser's own middle-click autoscroll out of the way.
+        event.preventDefault();
+        panning.value = true;
+        panLastX = event.clientX;
+        panLastY = event.clientY;
+        panRestX = 0;
+        panRestY = 0;
+        return;
+      }
       if (event.button === 2) {
         store.selectTool('pointer');
         const { x, y, z } = cursorTile();
@@ -76,7 +115,11 @@ export default defineComponent({
       dragging.value = true;
     }
 
-    function handleMouseUp() {
+    function handleMouseUp(event) {
+      if (event.button === 1) {
+        panning.value = false;
+        return;
+      }
       if (!dragging.value) return;
       dragging.value = false;
       dragStarted = false;
@@ -102,13 +145,16 @@ export default defineComponent({
       resizeObserver = new ResizeObserver(() => renderer.resize());
       resizeObserver.observe(viewportEl.value);
       // Bound to window (not the canvas) so a drag that ends outside the
-      // canvas still stops instead of getting stuck.
+      // canvas still stops instead of getting stuck, and a middle-button
+      // pan keeps following the pointer past the canvas edge.
       window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('mousemove', handlePanMove);
     });
 
     onBeforeUnmount(() => {
       resizeObserver?.disconnect();
       window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mousemove', handlePanMove);
       renderer.detach();
     });
 

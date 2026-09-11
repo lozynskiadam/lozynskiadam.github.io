@@ -289,12 +289,10 @@ export function createStore(config) {
     centerOn(x, y, z);
   }
 
+  /** Scrolls the view by whole tiles; each axis stops at the map edge on its own, so a diagonal pan still moves along the free axis. */
   function pan(dx, dy) {
-    const nextX = state.renderFromX + dx;
-    const nextY = state.renderFromY + dy;
-    if (nextX < 0 || nextY < 0) return;
-    state.renderFromX = nextX;
-    state.renderFromY = nextY;
+    state.renderFromX = Math.max(0, state.renderFromX + dx);
+    state.renderFromY = Math.max(0, state.renderFromY + dy);
   }
 
   /** Returns true when the position actually changed, so callers can skip redundant work. */
