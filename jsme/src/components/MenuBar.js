@@ -1,12 +1,13 @@
 import { defineComponent, ref, watch, onUnmounted } from '../vendor/vue.esm-browser.prod.js';
-import { actions } from '../editor.js';
+import { workspaceActions } from '../editor.js';
 import { MENUS } from '../core/menus.js';
 import { primaryShortcutLabel } from '../core/shortcuts.js';
 
 /**
- * Classic application menu bar. Click a title to open its menu; while one
- * is open, hovering another title switches to it (as desktop apps do).
- * Content comes entirely from menus.js + actions.js.
+ * Classic application menu bar, above the rail and shared by every editor.
+ * Click a title to open its menu; while one is open, hovering another
+ * title switches to it (as desktop apps do). Content comes entirely from
+ * menus.js + workspaceActions.js.
  */
 export default defineComponent({
   name: 'MenuBar',
@@ -19,7 +20,7 @@ export default defineComponent({
       label: menu.label,
       items: menu.items.map((actionId, index) => {
         if (actionId === null) return { key: `separator-${index}`, separator: true };
-        const action = actions[actionId];
+        const action = workspaceActions[actionId];
         if (!action) throw new Error(`Menu "${menu.id}" references unknown action "${actionId}"`);
         return { key: action.id, action, shortcut: primaryShortcutLabel(action) };
       }),

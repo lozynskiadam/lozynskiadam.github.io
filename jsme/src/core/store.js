@@ -79,7 +79,7 @@ export function createStore(config) {
     selection: null, // { z, x1, y1, x2, y2 } - rectangular, restricted to a single floor
     clipboard: null, // { width, height, cells } - cells keyed "dx,dy" -> [entry, ...], floor-agnostic
     contextMenu: null, // { screenX, screenY, itemId, x, y, z } - right-click menu for the topmost item on a tile
-    dialog: null, // { name, props } - the one modal dialog that can be open at a time (see components/App.js)
+    dialog: null, // { name, props } - the one modal dialog that can be open at a time (see components/App.js and MapEditor.js)
     mapRevision: 0, // bumped on every map mutation; the renderer's cue to repaint floors
     undoDepth: 0, // mirrors history for the UI (undo/redo buttons, menu items)
     redoDepth: 0,

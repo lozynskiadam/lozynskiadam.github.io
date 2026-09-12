@@ -44,20 +44,84 @@ button {
 /* ------------------------------------------------------------------ */
 
 .app-root {
-  display: grid;
-  grid-template-columns: 236px 1fr;
-  grid-template-rows: auto auto 1fr;
+  display: flex;
+  flex-direction: column;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
 }
 .menubar {
-  grid-column: 1 / -1;
-  grid-row: 1;
+  flex: none;
+}
+.workspace {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+.editor-view {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ---- editor rail ---- */
+.editor-rail {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  width: 44px;
+  padding: 6px 0;
+  background-color: #2f2f2f;
+  border-right: 1px solid var(--panel-border);
+  box-shadow: 0 0 5px #000;
+  z-index: 5;
+  user-select: none;
+}
+.editor-rail-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  cursor: default;
+  opacity: 0.55;
+}
+.editor-rail-button:hover {
+  opacity: 0.9;
+}
+.editor-rail-button.active {
+  opacity: 1;
+}
+.editor-rail-button.active::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 0;
+  width: 3px;
+  background: var(--accent);
+  border-radius: 0 2px 2px 0;
+}
+
+/* ---- map editor ---- */
+.map-editor {
+  position: relative;
+  display: grid;
+  grid-template-columns: 236px 1fr;
+  grid-template-rows: auto 1fr;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 .sidebar {
   grid-column: 1;
-  grid-row: 2 / 4;
+  grid-row: 1 / 3;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -69,11 +133,11 @@ button {
 }
 .toolbar {
   grid-column: 2;
-  grid-row: 2;
+  grid-row: 1;
 }
 .content {
   grid-column: 2;
-  grid-row: 3;
+  grid-row: 2;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
@@ -82,8 +146,26 @@ button {
   grid-template-rows: 20px 1fr;
 }
 
+/* ---- editors without a UI yet ---- */
+.empty-editor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  user-select: none;
+}
+.empty-editor-title {
+  font-size: 18px;
+  color: var(--text);
+}
+.empty-editor-hint {
+  margin-top: 6px;
+}
+
 .loading {
-  position: fixed;
+  position: absolute;
   inset: 0;
   background: #222;
   z-index: 5000;
@@ -141,6 +223,30 @@ button {
   background-image: none;
 }
 
+/* Rail icons: 20px inline SVGs, one per editor (see core/editors.js). */
+.rail-icon {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+.rail-icon[data-icon='map'] {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none' stroke='%23e0e0e0' stroke-width='1.6' stroke-linejoin='round'><path d='M2.5 5l5-2 5 2 5-2v12l-5 2-5-2-5 2z'/><path d='M7.5 3v12M12.5 5v12'/></svg>");
+}
+.rail-icon[data-icon='items'] {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none' stroke='%23e0e0e0' stroke-width='1.6' stroke-linejoin='round'><path d='M10 2l7 4v8l-7 4-7-4V6z'/><path d='M3 6l7 4 7-4M10 10v8'/></svg>");
+}
+.rail-icon[data-icon='creatures'] {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='%23e0e0e0'><circle cx='6.5' cy='6' r='1.9'/><circle cx='13.5' cy='6' r='1.9'/><circle cx='3' cy='10.5' r='1.7'/><circle cx='17' cy='10.5' r='1.7'/><path d='M10 9.5c-3.2 0-5.5 2.6-5.5 5.2 0 1.7 1.1 2.8 2.7 2.8 1 0 1.8-.6 2.8-.6s1.8.6 2.8.6c1.6 0 2.7-1.1 2.7-2.8 0-2.6-2.3-5.2-5.5-5.2z'/></svg>");
+}
+.rail-icon[data-icon='effects'] {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='%23e0e0e0'><path d='M9 2l1.9 5.1L16 9l-5.1 1.9L9 16l-1.9-5.1L2 9l5.1-1.9z'/><path d='M16 13l.8 2.2 2.2.8-2.2.8L16 19l-.8-2.2-2.2-.8 2.2-.8z'/></svg>");
+}
+.rail-icon[data-icon='scripts'] {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none' stroke='%23e0e0e0' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M6.5 5l-5 5 5 5M13.5 5l5 5-5 5M11.8 3l-3.6 14'/></svg>");
+}
+
 /* ------------------------------------------------------------------ */
 /* Menu bar                                                            */
 /* ------------------------------------------------------------------ */
@@ -148,23 +254,29 @@ button {
 .menubar {
   display: flex;
   align-items: stretch;
-  height: 24px;
+  /* Same as the rail's width (44px + 1px border) so the two chrome strips match. */
+  height: 44px;
   padding: 0 4px;
   background-color: #3c3c3c;
   border-bottom: 1px solid var(--panel-border);
   color: var(--text);
   user-select: none;
-  z-index: 4;
+  /* Above the rail (z-index 5): the dropdowns open over it. */
+  z-index: 6;
   position: relative;
 }
 .menubar-menu {
   position: relative;
   display: flex;
+  /* Full-height wrapper keeps the dropdown anchored to the bar's bottom edge
+     while the title button itself stays a centered pill. */
+  align-items: center;
 }
 .menubar-title {
-  height: 100%;
+  height: 28px;
   padding: 0 10px;
   border: 0;
+  border-radius: 4px;
   background: transparent;
   color: inherit;
   cursor: default;

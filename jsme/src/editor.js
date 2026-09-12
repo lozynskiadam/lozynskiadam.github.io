@@ -2,6 +2,8 @@ import config from '../config.js';
 import { createStore } from './core/store.js';
 import { createTools } from './core/tools.js';
 import { createActions } from './core/actions.js';
+import { createWorkspaceActions } from './core/workspaceActions.js';
+import { normalizeShortcut, shortcutsOf } from './core/shortcuts.js';
 import { MapRenderer } from './core/renderer.js';
 
 /**
@@ -19,6 +21,20 @@ import { MapRenderer } from './core/renderer.js';
 export const store = createStore(config);
 export const tools = createTools(store, config);
 export const actions = createActions({ store, tools });
+/** File-menu commands: shared by every editor, bound to the keyboard for the whole workspace (see App.js). */
+export const workspaceActions = createWorkspaceActions({ store });
 export const renderer = new MapRenderer(store, tools, config);
 
 export { config };
+
+// Workspace shortcuts stay bound while any editor is up, so no editor may reuse one.
+const reserved = new Map();
+for (const action of Object.values(workspaceActions)) {
+  for (const shortcut of shortcutsOf(action)) reserved.set(normalizeShortcut(shortcut), action.id);
+}
+for (const action of Object.values(actions)) {
+  for (const shortcut of shortcutsOf(action)) {
+    const owner = reserved.get(normalizeShortcut(shortcut));
+    if (owner) throw new Error(`Shortcut "${shortcut}" of "${action.id}" is already taken by workspace action "${owner}"`);
+  }
+}

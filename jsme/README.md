@@ -4,6 +4,11 @@ Edytor map kafelkowych (Vue 3 + WebGL) bez kroku budowania: wystarczy
 serwer statyczny (`python3 -m http.server`) i otwarcie `index.html`.
 Moduły ES ładują się bezpośrednio w przeglądarce.
 
+Docelowo to zestaw edytorów (mapy, przedmiotów, creatures, efektów,
+skryptów) przełączanych railem po lewej stronie, ze wspólnym paskiem menu
+(File) nad nimi. Na razie działa tylko edytor map; pozostałe to puste
+miejsca w railu.
+
 ## Architektura
 
 Dane płyną w jedną stronę:
@@ -15,37 +20,52 @@ UI / klawiatura  →  actions.js / tools.js  →  store.js  →  renderer.js
 | Plik | Rola |
 | --- | --- |
 | `config.js` | Stałe edytora (URL katalogu itemów, rozmiar kafelka, maks. wysokość stosu, zakres pięter). |
-| `src/editor.js` | Singleton: tworzy store, narzędzia, akcje i renderer, z których korzystają komponenty. |
+| `src/editor.js` | Singleton edytora map: tworzy store, narzędzia, akcje i renderer, z których korzystają komponenty. |
+| `src/core/editors.js` | Lista edytorów w railu (`EDITORS`) i stan workspace: który edytor jest aktywny. |
 | `src/core/mapData.js` | Czysty model mapy (piętro → wiersz → kolumna → stos wpisów) i operacje blokowe. Bez wiedzy o UI. |
 | `src/core/catalog.js` | Ładowanie katalogu itemów; indeks `Map` po id i podział na warstwy. |
 | `src/core/store.js` | Reaktywny stan UI + reguły edycji nad `mapData`. Każda mutacja mapy podbija `state.mapRevision` i jest rejestrowana w historii. |
 | `src/core/history.js` | Cofnij/powtórz: zapamiętuje zawartość kafelków sprzed zmiany; krok = jeden gest myszy albo jedna akcja. |
 | `src/core/tools.js` | Narzędzia (pointer, select, brush, eraser, sampler): reakcja na mysz i rysowanie HUD. |
-| `src/core/actions.js` | Rejestr komend (`file.save`, `edit.copy`, …) z etykietą, skrótem, ikoną i `run()`. |
-| `src/core/menus.js` | Definicja paska menu i przycisków akcji na pasku narzędzi jako listy id akcji. |
+| `src/core/actions.js` | Rejestr komend edytora map (`edit.copy`, `view.zoomIn`, …) z etykietą, skrótem, ikoną i `run()`. |
+| `src/core/workspaceActions.js` | Komendy wspólne dla wszystkich edytorów – menu File (`file.save`, `help.shortcuts`, …), ten sam kształt co w `actions.js`. |
+| `src/core/menus.js` | Definicja paska menu (id z `workspaceActions.js`) i przycisków akcji na pasku narzędzi mapy (id z `actions.js`). |
 | `src/core/shortcuts.js` | Notacja skrótów klawiszowych: normalizacja, dopasowanie do `KeyboardEvent`, format do wyświetlenia. |
 | `src/core/mapFile.js` | Otwieranie/zapis pliku mapy w przeglądarce, envelope `{ name, respawnPoint, map }` + walidacja. |
 | `src/core/renderer.js` | Renderer WebGL. Obserwuje store i sam planuje klatkę (`requestAnimationFrame`). |
 | `src/core/painter.js` | Warstwa WebGL z API w stylu Canvas 2D (batching, atlas tekstur, warstwy offscreen). |
 | `src/core/pointer.js` | Matematyka piksel ↔ kafelek z uwzględnieniem paralaksy pięter. |
-| `src/components/` | Komponenty Vue: `MenuBar`, `Toolbar`, `Sidebar`, `Palette`, `MapCanvas`, dialogi. |
-| `src/composables/` | `useKeyboard` (mapuje skróty na akcje), `useDraggable` (przeciąganie okien). |
+| `src/components/App.js` | Powłoka workspace: `MenuBar` nad wszystkim, `EditorRail` + aktywny edytor (`EDITOR_COMPONENTS`; brak wpisu = `EmptyEditor`), dialogi z menu File (`DIALOGS`: help, projectProperties), skróty File. |
+| `src/components/MapEditor.js` | Edytor map w całości: `Sidebar`, `Toolbar`, `MapCanvas`, własne dialogi (`DIALOGS`: itemProperties), skróty mapy. |
+| `src/components/` | Pozostałe komponenty Vue: `MenuBar`, `Toolbar`, `Sidebar`, `Palette`, `MapCanvas`, dialogi. |
+| `src/composables/` | `useKeyboard` (ogólne: skróty rejestru akcji → klawiatura), `useWorkspaceKeyboard` (skróty File + Escape zamykający dialog), `useMapKeyboard` (skróty edytora map + tryby Shift/Tab), `useDraggable` (przeciąganie okien). |
 
 Nikt poza rendererem nie woła „odśwież”. Store zaznacza zmienione piętra
 (`touchFloor`), renderer obserwuje `mapRevision` oraz pola stanu wpływające
 na widok i skleja wszystkie żądania z jednej klatki w jeden render.
 
+Edytory montują się pojedynczo: przełączenie w railu odmontowuje bieżący
+edytor razem z jego nasłuchem klawiatury, więc skróty są per edytor i
+nigdy nie nachodzą na siebie. Jedyne skróty globalne to te z menu File
+(`workspaceActions.js`); `editor.js` sprawdza przy starcie, że żaden
+edytor ich nie powtarza.
+
 ## Jak rozbudować
 
+- **Nowy edytor** – wpis `{ id, label, icon }` w `EDITORS` (`core/editors.js`), ikona w `app.css`
+  jako `.rail-icon[data-icon='id']`, komponent w `EDITOR_COMPONENTS` w `App.js`. Skróty edytora
+  podpina jego komponent-korzeń przez `useKeyboardShortcuts(akcje, { keydown?, keyup? })`.
 - **Nowa komenda** – dodaj wpis `define('grupa.nazwa', { label, shortcut?, icon?, enabled?, run })`
-  w `actions.js`. Skrót od razu działa z klawiatury i pojawia się w oknie Help.
-- **Pozycja w menu** – dopisz id akcji do listy w `menus.js` (`null` = separator).
-  Nowe menu to nowy obiekt w `MENUS`.
+  w `actions.js` (komenda mapy) albo `workspaceActions.js` (wspólna, dostępna w każdym edytorze).
+  Skrót od razu działa z klawiatury i pojawia się w oknie Help.
+- **Pozycja w menu** – dopisz id akcji z `workspaceActions.js` do listy w `menus.js` (`null` = separator).
+  Nowe menu to nowy obiekt w `MENUS`; pasek menu jest wspólny, więc menu specyficzne dla jednego
+  edytora tam nie należy.
 - **Nowe narzędzie** – dodaj obiekt w `tools.js` (`name`, `title`, `shortcut`, `sizing`,
   `cursor`, `onClick/onDragStart/onDrag/onRelease/onRender`). Pasek narzędzi, skrót i Help
   podpinają się same; ikonę dodaj w `app.css` jako `.ui-icon[data-icon='nazwa']`.
-- **Nowy dialog** – komponent + wpis w `DIALOGS` w `App.js`; otwieranie przez
-  `store.openDialog('nazwa', props)`.
+- **Nowy dialog** – komponent + wpis w `DIALOGS` w `MapEditor.js` (dialog mapy) albo w `App.js`
+  (dialog z menu File, widoczny w każdym edytorze); otwieranie przez `store.openDialog('nazwa', props)`.
 - **Nowa mutacja mapy** – funkcja w `store.js`, która przed zmianą woła `recordTile(x, y, z)`
   (to daje cofnij/powtórz), po zmianie `touchFloor(z)` (lub `touchAll()`), i eksport
   w zwracanym obiekcie. Mutacje z jednej akcji same składają się w jeden krok historii;

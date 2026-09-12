@@ -1,11 +1,10 @@
-import { pickMapFile, readMapFile, downloadMapFile } from './mapFile.js';
-
 /**
- * The editor's command registry: every user-triggerable operation, keyed
- * by a dotted id. Menus (menus.js), keyboard shortcuts (useKeyboard.js),
- * the toolbar and the help dialog are all driven from this one table, so
- * adding a command means adding a single entry here and then referencing
- * its id wherever it should be reachable from.
+ * The map editor's command registry: every user-triggerable operation of
+ * the map editor, keyed by a dotted id. Keyboard shortcuts (useMapKeyboard.js),
+ * the toolbar (menus.js) and the help dialog are all driven from this one
+ * table, so adding a command means adding a single entry here and then
+ * referencing its id wherever it should be reachable from. Commands shared
+ * by every editor (the File menu) live in workspaceActions.js instead.
  *
  * An action has:
  *   label      - text for menus and the help dialog
@@ -24,58 +23,6 @@ export function createActions({ store, tools }) {
   function define(id, definition) {
     actions[id] = { id, ...definition };
   }
-
-  /* ---- file --------------------------------------------------------- */
-
-  define('file.new', {
-    label: 'New',
-    icon: 'new',
-    run() {
-      if (store.hasMapContent() && !confirm('Discard the current map?')) return;
-      store.newMap();
-    },
-  });
-
-  define('file.open', {
-    label: 'Open…',
-    icon: 'open',
-    shortcut: 'Ctrl+O',
-    async run() {
-      if (store.hasMapContent() && !confirm('Discard the current map?')) return;
-      const file = await pickMapFile();
-      if (!file) return;
-      try {
-        store.loadMapFile(await readMapFile(file));
-      } catch (error) {
-        alert(error.message);
-      }
-    },
-  });
-
-  define('file.save', {
-    label: 'Save',
-    icon: 'save',
-    shortcut: 'Ctrl+S',
-    run() {
-      downloadMapFile(store.exportMapFile());
-    },
-  });
-
-  define('file.properties', {
-    label: 'Properties…',
-    run() {
-      store.toggleDialog('projectProperties');
-    },
-  });
-
-  define('help.shortcuts', {
-    label: 'Help',
-    icon: 'help',
-    shortcut: 'F1',
-    run() {
-      store.toggleDialog('help');
-    },
-  });
 
   /* ---- tools -------------------------------------------------------- */
 

@@ -23,6 +23,18 @@ export default defineComponent({
       store.openDialog('itemProperties', { itemId, x, y, z });
     }
 
+    function deleteItem() {
+      if (!menu.value) return;
+      const { x, y, z } = menu.value;
+      store.closeContextMenu();
+      // The menu always targets the tile's top item, so popping it removes
+      // exactly what the menu names; re-highlighting first keeps eraseOnTile
+      // from refusing a ground tile.
+      store.highlightOnTile(x, y, z);
+      store.eraseOnTile(x, y, z);
+      store.clearHighlight();
+    }
+
     function handleOutsideMouseDown(event) {
       if (!event.target.closest('.context-menu')) store.closeContextMenu();
     }
@@ -58,7 +70,7 @@ export default defineComponent({
       window.removeEventListener('keydown', handleKeydown);
     });
 
-    return { menuEl, position, menu, item, selectItem, showProperties };
+    return { menuEl, position, menu, item, selectItem, showProperties, deleteItem };
   },
   template: `
     <div
@@ -70,6 +82,7 @@ export default defineComponent({
       <div class="context-menu-info">{{ item.name }} ({{ item.id }})</div>
       <div class="context-menu-option" @click="selectItem">Select</div>
       <div class="context-menu-option" @click="showProperties">Properties</div>
+      <div class="context-menu-option" @click="deleteItem">Delete</div>
     </div>
   `,
 });
