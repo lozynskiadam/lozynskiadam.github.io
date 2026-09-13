@@ -8,6 +8,7 @@ import {
   decodeItem,
   itemToRaw,
   loadCatalog,
+  normalizeLight,
   normalizeTraits,
 } from './catalog.js';
 import { isValidRespawnPoint } from './mapFile.js';
@@ -250,7 +251,8 @@ export function createStore(config) {
 
   /**
    * Writes changed fields onto a catalog item. `patch` takes the same
-   * fields items.json has (id, name, layer, altitude, traits, png); the
+   * fields items.json has (id, name, layer, altitude, traits, light,
+   * png); the
    * caller is expected to have validated them. Returns false when the item
    * is gone or the new id is taken - the two things a caller cannot fix by
    * formatting its input differently.
@@ -266,6 +268,7 @@ export function createStore(config) {
     const next = { ...current, ...patch };
     next.id = String(next.id);
     next.traits = normalizeTraits(next.traits);
+    next.light = normalizeLight(next.light);
     if (next.id !== current.id && getItem(next.id)) return false;
 
     replaceCatalogItems(catalog.value.items.map((item) => (item === current ? next : item)));
@@ -290,6 +293,7 @@ export function createStore(config) {
       layer: layer ?? 'ground',
       altitude: 0,
       traits: [],
+      light: null,
       image: BLANK_ITEM_PNG,
     });
     replaceCatalogItems([...catalog.value.items, item]);

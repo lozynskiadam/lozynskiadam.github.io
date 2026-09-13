@@ -27,6 +27,30 @@ export function normalizeTraits(traits) {
   return ITEM_TRAITS.filter((trait) => wanted.has(trait));
 }
 
+/** What an item that starts emitting light gets: a short warm pool of it. */
+export const DEFAULT_LIGHT = { range: 3, color: '#ffa500' };
+
+const HEX_COLOR = /^#[0-9a-f]{6}$/i;
+
+/**
+ * An item's light source in canonical form - `{ range, color }` with the
+ * colour as lowercase `#rrggbb` - or null when the item emits none.
+ *
+ * A light that is there but unusable (no range, a colour in some other
+ * notation) keeps the light and falls back to DEFAULT_LIGHT's value for
+ * the broken field: a hand-edited items.json should not lose an item's
+ * light over a typo in one of the two numbers.
+ */
+export function normalizeLight(light) {
+  if (!light || typeof light !== 'object') return null;
+  const range = Math.round(Number(light.range));
+  const color = String(light.color ?? '');
+  return {
+    range: Number.isFinite(range) && range > 0 ? range : DEFAULT_LIGHT.range,
+    color: HEX_COLOR.test(color) ? color.toLowerCase() : DEFAULT_LIGHT.color,
+  };
+}
+
 /**
  * Builds a catalog item from its items.json form: the base64 PNG is
  * decoded into an `image` the renderer can draw and an `src` the UI can
@@ -42,6 +66,7 @@ export function decodeItem(raw) {
       layer: String(raw.layer ?? ''),
       altitude: Number(raw.altitude) || 0,
       traits: normalizeTraits(raw.traits),
+      light: normalizeLight(raw.light),
       png: raw.image,
     };
     const image = new Image();
@@ -59,6 +84,7 @@ export function itemToRaw(item) {
     layer: item.layer,
     altitude: item.altitude,
     traits: [...item.traits],
+    light: item.light ? { range: item.light.range, color: item.light.color } : null,
     image: item.png,
   };
 }

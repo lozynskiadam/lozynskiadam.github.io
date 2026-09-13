@@ -88,10 +88,15 @@ obiekt `map`) nadal się otwierają z domyślnymi `name`/`respawnPoint` z `confi
 
 ## Katalog itemów (`items.json`)
 
-Tablica wpisów `{ id, name, layer, altitude, image }`. `image` to PNG w base64,
+Tablica wpisów `{ id, name, layer, altitude, traits, light, image }`. `image` to PNG w base64,
 `layer` decyduje o zakładce w palecie i o tym, który wpis na kafelku zastępuje
 pędzel. `altitude` to wysokość itemu w px: każdy wpis leżący wyżej na stosie
 kafelka jest rysowany przesunięty w górę i w lewo o sumę `altitude` wpisów pod
 nim (`store.stackAltitude`), więc np. skrzynia o wysokości 8 „unosi” to, co na
 niej stoi. Suma jest przycinana do `config.maxAltitude` (64 px). Renderer, podgląd pędzla i podgląd przenoszenia zaznaczenia liczą
 to tak samo.
+
+`light` to źródło światła itemu: `null`, gdy item nie świeci, albo
+`{ range, color }` — zasięg w kafelkach (1–`config.maxLightRange`) i barwa jako
+hex `#rrggbb`. Edytor itemów tylko to zapisuje; samo światło nie jest nigdzie
+rysowane — pole jest dla gry czytającej katalog.

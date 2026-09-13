@@ -913,6 +913,26 @@ button {
 .items-form input[type='checkbox'] {
   accent-color: var(--accent);
 }
+/* The swatch and its hex share the value column: the swatch stays the size
+   of a button, the hex field takes what is left. */
+.items-form-color {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.items-form-color input[type='text'] {
+  width: 90px;
+}
+.items-form input[type='color'] {
+  flex: none;
+  width: 38px;
+  height: 26px;
+  padding: 2px;
+  border: 1px solid var(--control-border);
+  border-radius: 4px;
+  background: #212226;
+  cursor: pointer;
+}
 .items-form-traits {
   display: flex;
   flex-wrap: wrap;

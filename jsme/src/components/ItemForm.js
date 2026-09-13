@@ -1,6 +1,6 @@
 import { defineComponent, computed, reactive, ref, watch } from '../vendor/vue.esm-browser.prod.js';
 import { store, config } from '../editor.js';
-import { ITEM_TRAITS } from '../core/catalog.js';
+import { DEFAULT_LIGHT, ITEM_TRAITS } from '../core/catalog.js';
 import { pickImageFile, readImageFile } from '../core/itemsFile.js';
 
 /**
@@ -19,7 +19,7 @@ export default defineComponent({
     item: { type: Object, required: true },
   },
   setup(props) {
-    const draft = reactive({ id: '', name: '', layer: '', altitude: 0 });
+    const draft = reactive({ id: '', name: '', layer: '', altitude: 0, lightRange: 0, lightColor: '' });
     const error = ref('');
 
     // Every commit replaces the item object, which re-syncs the draft with
@@ -31,6 +31,11 @@ export default defineComponent({
         draft.name = item.name;
         draft.layer = item.layer;
         draft.altitude = item.altitude;
+        // An item that emits nothing still needs something in the two
+        // light fields for the moment its checkbox is ticked; the default
+        // light is what that tick then stores.
+        draft.lightRange = (item.light ?? DEFAULT_LIGHT).range;
+        draft.lightColor = (item.light ?? DEFAULT_LIGHT).color;
         error.value = '';
       },
       { immediate: true },
@@ -84,6 +89,37 @@ export default defineComponent({
       commit({ altitude });
     }
 
+    /**
+     * Light is one field, `{ range, color }` or null, so both inputs
+     * commit the pair - the one they did not change taken from the draft,
+     * which the watch above keeps in step with the stored light.
+     */
+    function commitLight(patch) {
+      commit({ light: { range: Number(draft.lightRange), color: draft.lightColor, ...patch } });
+    }
+
+    function toggleLight(on) {
+      commit({ light: on ? { ...DEFAULT_LIGHT } : null });
+    }
+
+    function commitLightRange() {
+      const range = Number(draft.lightRange);
+      if (!Number.isInteger(range) || range < 1 || range > config.maxLightRange) {
+        error.value = `The light range has to be a whole number between 1 and ${config.maxLightRange}.`;
+        return;
+      }
+      commitLight({ range });
+    }
+
+    function commitLightColor() {
+      const color = draft.lightColor.trim().toLowerCase();
+      if (!/^#[0-9a-f]{6}$/.test(color)) {
+        error.value = 'The light colour has to be a hex value like #ffa500.';
+        return;
+      }
+      commitLight({ color });
+    }
+
     function toggleTrait(trait, on) {
       const traits = props.item.traits.filter((value) => value !== trait);
       if (on) traits.push(trait);
@@ -106,12 +142,16 @@ export default defineComponent({
       error,
       traits: ITEM_TRAITS,
       maxAltitude: config.maxAltitude,
+      maxLightRange: config.maxLightRange,
       layers: store.layers,
       isGround: computed(() => props.item.layer === 'ground'),
       commitId,
       commitName,
       commitLayer,
       commitAltitude,
+      toggleLight,
+      commitLightRange,
+      commitLightColor,
       toggleTrait,
       replaceImage,
     };
@@ -168,6 +208,40 @@ export default defineComponent({
           </label>
         </div>
       </div>
+
+      <div class="items-form-field">
+        <span>Light</span>
+        <div class="items-form-traits">
+          <label>
+            <input type="checkbox" :checked="!!item.light" @change="toggleLight($event.target.checked)" />
+            emits light
+          </label>
+        </div>
+      </div>
+      <div class="items-form-hint">
+        Nothing draws it yet - it is the catalog telling the game which items are a light source.
+      </div>
+
+      <template v-if="item.light">
+        <label class="items-form-field">
+          <span>Range</span>
+          <input type="number" min="1" :max="maxLightRange" step="1" v-model="draft.lightRange" @change="commitLightRange" />
+        </label>
+        <div class="items-form-hint">
+          How far in tiles the light reaches (1-{{ maxLightRange }}).
+        </div>
+
+        <div class="items-form-field">
+          <span>Colour</span>
+          <div class="items-form-color">
+            <input type="color" v-model="draft.lightColor" @change="commitLightColor" />
+            <input type="text" v-model="draft.lightColor" spellcheck="false" maxlength="7" @change="commitLightColor" />
+          </div>
+        </div>
+        <div class="items-form-hint">
+          The colour the light is tinted with, as hex (#rrggbb).
+        </div>
+      </template>
 
       <div v-if="error" class="items-form-error">{{ error }}</div>
     </form>
