@@ -4,24 +4,75 @@
  * and the placement rules look them up for every entry on every tile - a
  * linear search through a thousand-item list there was the editor's single
  * hottest path.
+ *
+ * A catalog is immutable: the items editor rebuilds it from an edited item
+ * list (see store.replaceCatalogItems), which both re-indexes it and tells
+ * the renderer to repaint, since it watches `store.catalog`.
  */
 
-function decodeItemImage(raw) {
+/**
+ * The traits an item may carry. A closed set: anything else found in a
+ * file's `traits` is dropped on load, so the editor only ever writes back
+ * traits it knows.
+ */
+export const ITEM_TRAITS = ['floor', 'blocking', 'moveable'];
+
+/** A 32x32 fully transparent PNG - the placeholder image a brand new item starts with. */
+export const BLANK_ITEM_PNG =
+  'iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAGklEQVR42u3BAQEAAACCIP+vbkhAAQAAAO8GECAAAcm1w7EAAAAASUVORK5CYII=';
+
+/** Canonical trait list: known traits only, in ITEM_TRAITS order, without duplicates. */
+export function normalizeTraits(traits) {
+  const wanted = new Set(Array.isArray(traits) ? traits : []);
+  return ITEM_TRAITS.filter((trait) => wanted.has(trait));
+}
+
+/**
+ * Builds a catalog item from its items.json form: the base64 PNG is
+ * decoded into an `image` the renderer can draw and an `src` the UI can
+ * put in an <img>, while the base64 itself is kept as `png` so the item
+ * can be written back out unchanged (see itemToRaw). Only the fields
+ * items.json defines survive, which keeps the round trip lossless.
+ */
+export function decodeItem(raw) {
   return new Promise((resolve, reject) => {
+    const item = {
+      id: String(raw.id),
+      name: String(raw.name ?? ''),
+      layer: String(raw.layer ?? ''),
+      altitude: Number(raw.altitude) || 0,
+      traits: normalizeTraits(raw.traits),
+      png: raw.image,
+    };
     const image = new Image();
-    image.onload = () => resolve({ ...raw, id: String(raw.id), src: image.src, image });
+    image.onload = () => resolve({ ...item, src: image.src, image });
     image.onerror = () => reject(new Error(`Failed to decode image for item ${raw.id}`));
-    image.src = `data:image/png;base64,${raw.image}`;
+    image.src = `data:image/png;base64,${item.png}`;
   });
 }
 
+/** An item back in its items.json form - the inverse of decodeItem, and the key order the file uses. */
+export function itemToRaw(item) {
+  return {
+    id: String(item.id),
+    name: item.name,
+    layer: item.layer,
+    altitude: item.altitude,
+    traits: [...item.traits],
+    image: item.png,
+  };
+}
+
 export function createCatalog(items) {
-  const byId = new Map(items.map((item) => [item.id, item]));
+  // Sorted by id, the way items.json itself is, so a renumbered or newly
+  // added item lands where both the palette and the file expect it.
+  const sorted = [...items].sort((a, b) => Number(a.id) - Number(b.id));
+  const byId = new Map(sorted.map((item) => [item.id, item]));
   const byLayer = {};
-  for (const item of items) (byLayer[item.layer] ??= []).push(item);
+  for (const item of sorted) (byLayer[item.layer] ??= []).push(item);
 
   return {
-    items,
+    items: sorted,
     layers: Object.keys(byLayer),
     byLayer,
     /** Catalog item for an id (string or number); null when unknown. */
@@ -39,5 +90,5 @@ export async function loadCatalog(url) {
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   const raw = await response.json();
   if (!Array.isArray(raw)) throw new Error('Item list is not an array');
-  return createCatalog(await Promise.all(raw.map(decodeItemImage)));
+  return createCatalog(await Promise.all(raw.map(decodeItem)));
 }

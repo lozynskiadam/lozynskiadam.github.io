@@ -5,6 +5,7 @@ import { useWorkspaceKeyboard } from '../composables/useWorkspaceKeyboard.js';
 import MenuBar from './MenuBar.js';
 import EditorRail from './EditorRail.js';
 import MapEditor from './MapEditor.js';
+import ItemsEditor from './ItemsEditor.js';
 import EmptyEditor from './EmptyEditor.js';
 import HelpModal from './HelpModal.js';
 import ProjectPropertiesModal from './ProjectPropertiesModal.js';
@@ -15,6 +16,7 @@ import ProjectPropertiesModal from './ProjectPropertiesModal.js';
  */
 const EDITOR_COMPONENTS = {
   map: MapEditor,
+  items: ItemsEditor,
 };
 
 /**

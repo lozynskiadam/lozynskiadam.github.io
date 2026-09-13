@@ -1,7 +1,15 @@
 import { reactive, shallowRef, computed } from '../vendor/vue.esm-browser.prod.js';
 import { createMapData, cellKey } from './mapData.js';
 import { createHistory } from './history.js';
-import { EMPTY_CATALOG, loadCatalog } from './catalog.js';
+import {
+  BLANK_ITEM_PNG,
+  EMPTY_CATALOG,
+  createCatalog,
+  decodeItem,
+  itemToRaw,
+  loadCatalog,
+  normalizeTraits,
+} from './catalog.js';
 import { isValidRespawnPoint } from './mapFile.js';
 
 // Keys of a placed map entry that belong to the editor itself; everything
@@ -80,6 +88,7 @@ export function createStore(config) {
     clipboard: null, // { width, height, cells } - cells keyed "dx,dy" -> [entry, ...], floor-agnostic
     contextMenu: null, // { screenX, screenY, itemId, x, y, z } - right-click menu for the topmost item on a tile
     dialog: null, // { name, props } - the one modal dialog that can be open at a time (see components/App.js and MapEditor.js)
+    itemsDirty: false, // the item catalog was edited and items.json has not been saved since
     mapRevision: 0, // bumped on every map mutation; the renderer's cue to repaint floors
     undoDepth: 0, // mirrors history for the UI (undo/redo buttons, menu items)
     redoDepth: 0,
@@ -207,12 +216,103 @@ export function createStore(config) {
     try {
       catalog.value = await loadCatalog(config.itemsUrl);
       state.selectedLayer = catalog.value.layers[0] ?? null;
+      state.itemsDirty = false;
     } catch (error) {
       state.loadError = error;
       throw error;
     } finally {
       state.loading = false;
     }
+  }
+
+  /* ---- editing the item catalog ---------------------------------------- */
+
+  /**
+   * Swaps in a catalog built from an edited item list. The catalog is
+   * replaced rather than mutated in place: that re-indexes it, re-runs the
+   * computeds the palette and the item list read, and is what the renderer
+   * watches to redraw the map with the new names, layers and altitudes.
+   */
+  function replaceCatalogItems(items) {
+    catalog.value = createCatalog(items);
+    // An edit can empty a layer out of existence (or invent a new one), so
+    // the palette's layer may no longer be one the catalog has.
+    if (!catalog.value.layers.includes(state.selectedLayer)) state.selectedLayer = catalog.value.layers[0] ?? null;
+    state.itemsDirty = true;
+  }
+
+  /** The lowest free id above every id in use, as a string. */
+  function nextItemId() {
+    let highest = -1;
+    for (const item of catalog.value.items) highest = Math.max(highest, Number(item.id));
+    return String(highest + 1);
+  }
+
+  /**
+   * Writes changed fields onto a catalog item. `patch` takes the same
+   * fields items.json has (id, name, layer, altitude, traits, png); the
+   * caller is expected to have validated them. Returns false when the item
+   * is gone or the new id is taken - the two things a caller cannot fix by
+   * formatting its input differently.
+   *
+   * Renumbering an item does not touch the map: entries already placed
+   * keep the old id and stop resolving, which is why the editor warns
+   * about it rather than the store trying to rewrite the map.
+   */
+  function updateItem(id, patch) {
+    const current = getItem(id);
+    if (!current) return false;
+
+    const next = { ...current, ...patch };
+    next.id = String(next.id);
+    next.traits = normalizeTraits(next.traits);
+    if (next.id !== current.id && getItem(next.id)) return false;
+
+    replaceCatalogItems(catalog.value.items.map((item) => (item === current ? next : item)));
+    if (state.selectedItemId === current.id) state.selectedItemId = next.id;
+    if (state.secondaryItemId === current.id) state.secondaryItemId = next.id;
+    return true;
+  }
+
+  /** Replaces an item's sprite with a base64 PNG; rejects when it cannot be decoded. */
+  async function setItemImage(id, png) {
+    const current = getItem(id);
+    if (!current) return false;
+    const decoded = await decodeItem({ ...itemToRaw(current), image: png });
+    return updateItem(id, { png: decoded.png, src: decoded.src, image: decoded.image });
+  }
+
+  /** Adds an empty item on the given layer (the palette's by default) and returns its id. */
+  async function addItem(layer = state.selectedLayer) {
+    const item = await decodeItem({
+      id: nextItemId(),
+      name: 'new item',
+      layer: layer ?? 'ground',
+      altitude: 0,
+      traits: [],
+      image: BLANK_ITEM_PNG,
+    });
+    replaceCatalogItems([...catalog.value.items, item]);
+    return item.id;
+  }
+
+  /** Drops an item from the catalog; copies already placed on the map stop resolving and are no longer drawn. */
+  function removeItem(id) {
+    const item = getItem(id);
+    if (!item) return false;
+    replaceCatalogItems(catalog.value.items.filter((other) => other !== item));
+    if (state.selectedItemId === item.id) state.selectedItemId = null;
+    if (state.secondaryItemId === item.id) state.secondaryItemId = null;
+    return true;
+  }
+
+  /** The catalog as items.json content (see itemsFile.serializeItems). */
+  function exportItems() {
+    return catalog.value.items;
+  }
+
+  function markItemsSaved() {
+    state.itemsDirty = false;
   }
 
   /* ---- selection of tool / items --------------------------------------- */
@@ -686,6 +786,12 @@ export function createStore(config) {
     getItem,
     stackAltitude,
     loadItems,
+    updateItem,
+    setItemImage,
+    addItem,
+    removeItem,
+    exportItems,
+    markItemsSaved,
     selectTool,
     selectItem,
     selectItemAndReveal,

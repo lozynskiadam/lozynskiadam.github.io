@@ -13,7 +13,9 @@ html {
 body {
   padding: 0;
   margin: 0;
-  background-color: #282828;
+  background-color: #26282c;
+  background-image: radial-gradient(180px 180px at 120px 20px, #3e492f 0%, #26282c 100%);
+  background-repeat: no-repeat;
   font-family: 'Tahoma', monospace;
   font-size: 13px;
   overflow: hidden;
@@ -25,7 +27,7 @@ button {
 
 /* Shared surface styles, so every panel/button reads as one UI. */
 :root {
-  --panel-bg: #535353;
+  --panel-bg: #191a1c;
   --panel-dark: #353535;
   --panel-border: #282828;
   --control-border: #2c2c2c;
@@ -72,9 +74,6 @@ button {
   flex: none;
   width: 44px;
   padding: 6px 0;
-  background-color: #2f2f2f;
-  border-right: 1px solid var(--panel-border);
-  box-shadow: 0 0 5px #000;
   z-index: 5;
   user-select: none;
 }
@@ -115,6 +114,7 @@ button {
   display: grid;
   grid-template-columns: 236px 1fr;
   grid-template-rows: auto 1fr;
+  column-gap: 5px;
   width: 100%;
   height: 100%;
   overflow: hidden;
@@ -129,7 +129,7 @@ button {
   color: var(--text);
   overflow: hidden;
   z-index: 3;
-  box-shadow: 0 0 5px #000;
+  border-radius: 10px;
 }
 .toolbar {
   grid-column: 2;
@@ -155,6 +155,8 @@ button {
   height: 100%;
   color: var(--text-muted);
   user-select: none;
+  background-color: var(--panel-bg);
+  border-radius: 10px;
 }
 .empty-editor-title {
   font-size: 18px;
@@ -211,6 +213,9 @@ button {
 .ui-icon[data-icon='redo'] {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='17' height='15' viewBox='0 0 17 15'><path d='M16 5.5l-5-4v3H6.5a4.5 4.5 0 0 0 0 9H11v-2H6.5a2.5 2.5 0 0 1 0-5H11v3z' fill='%23e0e0e0'/></svg>");
 }
+.ui-icon[data-icon='menu'] {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='17' height='15' viewBox='0 0 17 15'><g fill='%23e0e0e0'><rect x='2' y='1.5' width='13' height='1.5' rx='.75'/><rect x='2' y='5' width='13' height='1.5' rx='.75'/><rect x='2' y='8.5' width='13' height='1.5' rx='.75'/><rect x='2' y='12' width='13' height='1.5' rx='.75'/></g></svg>");
+}
 .ui-icon[data-icon='select'] {
   background-image: none;
   width: 11px;
@@ -254,14 +259,10 @@ button {
 .menubar {
   display: flex;
   align-items: stretch;
-  /* Same as the rail's width (44px + 1px border) so the two chrome strips match. */
   height: 44px;
   padding: 0 4px;
-  background-color: #3c3c3c;
-  border-bottom: 1px solid var(--panel-border);
   color: var(--text);
   user-select: none;
-  /* Above the rail (z-index 5): the dropdowns open over it. */
   z-index: 6;
   position: relative;
 }
@@ -273,13 +274,18 @@ button {
   align-items: center;
 }
 .menubar-title {
-  height: 28px;
+  height: 30px;
   padding: 0 10px;
   border: 0;
   border-radius: 4px;
   background: transparent;
   color: inherit;
   cursor: default;
+}
+.menubar-title-icon {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
 }
 .menubar-title:hover,
 .menubar-title.open {
@@ -332,6 +338,75 @@ button {
   background: var(--panel-border);
 }
 
+/* ---- project switcher (right of the menu titles) ---- */
+.menubar-project-menu {
+  margin-left: 6px;
+}
+.menubar-project {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  max-width: 240px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.07);
+  color: inherit;
+  cursor: default;
+}
+.menubar-project:hover,
+.menubar-project.open {
+  background: var(--hover-gradient);
+}
+.menubar-project-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Project avatar: the name's first letter on a solid tile, like a repo badge. */
+.menubar-project-icon {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 2px;
+  background: linear-gradient(135deg, #9da459 0%, #8aa859 100%);
+  color: #fff;
+  font-size: 11px;
+  font-weight: bold;
+  line-height: 1;
+  text-transform: uppercase;
+}
+.menubar-project-chevron {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-left: 2px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none' stroke='%23e0e0e0' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'><path d='M1.5 3l2.5 2.5L6.5 3'/></svg>");
+  opacity: 0.8;
+}
+.menubar-project-dropdown {
+  min-width: 240px;
+}
+.menubar-dropdown-header {
+  padding: 5px 12px 5px 6px;
+  color: var(--text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.menubar-project-item {
+  grid-template-columns: 20px 1fr;
+}
+.menubar-project-item.current .menubar-item-label {
+  font-weight: bold;
+}
+
 /* ------------------------------------------------------------------ */
 /* Toolbar                                                             */
 /* ------------------------------------------------------------------ */
@@ -382,6 +457,23 @@ button {
   background: var(--control-gradient);
   border-color: var(--control-border);
   box-shadow: 0 1px 1px #636363;
+}
+.toolbar .text-button {
+  height: 25px;
+  margin-right: 4px;
+  padding: 0 10px;
+  border: 1px solid var(--control-border);
+  border-radius: 2px;
+  background: var(--control-gradient);
+  color: var(--text);
+  cursor: default;
+}
+.toolbar .text-button:hover:not(:disabled) {
+  background: var(--hover-gradient);
+}
+.toolbar .text-button:disabled {
+  opacity: 0.35;
+  pointer-events: none;
 }
 .toolbar-slider {
   -webkit-appearance: none;
@@ -558,6 +650,164 @@ button {
   height: 32px;
   object-fit: cover;
   object-position: 0 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Items editor                                                        */
+/* ------------------------------------------------------------------ */
+
+.items-editor {
+  position: relative;
+  display: grid;
+  /* Same shape as the map editor: catalog where the palette is, toolbar on top. */
+  grid-template-columns: 236px 1fr;
+  grid-template-rows: auto 1fr;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.items-sidebar {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background-color: var(--panel-bg);
+  color: var(--text);
+  overflow: hidden;
+  z-index: 3;
+  box-shadow: 0 0 5px #000;
+}
+.items-filters {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+}
+.items-search {
+  width: calc(100% - 6px);
+  height: 25px;
+  margin: 0 3px 3px;
+}
+.items-count {
+  flex: none;
+  padding: 5px 6px;
+  color: var(--text-muted);
+  font-size: 11px;
+  user-select: none;
+}
+.items-toolbar {
+  grid-column: 2;
+  grid-row: 1;
+}
+.items-unsaved {
+  color: var(--highlight);
+}
+.items-detail {
+  grid-column: 2;
+  grid-row: 2;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px;
+  color: var(--text);
+}
+.items-detail-empty {
+  color: var(--text-muted);
+  user-select: none;
+}
+
+/* ---- the edited item's fields ---- */
+.items-form {
+  max-width: 420px;
+}
+.items-form-image {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.items-form-preview {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 140px;
+  height: 140px;
+  border: 2px inset var(--control-border);
+  border-radius: 2px;
+  background: var(--control-gradient);
+  overflow: hidden;
+}
+/* Sprites are 32-64px pixel art: double them and keep the pixels hard. */
+.items-form-preview img {
+  transform: scale(2);
+  image-rendering: pixelated;
+}
+.items-form-image-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--text-muted);
+}
+.items-form-field {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.items-form-field > span {
+  color: var(--text-muted);
+}
+.items-form input[type='text'],
+.items-form input[type='number'],
+.items-search {
+  min-width: 0;
+  padding: 3px 5px;
+  border: 1px solid var(--control-border);
+  border-radius: 2px;
+  background: #3f3f3f;
+  color: #fafafa;
+  font: inherit;
+}
+.items-form input[type='text']:focus,
+.items-form input[type='number']:focus,
+.items-search:focus {
+  outline: 1px solid var(--accent);
+}
+.items-form-traits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.items-form-traits label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  user-select: none;
+}
+.items-form-hint {
+  /* Lines up with the fields' value column. */
+  margin: 0 0 10px 88px;
+  color: #999;
+  font-size: 11px;
+}
+.items-form-error {
+  margin-top: 10px;
+  color: var(--error);
+}
+.items-form-image-info button,
+.items-form-actions button {
+  height: 26px;
+  padding: 0 12px;
+  border: 1px solid var(--control-border);
+  border-radius: 2px;
+  background: #3f3f3f;
+  color: #fafafa;
+  font: inherit;
+  cursor: pointer;
+}
+.items-form-image-info button:hover {
+  background: #4a4a4a;
 }
 
 /* ------------------------------------------------------------------ */

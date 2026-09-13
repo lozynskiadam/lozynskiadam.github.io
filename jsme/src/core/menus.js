@@ -5,11 +5,16 @@
  * from the action itself.
  */
 
-/** The workspace menu bar above the rail; ids from workspaceActions.js, shared by every editor. */
+/**
+ * The workspace menu bar above the rail; ids from workspaceActions.js, shared
+ * by every editor. An optional `icon` (sprite name from app.css `[data-icon]`)
+ * replaces the title's text, keeping `label` as its tooltip / accessible name.
+ */
 export const MENUS = [
   {
     id: 'file',
     label: 'File',
+    icon: 'menu',
     items: ['file.new', 'file.open', 'file.save', null, 'file.properties', null, 'help.shortcuts'],
   },
 ];
