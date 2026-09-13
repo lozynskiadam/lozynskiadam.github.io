@@ -5,9 +5,10 @@ import { pixelToTile, tileToPixel, marginTiles, visibleOrigin } from './pointer.
 // Ruler strip thickness in px, and how often (in tiles) a tick gets a label.
 const RULER_SIZE = 20;
 const MAJOR_TICK_EVERY = 5;
-// Ruler colours - the strips are chrome around the map, so they stay close to
-// the panel behind them (--ruler-bg in app.css paints the rulers' corner).
-const RULER_BG = '#202226';
+// Ruler colours - the strips are chrome around the map, so they read as part
+// of the panel behind them and take its background (--ruler-bg in app.css,
+// which paints the corner between the two strips to match).
+const RULER_BG = '#191a1c'; // --panel-bg in app.css
 const RULER_TICK = '#5b606a';
 const RULER_LABEL = '#9aa0aa';
 // Rulers only ever hold a few tiny tick labels, so their glyph atlas can stay small.
