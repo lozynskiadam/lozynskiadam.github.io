@@ -30,6 +30,7 @@ button {
   --panel-bg: #191a1c;
   --panel-dark: #353535;
   --panel-border: #282828;
+  --panel-border-radius: 10px;
   --control-border: #2c2c2c;
   --control-gradient: linear-gradient(180deg, #3f3f3f 0%, #373737 100%);
   --hover-gradient: linear-gradient(180deg, #919191 0%, #757575 2%, #626262 100%);
@@ -59,6 +60,8 @@ button {
   display: flex;
   flex: 1;
   min-height: 0;
+  margin-right: 5px;
+  margin-bottom: 5px;
 }
 .editor-view {
   position: relative;
@@ -129,7 +132,7 @@ button {
   color: var(--text);
   overflow: hidden;
   z-index: 3;
-  border-radius: 10px;
+  border-radius: var(--panel-border-radius);
 }
 .toolbar {
   grid-column: 2;
@@ -156,7 +159,7 @@ button {
   color: var(--text-muted);
   user-select: none;
   background-color: var(--panel-bg);
-  border-radius: 10px;
+  border-radius: var(--panel-border-radius);
 }
 .empty-editor-title {
   font-size: 18px;
@@ -166,10 +169,12 @@ button {
   margin-top: 6px;
 }
 
+/* Sits where the editor panels will be, so it reads as the same surface. */
 .loading {
   position: absolute;
   inset: 0;
-  background: #222;
+  background-color: var(--panel-bg);
+  border-radius: var(--panel-border-radius);
   z-index: 5000;
 }
 .spinner {
@@ -178,8 +183,8 @@ button {
   margin: auto;
   width: 35px;
   height: 35px;
-  border: 5px solid rgba(255, 255, 255, 0.25);
-  border-top: 5px solid rgba(255, 255, 255, 0.8);
+  border: 5px solid var(--panel-dark);
+  border-top: 5px solid var(--text-muted);
   border-radius: 50%;
   animation: 0.75s linear infinite spinner;
 }
