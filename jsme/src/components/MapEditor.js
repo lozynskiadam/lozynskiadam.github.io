@@ -22,6 +22,10 @@ const DIALOGS = {
  * The map editor as a whole: tool/item panels, the viewport and its
  * dialogs. Its keyboard shortcuts live only as long as it is mounted, so
  * switching to another editor in the rail takes them down with it.
+ *
+ * The toolbar and the viewport share one `.map-panel` wrapper: it is the
+ * card that carries the rounded corners, so the rulers and the canvas get
+ * clipped by it instead of each rounding its own edge.
  */
 export default defineComponent({
   name: 'MapEditor',
@@ -44,8 +48,10 @@ export default defineComponent({
       <LoadingOverlay v-if="state.loading" />
       <template v-else>
         <Sidebar />
-        <Toolbar />
-        <MapCanvas />
+        <div class="map-panel">
+          <Toolbar />
+          <MapCanvas />
+        </div>
         <component v-if="state.dialog && dialogs[state.dialog.name]" :is="dialogs[state.dialog.name]" v-bind="state.dialog.props" />
         <ContextMenu />
       </template>

@@ -14,6 +14,9 @@ import ItemForm from './ItemForm.js';
  * Saving is its own command rather than File → Save: that one writes the
  * map file, while the catalog is the project's items.json, a separate file
  * on disk (see core/itemsFile.js).
+ *
+ * Laid out like the map editor: the catalog card on the left, and the
+ * toolbar plus the edited item in one `.items-panel` card next to it.
  */
 export default defineComponent({
   name: 'ItemsEditor',
@@ -52,22 +55,24 @@ export default defineComponent({
       <template v-else>
         <ItemList />
 
-        <div class="toolbar items-toolbar">
-          <div class="toolbar-buttons">
-            <button type="button" class="text-button" @click="addItem">New item</button>
-            <button type="button" class="text-button" :disabled="!item" @click="removeItem">Delete item</button>
-            <div class="toolbar-separator"></div>
-            <button type="button" class="text-button" @click="save">Save {{ fileName }}</button>
+        <div class="items-panel">
+          <div class="toolbar">
+            <div class="toolbar-buttons">
+              <button type="button" class="text-button" @click="addItem">New item</button>
+              <button type="button" class="text-button" :disabled="!item" @click="removeItem">Delete item</button>
+              <div class="toolbar-separator"></div>
+              <button type="button" class="text-button" @click="save">Save {{ fileName }}</button>
+            </div>
+            <div class="toolbar-status">
+              <span v-if="state.itemsDirty" class="items-unsaved" :title="fileName + ' has unsaved changes'">unsaved changes</span>
+            </div>
           </div>
-          <div class="toolbar-status">
-            <span v-if="state.itemsDirty" class="items-unsaved" :title="fileName + ' has unsaved changes'">unsaved changes</span>
-          </div>
-        </div>
 
-        <div class="items-detail">
-          <ItemForm v-if="item" :item="item" />
-          <div v-else class="items-detail-empty">Pick an item on the left to edit it.</div>
-          <div v-if="error" class="items-form-error">{{ error }}</div>
+          <div class="items-detail">
+            <ItemForm v-if="item" :item="item" />
+            <div v-else class="items-detail-empty">Pick an item on the left to edit it.</div>
+            <div v-if="error" class="items-form-error">{{ error }}</div>
+          </div>
         </div>
       </template>
     </div>

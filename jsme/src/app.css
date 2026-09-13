@@ -31,6 +31,13 @@ button {
   --panel-dark: #353535;
   --panel-border: #282828;
   --panel-border-radius: 10px;
+  /* Panels float over the desktop gradient, so they cast a soft shadow. */
+  /* Recessed areas inside a panel (the palette, the map viewport). */
+  --well-bg: rgba(0, 0, 0, 0.28);
+  /* Rulers, kept in sync with RULER_* in core/renderer.js. */
+  --ruler-bg: #202226;
+  /* Down-chevron for anything that opens a list (menu bar, layer picker). */
+  --chevron: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none' stroke='%23e0e0e0' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'><path d='M1.5 3l2.5 2.5L6.5 3'/></svg>");
   --control-border: #2c2c2c;
   --control-gradient: linear-gradient(180deg, #3f3f3f 0%, #373737 100%);
   --hover-gradient: linear-gradient(180deg, #919191 0%, #757575 2%, #626262 100%);
@@ -40,6 +47,34 @@ button {
   --accent-soft: #8fd3ff;
   --highlight: #ffcb00;
   --error: #ffb3b3;
+}
+
+/* Anything that scrolls inside a panel gets a thin scrollbar, so the OS one
+   does not cut a wide stripe out of the panel. */
+.palette,
+.items-detail {
+  scrollbar-width: thin;
+  scrollbar-color: #4a4a4a transparent;
+}
+.palette::-webkit-scrollbar,
+.items-detail::-webkit-scrollbar {
+  width: 10px;
+}
+.palette::-webkit-scrollbar-track,
+.items-detail::-webkit-scrollbar-track {
+  background: transparent;
+}
+.palette::-webkit-scrollbar-thumb,
+.items-detail::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 5px;
+  background: #4a4a4a;
+  background-clip: content-box;
+}
+.palette::-webkit-scrollbar-thumb:hover,
+.items-detail::-webkit-scrollbar-thumb:hover {
+  background: #5f5f5f;
+  background-clip: content-box;
 }
 
 /* ------------------------------------------------------------------ */
@@ -60,8 +95,8 @@ button {
   display: flex;
   flex: 1;
   min-height: 0;
-  margin-right: 5px;
-  margin-bottom: 5px;
+  margin-right: 8px;
+  margin-bottom: 8px;
 }
 .editor-view {
   position: relative;
@@ -112,35 +147,42 @@ button {
 }
 
 /* ---- map editor ---- */
+/* Two cards side by side: the sidebar, and the toolbar + map as one panel. */
 .map-editor {
   position: relative;
-  display: grid;
-  grid-template-columns: 236px 1fr;
-  grid-template-rows: auto 1fr;
-  column-gap: 5px;
+  display: flex;
+  gap: 8px;
   width: 100%;
   height: 100%;
   overflow: hidden;
 }
 .sidebar {
-  grid-column: 1;
-  grid-row: 1 / 3;
+  flex: none;
   display: flex;
   flex-direction: column;
+  gap: 8px;
+  width: 236px;
   min-height: 0;
+  padding: 8px;
   background-color: var(--panel-bg);
   color: var(--text);
   overflow: hidden;
   z-index: 3;
   border-radius: var(--panel-border-radius);
 }
-.toolbar {
-  grid-column: 2;
-  grid-row: 1;
+/* The wrapper owns the rounded corners, so the rulers and the canvas are
+   clipped by it instead of each having to round an edge of its own. */
+.map-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  background-color: var(--panel-bg);
+  border-radius: var(--panel-border-radius);
 }
 .content {
-  grid-column: 2;
-  grid-row: 2;
+  flex: 1;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
@@ -392,7 +434,7 @@ button {
   margin-left: 2px;
   background-repeat: no-repeat;
   background-position: center;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none' stroke='%23e0e0e0' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'><path d='M1.5 3l2.5 2.5L6.5 3'/></svg>");
+  background-image: var(--chevron);
   opacity: 0.8;
 }
 .menubar-project-dropdown {
@@ -417,13 +459,16 @@ button {
 /* ------------------------------------------------------------------ */
 
 .toolbar {
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 32px;
+  gap: 12px;
+  height: 36px;
   padding: 0 10px 0 6px;
   background-color: var(--panel-bg);
-  box-shadow: 0 0 5px #000;
+  /* A hairline, not a drop shadow: the toolbar and the map below it are one card. */
+  border-bottom: 1px solid var(--panel-border);
   z-index: 2;
   cursor: default;
 }
@@ -433,8 +478,8 @@ button {
 }
 .toolbar-separator {
   width: 1px;
-  height: 24px;
-  margin: 0 5px;
+  height: 20px;
+  margin: 0 6px;
   border-left: 1px solid #383838;
 }
 .toolbar-button {
@@ -445,7 +490,7 @@ button {
   height: 25px;
   padding: 0;
   border: 1px solid transparent;
-  border-radius: 2px;
+  border-radius: 4px;
   background: transparent;
   color: #e0e0e0;
   cursor: default;
@@ -468,7 +513,7 @@ button {
   margin-right: 4px;
   padding: 0 10px;
   border: 1px solid var(--control-border);
-  border-radius: 2px;
+  border-radius: 4px;
   background: var(--control-gradient);
   color: var(--text);
   cursor: default;
@@ -487,7 +532,7 @@ button {
   height: 8px;
   margin: 0 4px;
   border: 1px solid var(--control-border);
-  border-radius: 2px;
+  border-radius: 4px;
   background: var(--control-gradient);
 }
 .toolbar-slider::-webkit-slider-thumb {
@@ -511,7 +556,7 @@ button {
 .toolbar-status {
   display: flex;
   gap: 14px;
-  color: var(--text);
+  color: var(--text-muted);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -523,7 +568,7 @@ button {
 .ruler-corner {
   grid-column: 1;
   grid-row: 1;
-  background-color: var(--panel-dark);
+  background-color: var(--ruler-bg);
   border-right: 1px solid var(--panel-border);
   border-bottom: 1px solid var(--panel-border);
 }
@@ -545,6 +590,8 @@ button {
   grid-row: 2;
   position: relative;
   overflow: hidden;
+  /* The canvas clears to transparent, so this is what shows around the map. */
+  background-color: #141517;
 }
 .map-canvas {
   display: block;
@@ -565,19 +612,28 @@ button {
 /* Sidebar: selected item & palette                                    */
 /* ------------------------------------------------------------------ */
 
+/* ---- the painting pair: primary in front, secondary behind it ---- */
 .selected-item {
-  position: relative;
   flex: none;
-  margin: 10px;
-  height: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-top: 4px;
+}
+/* Fixed box so the two tiles overlap the same way whatever the sidebar's width. */
+.selected-item-swatches {
+  position: relative;
+  width: 90px;
+  height: 88px;
 }
 .selected-item-image,
 .secondary-item-image,
 .item-properties-preview {
   width: 68px;
   height: 68px;
-  border: 2px inset var(--control-border);
-  border-radius: 2px;
+  border: 2px solid var(--control-border);
+  border-radius: 4px;
   background: var(--control-gradient);
   overflow: hidden;
 }
@@ -586,137 +642,206 @@ button {
   position: absolute;
 }
 .selected-item-image {
-  top: 15px;
-  left: 70px;
+  top: 20px;
+  left: 0;
   z-index: 2;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
 }
 .secondary-item-image {
   top: 0;
-  left: 85px;
+  left: 22px;
   z-index: 1;
 }
+/* Sprites are pixel art: double them from the box's top-left corner (2px
+   border + 32px sprite x2 = the 68px tile) and keep the pixels hard. */
 .selected-item-image img,
 .secondary-item-image img,
 .item-properties-preview img {
-  object-fit: cover;
-  object-position: 0 0;
-  margin-left: 16px;
-  margin-top: 16px;
+  display: block;
   width: 32px;
   height: 32px;
+  object-fit: cover;
+  object-position: 0 0;
   transform: scale(2);
+  transform-origin: top left;
+  image-rendering: pixelated;
 }
 .selected-item-details {
-  position: absolute;
   width: 100%;
-  top: 85px;
+  /* Room for both lines, so the palette does not jump when nothing is picked. */
+  min-height: 32px;
   text-align: center;
+  line-height: 16px;
 }
+.selected-item-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.selected-item-id,
+.selected-item-empty {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+.selected-item-empty {
+  padding-top: 8px;
+}
+
+/* ---- layer picker ---- */
 .layer-list {
   flex: none;
-  width: calc(100% - 6px);
-  height: 25px;
-  padding: 2px;
-  margin: 3px;
+  width: 100%;
+  height: 26px;
+  padding: 0 24px 0 8px;
   color: var(--text);
   border: 1px solid var(--control-border);
-  border-radius: 2px;
+  border-radius: 4px;
   -webkit-appearance: none;
   appearance: none;
-  background-image: url('ui.png');
-  background-repeat: no-repeat;
-  background-color: #6f6f6f;
-  background-position: right 0 top -90px;
-  box-shadow: inset 0 1px 3px #757575;
+  /* Own chevron on top of the shared control fill, instead of the ui.png arrow. */
+  background-image: var(--chevron), var(--control-gradient);
+  background-repeat: no-repeat, no-repeat;
+  background-position: right 8px center, 0 0;
+  background-size: 8px 8px, auto;
+  cursor: pointer;
 }
+.layer-list:hover {
+  background-image: var(--chevron), var(--hover-gradient);
+}
+.layer-list:focus {
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
+}
+/* The dropdown itself is drawn by the OS, which does not inherit the panel's colours. */
+.layer-list option {
+  background-color: #2b2b2b;
+  color: var(--text);
+}
+
+/* ---- palette ---- */
 .palette {
   flex: 1;
   min-height: 0;
-  overflow-y: scroll;
-  scrollbar-color: #505050 rgba(0, 0, 0, 0.25);
-  background-color: rgba(0, 0, 0, 0.25);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  gap: 4px;
+  align-content: start;
+  padding: 6px;
+  overflow-y: auto;
+  border-radius: 6px;
+  background-color: var(--well-bg);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 .palette .item-select {
-  display: inline-block;
-  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border: 1px solid var(--control-border);
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.03);
   cursor: pointer;
   user-select: none;
-  border: 2px outset var(--control-border);
-  width: 36px;
-  height: 36px;
 }
+.palette .item-select:hover {
+  border-color: #4f4f4f;
+  background-color: rgba(255, 255, 255, 0.07);
+}
+/* Outline rather than a thicker border, so picking an item moves nothing. */
 .palette .item-select.active {
-  border: 2px ridge var(--highlight);
-  background-color: rgba(0, 0, 0, 0.47);
-  box-shadow: 0 0 2px #ebff00;
+  border-color: var(--highlight);
+  outline: 1px solid var(--highlight);
+  outline-offset: -2px;
+  background-color: rgba(255, 203, 0, 0.12);
+  box-shadow: 0 0 4px rgba(235, 255, 0, 0.35);
 }
 .palette .item-select img {
+  display: block;
   width: 32px;
   height: 32px;
   object-fit: cover;
   object-position: 0 0;
+  image-rendering: pixelated;
 }
 
 /* ------------------------------------------------------------------ */
 /* Items editor                                                        */
 /* ------------------------------------------------------------------ */
 
+/* Same two cards as the map editor: the catalog where the palette is, and
+   the toolbar plus the edited item in one panel beside it. */
 .items-editor {
   position: relative;
-  display: grid;
-  /* Same shape as the map editor: catalog where the palette is, toolbar on top. */
-  grid-template-columns: 236px 1fr;
-  grid-template-rows: auto 1fr;
+  display: flex;
+  gap: 8px;
   width: 100%;
   height: 100%;
   overflow: hidden;
 }
 .items-sidebar {
-  grid-column: 1;
-  grid-row: 1 / 3;
+  flex: none;
   display: flex;
   flex-direction: column;
+  gap: 8px;
+  width: 236px;
   min-height: 0;
+  padding: 8px;
   background-color: var(--panel-bg);
   color: var(--text);
   overflow: hidden;
   z-index: 3;
-  box-shadow: 0 0 5px #000;
+  border-radius: var(--panel-border-radius);
 }
+/* The layer picker and the palette are the map sidebar's controls reused
+   here, so they only need stacking - the sidebar does the padding. */
 .items-filters {
   flex: none;
   display: flex;
   flex-direction: column;
+  gap: 6px;
 }
 .items-search {
-  width: calc(100% - 6px);
-  height: 25px;
-  margin: 0 3px 3px;
+  width: 100%;
 }
 .items-count {
   flex: none;
-  padding: 5px 6px;
+  padding: 0 2px;
   color: var(--text-muted);
   font-size: 11px;
+  text-align: center;
   user-select: none;
 }
-.items-toolbar {
-  grid-column: 2;
-  grid-row: 1;
+.items-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  background-color: var(--panel-bg);
+  border-radius: var(--panel-border-radius);
 }
 .items-unsaved {
   color: var(--highlight);
 }
 .items-detail {
-  grid-column: 2;
-  grid-row: 2;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   min-height: 0;
   overflow-y: auto;
   padding: 16px;
   color: var(--text);
 }
+.items-form,
+.items-detail > .items-form-error {
+  /* Keep their own height: a shrinking child would be clipped, not scrolled. */
+  flex: none;
+}
+/* Fills the panel, so the invitation sits in the middle of the empty card. */
 .items-detail-empty {
+  flex: 1;
+  display: grid;
+  place-items: center;
   color: var(--text-muted);
   user-select: none;
 }
@@ -737,9 +862,10 @@ button {
   place-items: center;
   width: 140px;
   height: 140px;
-  border: 2px inset var(--control-border);
-  border-radius: 2px;
+  border: 2px solid var(--control-border);
+  border-radius: 4px;
   background: var(--control-gradient);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
   overflow: hidden;
 }
 /* Sprites are 32-64px pixel art: double them and keep the pixels hard. */
@@ -763,14 +889,18 @@ button {
 .items-form-field > span {
   color: var(--text-muted);
 }
+/* Typed-into fields are recessed, the buttons beside them raised - the same
+   pairing the toolbar and the map sidebar use. */
 .items-form input[type='text'],
 .items-form input[type='number'],
 .items-search {
   min-width: 0;
-  padding: 3px 5px;
+  height: 26px;
+  padding: 0 8px;
   border: 1px solid var(--control-border);
-  border-radius: 2px;
-  background: #3f3f3f;
+  border-radius: 4px;
+  background: #212226;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.45);
   color: #fafafa;
   font: inherit;
 }
@@ -778,6 +908,10 @@ button {
 .items-form input[type='number']:focus,
 .items-search:focus {
   outline: 1px solid var(--accent);
+  outline-offset: -1px;
+}
+.items-form input[type='checkbox'] {
+  accent-color: var(--accent);
 }
 .items-form-traits {
   display: flex;
@@ -800,19 +934,18 @@ button {
   margin-top: 10px;
   color: var(--error);
 }
-.items-form-image-info button,
-.items-form-actions button {
+.items-form button {
   height: 26px;
   padding: 0 12px;
   border: 1px solid var(--control-border);
-  border-radius: 2px;
-  background: #3f3f3f;
-  color: #fafafa;
+  border-radius: 4px;
+  background: var(--control-gradient);
+  color: var(--text);
   font: inherit;
   cursor: pointer;
 }
-.items-form-image-info button:hover {
-  background: #4a4a4a;
+.items-form button:hover {
+  background: var(--hover-gradient);
 }
 
 /* ------------------------------------------------------------------ */
