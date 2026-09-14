@@ -134,12 +134,13 @@ export default defineComponent({
       // Ctrl+wheel zooms (also swallowing the browser's page zoom), as does the
       // wheel while the middle button is held for panning - the hand is already
       // on the map, so it reads as "move around", not as a brush change.
-      // A plain wheel sizes the brush.
+      // A plain wheel sizes the brush - but only for a tool that has one,
+      // so it never quietly moves a slider the toolbar is not even showing.
       if (event.ctrlKey || event.metaKey || panning.value) {
         store.stepZoom(direction);
         return;
       }
-      store.setBrushSize(store.state.brushSize + direction);
+      if (activeTool.value?.sizing) store.setBrushSize(store.state.brushSize + direction);
     }
 
     onMounted(() => {

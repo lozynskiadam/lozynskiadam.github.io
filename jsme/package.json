@@ -1,0 +1,19 @@
+{
+  "name": "jsme",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "JS Map Editor - tile map editor (Vue 3 + WebGL) that runs straight off a static server",
+  "scripts": {
+    "serve": "python3 -m http.server 8000",
+    "test": "node --test \"test/*.test.mjs\"",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "eslint": "^9.17.0",
+    "prettier": "^3.4.2"
+  }
+}

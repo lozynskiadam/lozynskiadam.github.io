@@ -1,3 +1,5 @@
+import { parseCellKey } from './mapData.js';
+
 function forEachBrushCell(size, callback) {
   for (let dy = -(size - 1); dy <= size - 1; dy++) {
     for (let dx = -(size - 1); dx <= size - 1; dx++) {
@@ -36,10 +38,22 @@ function drawCellOutline(ctx, x, y, tileSize, outerColor) {
  * dialog pick it up automatically (see actions.js).
  */
 export function createTools(store, config) {
-  function sampleTile(x, y, z) {
+  function sampleTile({ x, y, z }) {
     const tile = store.getTile(x, y, z);
     if (!tile || tile.length === 0) return;
     store.selectItemAndReveal(tile[tile.length - 1].id);
+  }
+
+  /** Press and drag do the same thing for the painting tools, so they share one callback. */
+  function paint({ x, y, z }) {
+    forEachBrushCell(store.state.brushSize, (dx, dy) => store.drawOnTile(x + dx, y + dy, z));
+  }
+
+  // A brush wider than one tile wipes the whole stack, ground included; at
+  // 1x1 the eraser only takes the top item and leaves the ground alone.
+  function erase({ x, y, z }) {
+    const wholeStack = store.state.brushSize > 1;
+    forEachBrushCell(store.state.brushSize, (dx, dy) => store.eraseOnTile(x + dx, y + dy, z, { wholeStack }));
   }
 
   // Ephemeral drag state, private to this module - there is only ever one
@@ -57,17 +71,17 @@ export function createTools(store, config) {
     // itself (see MapRenderer.renderFloor), plus a small up-left shift, so
     // a drag reads as picking the thing up rather than just previewing a paste.
     for (const [key, entries] of Object.entries(moveDraft.block.cells)) {
-      const [dx, dy] = key.split(',').map(Number);
+      const [dx, dy] = parseCellKey(key);
       let lift = 0;
       for (const entry of entries) {
         const item = store.getItem(entry.id);
         if (!item) continue;
-        const drawX = blockX + dx * config.tileSize + (config.tileSize - item.image.width) - 6 - lift;
-        const drawY = blockY + dy * config.tileSize + (config.tileSize - item.image.height) - 6 - lift;
+        const drawX = blockX + dx * config.tileSize + (config.tileSize - item.bitmap.width) - 6 - lift;
+        const drawY = blockY + dy * config.tileSize + (config.tileSize - item.bitmap.height) - 6 - lift;
         lift = Math.min(lift + (item.elevation ?? 0), config.maxElevation);
-        ctx.drawImage(item.image, drawX, drawY);
+        ctx.drawImage(item.bitmap, drawX, drawY);
         ctx.globalCompositeOperation = 'lighter';
-        ctx.drawImage(item.image, drawX, drawY);
+        ctx.drawImage(item.bitmap, drawX, drawY);
         ctx.globalCompositeOperation = 'source-over';
       }
     }
@@ -175,12 +189,8 @@ export function createTools(store, config) {
       shortcut: '3',
       sizing: true,
       cursor: 'default',
-      onClick({ x, y, z }) {
-        forEachBrushCell(store.state.brushSize, (dx, dy) => store.drawOnTile(x + dx, y + dy, z));
-      },
-      onDrag({ x, y, z }) {
-        forEachBrushCell(store.state.brushSize, (dx, dy) => store.drawOnTile(x + dx, y + dy, z));
-      },
+      onClick: paint,
+      onDrag: paint,
       onRender({ ctx, x, y, z, tileX, tileY }) {
         const item = store.selectedItem.value;
         if (!item) return;
@@ -190,9 +200,9 @@ export function createTools(store, config) {
           const tile = store.getTile(tileX + dx, tileY + dy, z) ?? [];
           const slot = tile.findIndex((entry) => store.getItem(entry.id)?.layer === item.layer);
           const lift = store.stackElevation(tile, slot === -1 ? tile.length : slot);
-          const drawX = x + config.tileSize - item.image.width + dx * config.tileSize - lift;
-          const drawY = y + config.tileSize - item.image.height + dy * config.tileSize - lift;
-          ctx.drawImage(item.image, drawX, drawY);
+          const drawX = x + config.tileSize - item.bitmap.width + dx * config.tileSize - lift;
+          const drawY = y + config.tileSize - item.bitmap.height + dy * config.tileSize - lift;
+          ctx.drawImage(item.bitmap, drawX, drawY);
           drawCellOutline(ctx, x + dx * config.tileSize, y + dy * config.tileSize, config.tileSize, '#ffffff');
         });
       },
@@ -204,14 +214,8 @@ export function createTools(store, config) {
       shortcut: '4',
       sizing: true,
       cursor: 'default',
-      onClick({ x, y, z }) {
-        const hardClear = store.state.brushSize > 1;
-        forEachBrushCell(store.state.brushSize, (dx, dy) => store.eraseOnTile(x + dx, y + dy, z, hardClear));
-      },
-      onDrag({ x, y, z }) {
-        const hardClear = store.state.brushSize > 1;
-        forEachBrushCell(store.state.brushSize, (dx, dy) => store.eraseOnTile(x + dx, y + dy, z, hardClear));
-      },
+      onClick: erase,
+      onDrag: erase,
       onRender({ ctx, x, y }) {
         forEachBrushCell(store.state.brushSize, (dx, dy) => {
           drawCellOutline(ctx, x + dx * config.tileSize, y + dy * config.tileSize, config.tileSize, '#ff0000');
@@ -226,12 +230,8 @@ export function createTools(store, config) {
       hint: 'hold Tab',
       sizing: false,
       cursor: 'crosshair',
-      onClick({ x, y, z }) {
-        sampleTile(x, y, z);
-      },
-      onDrag({ x, y, z }) {
-        sampleTile(x, y, z);
-      },
+      onClick: sampleTile,
+      onDrag: sampleTile,
       onRender({ ctx, x, y }) {
         drawCellOutline(ctx, x, y, config.tileSize, '#ffffff');
       },

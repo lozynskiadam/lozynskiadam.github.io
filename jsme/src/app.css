@@ -19,7 +19,7 @@ body {
   font-family: 'Tahoma', monospace;
   font-size: 13px;
   overflow: hidden;
-  color: #333;
+  color: var(--text);
 }
 button {
   font: inherit;
@@ -31,11 +31,9 @@ button {
   --panel-dark: #353535;
   --panel-border: #282828;
   --panel-border-radius: 10px;
-  /* Panels float over the desktop gradient, so they cast a soft shadow. */
-  /* Recessed areas inside a panel (the palette, the map viewport). */
-  --well-bg: rgba(0, 0, 0, 0.28);
-  /* Rulers: the strips are painted by the renderer (RULER_BG in
-     core/renderer.js), this paints the corner where they meet. */
+  /* Rulers: this paints the corner where the two strips meet, and the
+     renderer reads it on attach to paint the strips themselves - so the
+     color is defined here only. */
   --ruler-bg: #191a1c;
   /* Down-chevron for anything that opens a list (menu bar, layer picker). */
   --chevron: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none' stroke='%23e0e0e0' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'><path d='M1.5 3l2.5 2.5L6.5 3'/></svg>");
@@ -1079,7 +1077,13 @@ label.key {
   white-space: nowrap;
 }
 .context-menu-option {
+  display: block;
+  width: 100%;
   padding: 6px 10px;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
   cursor: pointer;
   user-select: none;
 }

@@ -4,6 +4,7 @@ import { EDITORS, workspace } from '../core/editors.js';
 import { useWorkspaceKeyboard } from '../composables/useWorkspaceKeyboard.js';
 import MenuBar from './MenuBar.js';
 import EditorRail from './EditorRail.js';
+import DialogHost from './DialogHost.js';
 import MapEditor from './MapEditor.js';
 import ItemsEditor from './ItemsEditor.js';
 import EmptyEditor from './EmptyEditor.js';
@@ -39,7 +40,7 @@ const DIALOGS = {
  */
 export default defineComponent({
   name: 'App',
-  components: { MenuBar, EditorRail },
+  components: { MenuBar, EditorRail, DialogHost },
   setup() {
     useWorkspaceKeyboard();
 
@@ -62,7 +63,7 @@ export default defineComponent({
       activeComponent.value === EmptyEditor ? { label: activeEditor.value.label } : {},
     );
 
-    return { state: store.state, workspace, activeComponent, activeProps, dialogs: DIALOGS };
+    return { workspace, activeComponent, activeProps, dialogs: DIALOGS };
   },
   template: `
     <div class="app-root" @contextmenu.prevent>
@@ -73,7 +74,7 @@ export default defineComponent({
           <component :is="activeComponent" :key="workspace.activeEditor" v-bind="activeProps" />
         </div>
       </div>
-      <component v-if="state.dialog && dialogs[state.dialog.name]" :is="dialogs[state.dialog.name]" v-bind="state.dialog.props" />
+      <DialogHost :dialogs="dialogs" />
     </div>
   `,
 });

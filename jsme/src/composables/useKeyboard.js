@@ -17,8 +17,12 @@ export function isTypingTarget(target) {
  *   keydown(event) - runs first; return true to claim the event so no
  *                    action is looked up for it
  *   keyup(event)   - every key release
+ *
+ * `whileTyping` keeps the shortcuts live inside inputs. Only the workspace
+ * wants that: its combos (Ctrl+S, Ctrl+O, F1) are application commands that
+ * nobody types, unlike the map editor's bare letters.
  */
-export function useKeyboardShortcuts(actions, { keydown, keyup } = {}) {
+export function useKeyboardShortcuts(actions, { keydown, keyup, whileTyping = false } = {}) {
   // Built once: normalized shortcut -> action.
   const bindings = new Map();
   for (const action of Object.values(actions)) {
@@ -31,7 +35,7 @@ export function useKeyboardShortcuts(actions, { keydown, keyup } = {}) {
 
   function handleKeyDown(event) {
     if (keydown?.(event)) return;
-    if (isTypingTarget(event.target)) return;
+    if (!whileTyping && isTypingTarget(event.target)) return;
 
     const action = bindings.get(shortcutFromEvent(event));
     if (!action || (action.enabled && !action.enabled())) return;

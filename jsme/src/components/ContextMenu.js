@@ -28,10 +28,9 @@ export default defineComponent({
       const { x, y, z } = menu.value;
       store.closeContextMenu();
       // The menu always targets the tile's top item, so popping it removes
-      // exactly what the menu names; re-highlighting first keeps eraseOnTile
-      // from refusing a ground tile.
-      store.highlightOnTile(x, y, z);
-      store.eraseOnTile(x, y, z);
+      // exactly what the menu names - ground included, since the user named
+      // it. The highlight the right-click left behind goes with it.
+      store.eraseOnTile(x, y, z, { force: true });
       store.clearHighlight();
     }
 
@@ -77,12 +76,13 @@ export default defineComponent({
       v-if="menu && item"
       ref="menuEl"
       class="context-menu"
+      role="menu"
       :style="{ left: position.left + 'px', top: position.top + 'px' }"
     >
       <div class="context-menu-info">{{ item.name }} ({{ item.id }})</div>
-      <div class="context-menu-option" @click="selectItem">Select</div>
-      <div class="context-menu-option" @click="showProperties">Properties</div>
-      <div class="context-menu-option" @click="deleteItem">Delete</div>
+      <button type="button" class="context-menu-option" role="menuitem" @click="selectItem">Select</button>
+      <button type="button" class="context-menu-option" role="menuitem" @click="showProperties">Properties</button>
+      <button type="button" class="context-menu-option" role="menuitem" @click="deleteItem">Delete</button>
     </div>
   `,
 });

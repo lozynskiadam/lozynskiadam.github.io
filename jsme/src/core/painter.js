@@ -136,9 +136,15 @@ function compileShader(gl, type, source) {
 
 function createProgram(gl, vertexSource, fragmentSource) {
   const program = gl.createProgram();
-  gl.attachShader(program, compileShader(gl, gl.VERTEX_SHADER, vertexSource));
-  gl.attachShader(program, compileShader(gl, gl.FRAGMENT_SHADER, fragmentSource));
+  const shaders = [
+    compileShader(gl, gl.VERTEX_SHADER, vertexSource),
+    compileShader(gl, gl.FRAGMENT_SHADER, fragmentSource),
+  ];
+  for (const shader of shaders) gl.attachShader(program, shader);
   gl.linkProgram(program);
+  // The linked program keeps what it needs; flagging them here means they
+  // go with it instead of outliving every context loss and restore.
+  for (const shader of shaders) gl.deleteShader(shader);
   if (!gl.getProgramParameter(program, gl.LINK_STATUS) && !gl.isContextLost()) {
     const log = gl.getProgramInfoLog(program);
     gl.deleteProgram(program);

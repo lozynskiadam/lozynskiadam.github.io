@@ -6,15 +6,22 @@ import { pixelToTile, tileToPixel, marginTiles, visibleOrigin } from './pointer.
 const RULER_SIZE = 20;
 const MAJOR_TICK_EVERY = 5;
 // Ruler colors - the strips are chrome around the map, so they read as part
-// of the panel behind them and take its background (--ruler-bg in app.css,
-// which paints the corner between the two strips to match).
-const RULER_BG = '#191a1c'; // --panel-bg in app.css
+// of the panel behind them and take its background. That background has one
+// owner, --ruler-bg in app.css (which also paints the corner between the two
+// strips to match); this is only the fallback for when the variable is gone.
+const RULER_BG_FALLBACK = '#191a1c';
 const RULER_TICK = '#5b606a';
 const RULER_LABEL = '#9aa0aa';
 // Rulers only ever hold a few tiny tick labels, so their glyph atlas can stay small.
 const RULER_ATLAS_SIZE = 256;
 // Leg length (px) of the corner triangle marking items that carry custom properties.
 const BADGE_SIZE = 7;
+
+/** A color custom property off :root, or '' when it is not set (or there is no DOM). */
+function readCssColor(name) {
+  if (typeof getComputedStyle !== 'function') return '';
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
 
 /**
  * Imperative WebGL renderer for the map editor.
@@ -54,6 +61,7 @@ export class MapRenderer {
     this.frame = 0; // pending requestAnimationFrame handle
     this.pendingAll = false; // whether the pending frame must redraw every floor
     this.dirtyFloors = new Set(); // floors the pending frame must redraw (besides what the store reports)
+    this.rulerBg = RULER_BG_FALLBACK; // read from app.css on attach()
     this.stopWatchers = [];
   }
 
@@ -62,11 +70,13 @@ export class MapRenderer {
     this.painter = new GLPainter(canvas);
     // A lost GPU context wipes every texture and layer; once the browser
     // hands it back, rebuild the whole picture from the store.
-    this.painter.onContextRestored = () => this.invalidate('all');
+    this.painter.onContextRestored = () => this.invalidate({ all: true });
     this.hud = this.painter.createLayer(1, 1);
     this.floors = {};
     this.rulerH = rulerH ? new GLPainter(rulerH, { atlasSize: RULER_ATLAS_SIZE }) : null;
     this.rulerV = rulerV ? new GLPainter(rulerV, { atlasSize: RULER_ATLAS_SIZE }) : null;
+    // Read once here rather than per frame: getComputedStyle forces a style recalc.
+    this.rulerBg = readCssColor('--ruler-bg') || RULER_BG_FALLBACK;
     this.subscribe();
     this.resize();
   }
@@ -96,17 +106,17 @@ export class MapRenderer {
     const { state } = this.store;
     this.stopWatchers = [
       watch(() => state.mapRevision, () => this.invalidate()),
-      watch(() => this.store.catalog.value, () => this.invalidate('all')),
+      watch(() => this.store.catalog.value, () => this.invalidate({ all: true })),
       watch(
         () => [state.renderFromX, state.renderFromY, state.currentFloor],
-        () => this.invalidate('all'),
+        () => this.invalidate({ all: true }),
       ),
       // A new zoom changes how many tiles fit, so the layers have to be re-cut.
       watch(
         () => state.zoom,
         () => {
           this.layoutLayers();
-          this.invalidate('all');
+          this.invalidate({ all: true });
         },
       ),
       watch(
@@ -128,10 +138,10 @@ export class MapRenderer {
 
   /**
    * Requests a frame. Floors the store marked dirty are always redrawn;
-   * pass 'all' when every visible floor has to be (view moved, resize).
+   * `all` adds every visible floor (the view moved, or the canvas resized).
    */
-  invalidate(mode = 'dirty') {
-    if (mode === 'all') this.pendingAll = true;
+  invalidate({ all = false } = {}) {
+    if (all) this.pendingAll = true;
     if (this.frame || !this.painter) return;
     this.frame = requestAnimationFrame(() => {
       this.frame = 0;
@@ -199,9 +209,11 @@ export class MapRenderer {
     this.renderRulers();
   }
 
+  /** Floors at or below the current one are drawn - except that standing on ground level or above hides the basements. */
   isFloorVisible(z) {
     const { currentFloor } = this.store.state;
-    return !(z > currentFloor || (currentFloor >= 0 && z < 0));
+    if (z > currentFloor) return false;
+    return !(currentFloor >= 0 && z < 0);
   }
 
   /**
@@ -271,14 +283,14 @@ export class MapRenderer {
         const item = store.getItem(tile[index].id);
         if (!item) continue;
 
-        const drawX = tileX + (config.tileSize - item.image.width) - lift;
-        const drawY = tileY + (config.tileSize - item.image.height) - lift;
+        const drawX = tileX + (config.tileSize - item.bitmap.width) - lift;
+        const drawY = tileY + (config.tileSize - item.bitmap.height) - lift;
         lift = Math.min(lift + (item.elevation ?? 0), config.maxElevation);
         // The highlighted item stays in place; the second, additive pass only brightens it.
-        ctx.drawImage(item.image, drawX, drawY);
+        ctx.drawImage(item.bitmap, drawX, drawY);
         if (index === highlightedIndex) {
           ctx.globalCompositeOperation = 'lighter';
-          ctx.drawImage(item.image, drawX, drawY);
+          ctx.drawImage(item.bitmap, drawX, drawY);
           ctx.globalCompositeOperation = 'source-over';
         }
       }
@@ -392,7 +404,7 @@ export class MapRenderer {
     const length = axis === 'x' ? ctx.width : ctx.height;
 
     ctx.clearRect(0, 0, ctx.width, ctx.height);
-    ctx.fillStyle = RULER_BG;
+    ctx.fillStyle = this.rulerBg;
     ctx.fillRect(0, 0, ctx.width, ctx.height);
 
     ctx.strokeStyle = RULER_TICK;

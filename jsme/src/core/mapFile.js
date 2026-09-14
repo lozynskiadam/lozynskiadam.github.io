@@ -1,13 +1,14 @@
 import { isValidMapData } from './mapData.js';
+import { downloadText, pickFile } from './browserFiles.js';
 
 /**
- * Browser-side map file I/O (file picker, FileReader, download link) and
- * the file envelope: `{ name, respawnPoint: [x, y, z], map }`, where `map`
- * is the mapData structure. Kept out of the store so the store never
- * touches the DOM.
+ * The map file: its envelope `{ name, respawnPoint: [x, y, z], map }`
+ * (where `map` is the mapData structure), how to validate one, and how to
+ * read and write one in a browser (via browserFiles.js). Kept out of the
+ * store so the store never touches the DOM.
  */
 
-const INVALID = 'Selected file is not a valid map editor file';
+const INVALID_FILE_MESSAGE = 'Selected file is not a valid map editor file';
 
 export function isValidRespawnPoint(value) {
   return Array.isArray(value) && value.length === 3 && value.every(Number.isFinite);
@@ -27,14 +28,7 @@ export function isValidMapFile(value) {
 
 /** Opens the native file picker; resolves with the chosen File, or null when the user cancels. */
 export function pickMapFile() {
-  return new Promise((resolve) => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'application/json';
-    input.addEventListener('change', () => resolve(input.files[0] ?? null));
-    input.addEventListener('cancel', () => resolve(null));
-    input.click();
-  });
+  return pickFile('application/json');
 }
 
 /**
@@ -54,10 +48,10 @@ export async function readMapFile(file) {
   try {
     parsed = JSON.parse(await file.text());
   } catch {
-    throw new Error(INVALID);
+    throw new Error(INVALID_FILE_MESSAGE);
   }
   const envelope = toEnvelope(parsed);
-  if (!envelope) throw new Error(INVALID);
+  if (!envelope) throw new Error(INVALID_FILE_MESSAGE);
   return envelope;
 }
 
@@ -84,11 +78,5 @@ export function mapFileName(name) {
 }
 
 export function downloadMapFile(envelope) {
-  const blob = new Blob([JSON.stringify(envelope)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.download = mapFileName(envelope.name);
-  link.href = url;
-  link.click();
-  URL.revokeObjectURL(url);
+  downloadText(mapFileName(envelope.name), JSON.stringify(envelope));
 }

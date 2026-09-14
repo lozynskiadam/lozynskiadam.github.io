@@ -1,7 +1,11 @@
 import { defineComponent, computed, ref, watch, onUnmounted } from '../vendor/vue.esm-browser.prod.js';
 import { store, workspaceActions } from '../editor.js';
 import { MENUS } from '../core/menus.js';
+import { isActionEnabled } from '../core/actions.js';
 import { primaryShortcutLabel } from '../core/shortcuts.js';
+
+// Not a menu from MENUS: the project switcher shares the bar's open/close state.
+const PROJECT_MENU_ID = '@project';
 
 /**
  * Classic application menu bar, above the rail and shared by every editor.
@@ -33,14 +37,9 @@ export default defineComponent({
       }),
     }));
 
-    const PROJECT_MENU_ID = '@project';
     const recentProjects = computed(() => [{ id: 'current', name: store.state.name, current: true }].map(
       (project) => ({ ...project, initial: (project.name.trim()[0] ?? '?').toUpperCase() }),
     ));
-
-    function isEnabled(action) {
-      return action.enabled ? action.enabled() : true;
-    }
 
     function toggle(menuId) {
       openMenuId.value = openMenuId.value === menuId ? null : menuId;
@@ -55,7 +54,7 @@ export default defineComponent({
     }
 
     function run(action) {
-      if (!isEnabled(action)) return;
+      if (!isActionEnabled(action)) return;
       close();
       action.run();
     }
@@ -93,7 +92,7 @@ export default defineComponent({
       PROJECT_MENU_ID,
       recentProjects,
       newProject: workspaceActions['project.new'],
-      isEnabled,
+      isEnabled: isActionEnabled,
       toggle,
       hover,
       run,

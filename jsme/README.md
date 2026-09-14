@@ -6,8 +6,8 @@ Moduły ES ładują się bezpośrednio w przeglądarce.
 
 Docelowo to zestaw edytorów (mapy, przedmiotów, creatures, efektów,
 skryptów) przełączanych railem po lewej stronie, ze wspólnym paskiem menu
-(File) nad nimi. Na razie działa tylko edytor map; pozostałe to puste
-miejsca w railu.
+(File) nad nimi. Działają edytor map i edytor itemów; creatures, effects i
+scripts to na razie puste miejsca w railu.
 
 ## Architektura
 
@@ -19,7 +19,7 @@ UI / klawiatura  →  actions.js / tools.js  →  store.js  →  renderer.js
 
 | Plik | Rola |
 | --- | --- |
-| `config.js` | Stałe edytora (URL katalogu itemów i mapy startowej, rozmiar kafelka, maks. wysokość stosu, zakres pięter). |
+| `config.js` | Stałe edytora (URL katalogu itemów i mapy startowej, rozmiar kafelka, maks. wysokość stosu, zakres pięter). Leży obok `index.html`, a nie w `src/`, bo to plik do ręcznej edycji przy wdrożeniu. |
 | `src/editor.js` | Singleton edytora map: tworzy store, narzędzia, akcje i renderer, z których korzystają komponenty. |
 | `src/core/editors.js` | Lista edytorów w railu (`EDITORS`) i stan workspace: który edytor jest aktywny. |
 | `src/core/mapData.js` | Czysty model mapy (piętro → wiersz → kolumna → stos wpisów) i operacje blokowe. Bez wiedzy o UI. |
@@ -31,14 +31,21 @@ UI / klawiatura  →  actions.js / tools.js  →  store.js  →  renderer.js
 | `src/core/workspaceActions.js` | Komendy wspólne dla wszystkich edytorów – menu File (`file.save`, `help.shortcuts`, …), ten sam kształt co w `actions.js`. |
 | `src/core/menus.js` | Definicja paska menu (id z `workspaceActions.js`) i przycisków akcji na pasku narzędzi mapy (id z `actions.js`). |
 | `src/core/shortcuts.js` | Notacja skrótów klawiszowych: normalizacja, dopasowanie do `KeyboardEvent`, format do wyświetlenia. |
-| `src/core/mapFile.js` | Otwieranie/zapis pliku mapy w przeglądarce, envelope `{ name, respawnPoint, map }` + walidacja. |
+| `src/core/mapFile.js` | Envelope pliku mapy `{ name, respawnPoint, map }`, walidacja i odczyt/zapis. |
+| `src/core/itemsFile.js` | To samo dla `items.json`: serializacja katalogu i wczytanie PNG na sprite itemu. |
+| `src/core/browserFiles.js` | Dwa gesty przeglądarki, z których korzystają oba powyższe: `pickFile()` i `downloadText()`. Jedyne miejsce, które dotyka `<input type=file>` i `<a download>`. |
 | `src/core/renderer.js` | Renderer WebGL. Obserwuje store i sam planuje klatkę (`requestAnimationFrame`). |
 | `src/core/painter.js` | Warstwa WebGL z API w stylu Canvas 2D (batching, atlas tekstur, warstwy offscreen). |
 | `src/core/pointer.js` | Matematyka piksel ↔ kafelek z uwzględnieniem paralaksy pięter. |
 | `src/components/App.js` | Powłoka workspace: `MenuBar` nad wszystkim, `EditorRail` + aktywny edytor (`EDITOR_COMPONENTS`; brak wpisu = `EmptyEditor`), dialogi z paska menu (`DIALOGS`: help, projectProperties, newProject), skróty File. |
 | `src/components/MapEditor.js` | Edytor map w całości: `Sidebar`, `Toolbar`, `MapCanvas`, własne dialogi (`DIALOGS`: itemProperties), skróty mapy. |
-| `src/components/` | Pozostałe komponenty Vue: `MenuBar`, `Toolbar`, `Sidebar`, `Palette`, `MapCanvas`, dialogi. |
-| `src/composables/` | `useKeyboard` (ogólne: skróty rejestru akcji → klawiatura), `useWorkspaceKeyboard` (skróty File + Escape zamykający dialog), `useMapKeyboard` (skróty edytora map + tryby Shift/Tab), `useDraggable` (przeciąganie okien). |
+| `src/components/` | Pozostałe komponenty Vue: `MenuBar`, `Toolbar`, `Sidebar`, `Palette`, `MapCanvas`, dialogi. Wspólne kawałki: `Modal` (ramka każdego dialogu — overlay, przeciągany nagłówek, zamykanie), `DialogHost` (renderuje dialog wskazany przez `state.dialog`), `ItemGrid` (siatka sprite'ów dla palety i listy itemów), `ProjectFormFields` (pola nazwy i respawn pointu). |
+| `src/composables/` | `useKeyboard` (ogólne: skróty rejestru akcji → klawiatura), `useWorkspaceKeyboard` (skróty File + Escape zamykający dialog), `useMapKeyboard` (skróty edytora map + tryby Shift/Tab), `useDraggable` (przeciąganie okien), `useProjectForm` (walidowany draft nazwy i respawn pointu dla obu dialogów projektu). |
+
+Warstwy nad rendererem to fabryki domknięć (`createStore`, `createTools`,
+`createActions`), a sam rendering to klasy (`MapRenderer`, `GLPainter`,
+`Layer`) — bo to jedyna imperatywna część z własnym cyklem życia zasobów GPU
+(`attach`/`detach`, kontekst tracony i odzyskiwany).
 
 Nikt poza rendererem nie woła „odśwież”. Store zaznacza zmienione piętra
 (`touchFloor`), renderer obserwuje `mapRevision` oraz pola stanu wpływające
@@ -64,8 +71,9 @@ edytor ich nie powtarza.
 - **Nowe narzędzie** – dodaj obiekt w `tools.js` (`name`, `title`, `shortcut`, `sizing`,
   `cursor`, `onClick/onDragStart/onDrag/onRelease/onRender`). Pasek narzędzi, skrót i Help
   podpinają się same; ikonę dodaj w `app.css` jako `.ui-icon[data-icon='nazwa']`.
-- **Nowy dialog** – komponent + wpis w `DIALOGS` w `MapEditor.js` (dialog mapy) albo w `App.js`
-  (dialog z menu File, widoczny w każdym edytorze); otwieranie przez `store.openDialog('nazwa', props)`.
+- **Nowy dialog** – komponent owinięty w `<Modal title="…">` + wpis w `DIALOGS` w `MapEditor.js`
+  (dialog mapy) albo w `App.js` (dialog z menu File, widoczny w każdym edytorze); otwieranie przez
+  `store.openDialog('nazwa', props)`.
 - **Nowa mutacja mapy** – funkcja w `store.js`, która przed zmianą woła `recordTile(x, y, z)`
   (to daje cofnij/powtórz), po zmianie `touchFloor(z)` (lub `touchAll()`), i eksport
   w zwracanym obiekcie. Mutacje z jednej akcji same składają się w jeden krok historii;
@@ -108,6 +116,11 @@ nim (`store.stackElevation`), więc np. skrzynia o wysokości 8 „unosi” to, 
 niej stoi. Suma jest przycinana do `config.maxElevation` (64 px). Renderer, podgląd pędzla i podgląd przenoszenia zaznaczenia liczą
 to tak samo.
 
+Po wczytaniu `image` z pliku rozkłada się w katalogu na trzy pola, żeby
+każda nazwa znaczyła jedną rzecz: `png` (to samo base64, do zapisu z
+powrotem), `src` (data URL dla `<img>`) i `bitmap` (zdekodowany `Image`,
+którym rysuje renderer).
+
 `traits` to flagi z `ITEM_TRAITS` (`ground`, `floor`, `blocking`, `movable`,
 `pickupable`, `stackable`); nieznane są odrzucane przy wczytaniu. Jedyną, na
 którą reaguje sam edytor, jest `ground`: taki item ląduje na spodzie stosu
@@ -119,3 +132,28 @@ Reszta jedzie do pliku dla gry.
 `{ level, color }` — zasięg w kafelkach (1–`config.maxLightLevel`) i barwa jako
 hex `#rrggbb`. Edytor itemów tylko to zapisuje; samo światło nie jest nigdzie
 rysowane — pole jest dla gry czytającej katalog.
+
+## Testy
+
+```
+npm test        # node --test, bez instalowania czegokolwiek
+npm run lint    # eslint (wymaga `npm install`)
+npm run format  # prettier (wymaga `npm install`)
+```
+
+Testy nie potrzebują przeglądarki ani jsdom: `test/harness.mjs` podstawia tyle
+przeglądarki, ile edytor naprawdę dotyka (`window`, `document.createElement`,
+`Image`, `fetch`, `ResizeObserver`, `requestAnimationFrame`), a Vue montuje się
+przez `createRenderer()` z mikroskopijnym wirtualnym DOM-em. Dzięki temu w
+testach chodzą te same moduły, które ładuje przeglądarka.
+
+`canvas.getContext()` zwraca w harnessie `null`, więc każdy przebieg testów
+przechodzi zarazem ścieżkę „maszyna bez WebGL” — renderer zgłasza błąd,
+a edytor działa dalej.
+
+| Plik | Co pokrywa |
+| --- | --- |
+| `test/core.test.mjs` | Czyste moduły: `mapData`, `history`, `catalog`, `shortcuts`, `mapFile`, `pointer`. |
+| `test/store.test.mjs` | Reguły edycji: stos kafelka i ground, pędzel vs warstwy, cofnij/powtórz i gesty, zaznaczenie i schowek, edycja katalogu. |
+| `test/app.test.mjs` | Zamontowana aplikacja: render, rail, spójność rejestrów akcji, klawiatura (skróty mapy vs File, pisanie w polu, dialog). |
+| `test/dialogs.test.mjs` | Wspólna ramka `Modal` dla wszystkich dialogów i walidacja `useProjectForm`. |

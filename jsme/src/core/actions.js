@@ -16,6 +16,11 @@
  *                menus and its shortcut is ignored
  *   hint       - optional extra note for the help dialog
  */
+/** Whether an action may run right now; an action without `enabled` always may. */
+export function isActionEnabled(action) {
+  return action.enabled ? action.enabled() : true;
+}
+
 export function createActions({ store, tools }) {
   const { state } = store;
   const actions = {};
@@ -83,8 +88,9 @@ export function createActions({ store, tools }) {
     shortcut: 'Delete',
     run() {
       if (state.highlightedItem) {
+        // Pointed at by name, so it goes even if it is a ground item.
         const { x, y, z } = state.highlightedItem;
-        store.eraseOnTile(x, y, z);
+        store.eraseOnTile(x, y, z, { force: true });
         store.clearHighlight();
       } else {
         store.eraseOnTile(state.cursorPosition.x, state.cursorPosition.y, state.currentFloor);

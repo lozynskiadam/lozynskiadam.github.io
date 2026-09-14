@@ -1,5 +1,6 @@
 import { defineComponent, computed } from '../vendor/vue.esm-browser.prod.js';
 import { store, tools, actions } from '../editor.js';
+import { isActionEnabled } from '../core/actions.js';
 import { MIN_BRUSH_SIZE, MAX_BRUSH_SIZE } from '../core/store.js';
 import { TOOLBAR_ACTIONS } from '../core/menus.js';
 import { formatShortcut, primaryShortcutLabel } from '../core/shortcuts.js';
@@ -35,14 +36,10 @@ export default defineComponent({
       store.setBrushSize(Number(event.target.value));
     }
 
-    function isEnabled(action) {
-      return action.enabled ? action.enabled() : true;
-    }
-
     return {
       tools: TOOL_LIST,
       actionButtons: ACTION_LIST,
-      isEnabled,
+      isEnabled: isActionEnabled,
       state: store.state,
       minBrushSize: MIN_BRUSH_SIZE,
       maxBrushSize: MAX_BRUSH_SIZE,

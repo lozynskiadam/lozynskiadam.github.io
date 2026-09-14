@@ -1,8 +1,8 @@
 import { defineComponent } from '../vendor/vue.esm-browser.prod.js';
-import { store, actions, workspaceActions } from '../editor.js';
+import { actions, workspaceActions } from '../editor.js';
 import { HOLD_KEYS } from '../core/actions.js';
 import { allShortcutsLabel } from '../core/shortcuts.js';
-import { useDraggable } from '../composables/useDraggable.js';
+import Modal from './Modal.js';
 
 // Built once from the action registries, so a new shortcut documents itself.
 const SHORTCUTS = [
@@ -14,26 +14,17 @@ const SHORTCUTS = [
 
 export default defineComponent({
   name: 'HelpModal',
+  components: { Modal },
   setup() {
-    const { box, style, startDrag } = useDraggable();
-    function close() {
-      store.closeDialog();
-    }
-    return { shortcuts: SHORTCUTS, close, box, style, startDrag };
+    return { shortcuts: SHORTCUTS };
   },
   template: `
-    <div class="modal-overlay" @click.self="close">
-      <div class="modal" ref="box" :style="style">
-        <div class="modal-header" @pointerdown="startDrag">
-          <span>Keyboard shortcuts</span>
-          <button type="button" class="modal-close" title="Close" @click="close"></button>
-        </div>
-        <div class="modal-body">
-          <div v-for="[key, label] in shortcuts" :key="key" class="shortcut-row">
-            <label class="key">{{ key }}</label> {{ label }}
-          </div>
+    <Modal title="Keyboard shortcuts">
+      <div class="modal-body">
+        <div v-for="[key, label] in shortcuts" :key="key" class="shortcut-row">
+          <label class="key">{{ key }}</label> {{ label }}
         </div>
       </div>
-    </div>
+    </Modal>
   `,
 });

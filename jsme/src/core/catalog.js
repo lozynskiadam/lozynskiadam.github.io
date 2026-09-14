@@ -42,6 +42,11 @@ export const DEFAULT_LIGHT = { level: 3, color: '#ffa500' };
 
 const HEX_COLOR = /^#[0-9a-f]{6}$/i;
 
+/** Whether a string is a `#rrggbb` color - the only notation an item's light accepts. */
+export function isHexColor(value) {
+  return HEX_COLOR.test(String(value));
+}
+
 /**
  * An item's light source in canonical form - `{ level, color }` with the
  * color as lowercase `#rrggbb` - or null when the item emits none.
@@ -57,16 +62,17 @@ export function normalizeLight(light) {
   const color = String(light.color ?? '');
   return {
     level: Number.isFinite(level) && level > 0 ? level : DEFAULT_LIGHT.level,
-    color: HEX_COLOR.test(color) ? color.toLowerCase() : DEFAULT_LIGHT.color,
+    color: isHexColor(color) ? color.toLowerCase() : DEFAULT_LIGHT.color,
   };
 }
 
 /**
- * Builds a catalog item from its items.json form: the base64 PNG is
- * decoded into an `image` the renderer can draw and an `src` the UI can
- * put in an <img>, while the base64 itself is kept as `png` so the item
- * can be written back out unchanged (see itemToRaw). Only the fields
- * items.json defines survive, which keeps the round trip lossless.
+ * Builds a catalog item from its items.json form. The file's `image` (a
+ * base64 PNG) becomes three fields, so each name means exactly one thing:
+ * `bitmap` is the decoded Image the renderer draws, `src` the data URL the
+ * UI puts in an <img>, and `png` the base64 itself, kept so the item can be
+ * written back out unchanged (see itemToRaw). Only the fields items.json
+ * defines survive, which keeps the round trip lossless.
  */
 export function decodeItem(raw) {
   return new Promise((resolve, reject) => {
@@ -79,10 +85,10 @@ export function decodeItem(raw) {
       light: normalizeLight(raw.light),
       png: raw.image,
     };
-    const image = new Image();
-    image.onload = () => resolve({ ...item, src: image.src, image });
-    image.onerror = () => reject(new Error(`Failed to decode image for item ${raw.id}`));
-    image.src = `data:image/png;base64,${item.png}`;
+    const bitmap = new Image();
+    bitmap.onload = () => resolve({ ...item, src: bitmap.src, bitmap });
+    bitmap.onerror = () => reject(new Error(`Failed to decode image for item ${raw.id}`));
+    bitmap.src = `data:image/png;base64,${item.png}`;
   });
 }
 

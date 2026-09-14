@@ -16,7 +16,7 @@ import { fetchMapFile, isValidRespawnPoint } from './mapFile.js';
 
 // Keys of a placed map entry that belong to the editor itself; everything
 // else on the entry is a user-defined property (see setEntryProperty).
-const RESERVED_ENTRY_KEYS = new Set(['id']);
+export const RESERVED_ENTRY_KEYS = new Set(['id']);
 
 export const MIN_BRUSH_SIZE = 1;
 export const MAX_BRUSH_SIZE = 4;
@@ -76,7 +76,6 @@ export function createStore(config) {
 
   const state = reactive({
     loading: true,
-    loadError: null,
     name: defaults.name, // map name, saved in the file envelope
     respawnPoint: [...defaults.respawnPoint], // [x, y, z] - where the view centers after new/open
     viewport: { width: 0, height: 0 }, // map canvas size in px, reported by the renderer
@@ -220,14 +219,10 @@ export function createStore(config) {
 
   async function loadItems() {
     state.loading = true;
-    state.loadError = null;
     try {
       catalog.value = await loadCatalog(config.itemsUrl);
       state.selectedLayer = catalog.value.layers[0] ?? null;
       state.itemsDirty = false;
-    } catch (error) {
-      state.loadError = error;
-      throw error;
     } finally {
       state.loading = false;
     }
@@ -244,8 +239,8 @@ export function createStore(config) {
   function replaceCatalogItems(items) {
     catalog.value = createCatalog(items);
     // An edit can empty a layer out of existence (or invent a new one), so
-    // the palette's layer may no longer be one the catalog has. '' is the
-    // palette's "all layers" and always stays valid.
+    // the palette's layer may no longer be one the catalog has. null is
+    // "all layers" and always stays valid.
     if (state.selectedLayer && !catalog.value.layers.includes(state.selectedLayer)) {
       state.selectedLayer = catalog.value.layers[0] ?? null;
     }
@@ -260,9 +255,9 @@ export function createStore(config) {
   }
 
   /**
-   * Writes changed fields onto a catalog item. `patch` takes the same
-   * fields items.json has (id, name, layer, elevation, traits, light,
-   * png); the
+   * Writes changed fields onto a catalog item. `patch` carries the
+   * catalog item's own fields (id, name, layer, elevation, traits, light,
+   * and png/src/bitmap for the sprite - see catalog.decodeItem); the
    * caller is expected to have validated them. Returns false when the item
    * is gone or the new id is taken - the two things a caller cannot fix by
    * formatting its input differently.
@@ -292,7 +287,7 @@ export function createStore(config) {
     const current = getItem(id);
     if (!current) return false;
     const decoded = await decodeItem({ ...itemToRaw(current), image: png });
-    return updateItem(id, { png: decoded.png, src: decoded.src, image: decoded.image });
+    return updateItem(id, { png: decoded.png, src: decoded.src, bitmap: decoded.bitmap });
   }
 
   /** Adds an empty item on the given layer (the palette's by default, 'ground' when it is on "all layers") and returns its id. */
@@ -320,7 +315,7 @@ export function createStore(config) {
     return true;
   }
 
-  /** The catalog as items.json content (see itemsFile.serializeItems). */
+  /** The catalog as items.json content - the live list, so serialize it rather than keeping it (see itemsFile.serializeItems). */
   function exportItems() {
     return catalog.value.items;
   }
@@ -330,6 +325,11 @@ export function createStore(config) {
   }
 
   /* ---- selection of tool / items --------------------------------------- */
+
+  /** Filters the palette to one layer; null (or '' straight from a <select>) means "all layers". */
+  function selectLayer(layer) {
+    state.selectedLayer = layer || null;
+  }
 
   function selectTool(name) {
     state.selectedTool = name;
@@ -454,6 +454,11 @@ export function createStore(config) {
     return map.getTile(x, y, z);
   }
 
+  /** Visits every non-empty tile of a floor inside an inclusive rectangle (see mapData.forEachTile). */
+  function forEachTile(z, x1, y1, x2, y2, callback) {
+    map.forEachTile(z, x1, y1, x2, y2, callback);
+  }
+
   function isValidPosition(x, y, z) {
     return x >= 0 && y >= 0 && isValidFloor(z);
   }
@@ -524,15 +529,22 @@ export function createStore(config) {
     placeItemOnTile(x, y, z, item.id);
   }
 
-  function eraseOnTile(x, y, z, hardClear = false) {
+  /**
+   * Takes the top entry off a tile - or the whole stack with `wholeStack`.
+   *
+   * A ground item on top survives unless `force` says otherwise: the 1x1
+   * eraser must not strip the floor out from under a tile, while an item
+   * the user pointed at by name (Delete on a highlighted item, the context
+   * menu) has to go whatever it is. Both callers say so explicitly rather
+   * than the rule reading `state.highlightedItem` behind their back.
+   */
+  function eraseOnTile(x, y, z, { wholeStack = false, force = wholeStack } = {}) {
     const tile = getTile(x, y, z);
     if (!tile || tile.length === 0) return;
-
-    const topItem = getItem(tile[tile.length - 1].id);
-    if (!hardClear && isGroundItem(topItem) && !state.highlightedItem) return;
+    if (!force && isGroundItem(getItem(tile[tile.length - 1].id))) return;
 
     recordTile(x, y, z);
-    if (hardClear) tile.length = 0;
+    if (wholeStack) tile.length = 0;
     else tile.pop();
 
     map.pruneTile(x, y, z);
@@ -653,7 +665,7 @@ export function createStore(config) {
   }
 
   function clearArea(x1, y1, x2, y2, z) {
-    map.forEachTile(z, x1, y1, x2, y2, (tile, x, y) => recordTile(x, y, z));
+    map.forEachTile(z, x1, y1, x2, y2, (_tile, x, y) => recordTile(x, y, z));
     map.clear(x1, y1, x2, y2, z);
     const h = state.highlightedItem;
     if (h && h.z === z && h.x >= x1 && h.x <= x2 && h.y >= y1 && h.y <= y2) clearHighlight();
@@ -801,7 +813,7 @@ export function createStore(config) {
     resetView();
   }
 
-  /** The file envelope as saved to disk. */
+  /** The file envelope as saved to disk; `map` is the live structure, so serialize it rather than keeping it. */
   function exportMapFile() {
     return { name: state.name, respawnPoint: [...state.respawnPoint], map: map.toJSON() };
   }
@@ -828,6 +840,7 @@ export function createStore(config) {
     removeItem,
     exportItems,
     markItemsSaved,
+    selectLayer,
     selectTool,
     selectItem,
     selectItemAndReveal,
@@ -845,7 +858,7 @@ export function createStore(config) {
     canZoom,
     setCursorPosition,
     getTile,
-    forEachTile: map.forEachTile,
+    forEachTile,
     drawOnTile,
     eraseOnTile,
     highlightOnTile,

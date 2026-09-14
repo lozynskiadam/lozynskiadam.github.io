@@ -1,6 +1,7 @@
 import { defineComponent, computed, ref, watch, nextTick } from '../vendor/vue.esm-browser.prod.js';
 import { store } from '../editor.js';
 import { searchItems } from '../core/catalog.js';
+import ItemGrid from './ItemGrid.js';
 
 /**
  * The items editor's sidebar: a filter pair (layer, free text) over the
@@ -11,8 +12,9 @@ import { searchItems } from '../core/catalog.js';
  */
 export default defineComponent({
   name: 'ItemList',
+  components: { ItemGrid },
   setup() {
-    const listEl = ref(null);
+    const gridEl = ref(null);
     // '' is "all layers": the catalog is small enough to scroll through whole.
     const layer = ref('');
     const search = ref('');
@@ -38,7 +40,7 @@ export default defineComponent({
         if (layer.value && layer.value !== item.layer) layer.value = item.layer;
         if (!matches.value.includes(item)) search.value = '';
         await nextTick();
-        listEl.value?.querySelector(`[data-item-id="${item.id}"]`)?.scrollIntoView({ block: 'nearest' });
+        gridEl.value?.scrollToSelected();
       },
       { immediate: true },
     );
@@ -50,7 +52,7 @@ export default defineComponent({
       search,
       matches,
       total: computed(() => store.catalog.value.items.length),
-      listEl,
+      gridEl,
       pickItem,
     };
   },
@@ -63,19 +65,7 @@ export default defineComponent({
         </select>
         <input type="search" class="items-search" v-model="search" placeholder="name or id" spellcheck="false" />
       </div>
-      <div class="palette" ref="listEl">
-        <div
-          v-for="item in matches"
-          :key="item.id"
-          class="item-select"
-          :data-item-id="item.id"
-          :class="{ active: item.id === state.selectedItemId }"
-          :title="item.name + ' (' + item.id + ')'"
-          @click="pickItem(item)"
-        >
-          <img :src="item.src" :alt="item.name" />
-        </div>
-      </div>
+      <ItemGrid ref="gridEl" :items="matches" :selected-id="state.selectedItemId" @pick="pickItem" />
       <div class="items-count">{{ matches.length }} of {{ total }} items</div>
     </div>
   `,

@@ -1,4 +1,5 @@
 import { itemToRaw } from './catalog.js';
+import { downloadText, pickFile } from './browserFiles.js';
 
 /**
  * Browser-side items.json I/O: writing the edited catalog back out and
@@ -20,25 +21,12 @@ export function serializeItems(items) {
 }
 
 export function downloadItemsFile(items) {
-  const blob = new Blob([serializeItems(items)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.download = ITEMS_FILE_NAME;
-  link.href = url;
-  link.click();
-  URL.revokeObjectURL(url);
+  downloadText(ITEMS_FILE_NAME, serializeItems(items));
 }
 
 /** Opens the native file picker for an item image; resolves with the chosen File, or null when the user cancels. */
 export function pickImageFile() {
-  return new Promise((resolve) => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/png';
-    input.addEventListener('change', () => resolve(input.files[0] ?? null));
-    input.addEventListener('cancel', () => resolve(null));
-    input.click();
-  });
+  return pickFile('image/png');
 }
 
 /**

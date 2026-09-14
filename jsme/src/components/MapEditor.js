@@ -6,6 +6,7 @@ import Sidebar from './Sidebar.js';
 import Toolbar from './Toolbar.js';
 import MapCanvas from './MapCanvas.js';
 import ContextMenu from './ContextMenu.js';
+import DialogHost from './DialogHost.js';
 import ItemPropertiesModal from './ItemPropertiesModal.js';
 
 /**
@@ -29,7 +30,7 @@ const DIALOGS = {
  */
 export default defineComponent({
   name: 'MapEditor',
-  components: { LoadingOverlay, Sidebar, Toolbar, MapCanvas, ContextMenu },
+  components: { LoadingOverlay, Sidebar, Toolbar, MapCanvas, ContextMenu, DialogHost },
   setup() {
     useMapKeyboard();
 
@@ -52,7 +53,7 @@ export default defineComponent({
           <Toolbar />
           <MapCanvas />
         </div>
-        <component v-if="state.dialog && dialogs[state.dialog.name]" :is="dialogs[state.dialog.name]" v-bind="state.dialog.props" />
+        <DialogHost :dialogs="dialogs" />
         <ContextMenu />
       </template>
     </div>

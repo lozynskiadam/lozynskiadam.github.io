@@ -1,11 +1,12 @@
 import { defineComponent, computed, ref, watch } from '../vendor/vue.esm-browser.prod.js';
 import { store } from '../editor.js';
-import { toCamelCase } from '../core/store.js';
-import { useDraggable } from '../composables/useDraggable.js';
+import { RESERVED_ENTRY_KEYS, toCamelCase } from '../core/store.js';
+import Modal from './Modal.js';
 
 /** "Properties" dialog for one placed item, opened via store.openDialog('itemProperties', { itemId, x, y, z }). */
 export default defineComponent({
   name: 'ItemPropertiesModal',
+  components: { Modal },
   props: {
     itemId: { type: [Number, String], required: true },
     x: { type: Number, required: true },
@@ -13,7 +14,6 @@ export default defineComponent({
     z: { type: Number, required: true },
   },
   setup(props) {
-    const { box, style, startDrag } = useDraggable();
     const item = computed(() => store.getItem(props.itemId));
 
     // The map data itself is not reactive (see store.js), so the custom
@@ -48,8 +48,8 @@ export default defineComponent({
         error.value = 'The key needs at least one letter.';
         return;
       }
-      if (key === 'id') {
-        error.value = '"id" is reserved for the item type.';
+      if (RESERVED_ENTRY_KEYS.has(key)) {
+        error.value = `"${key}" is reserved for the item type.`;
         return;
       }
       const { x, y, z, itemId } = props;
@@ -95,48 +95,39 @@ export default defineComponent({
       removeProperty,
       normalizeKey,
       close,
-      box,
-      style,
-      startDrag,
     };
   },
   template: `
-    <div class="modal-overlay" @click.self="close">
-      <div class="modal" ref="box" :style="style">
-        <div class="modal-header" @pointerdown="startDrag">
-          <span>Item properties</span>
-          <button type="button" class="modal-close" title="Close" @click="close"></button>
+    <Modal title="Item properties">
+      <div v-if="item" class="modal-body">
+        <div class="item-properties">
+          <div class="item-properties-preview">
+            <img :src="item.src" :alt="item.name" />
+          </div>
+          <dl class="item-properties-details">
+            <dt>Name</dt><dd>{{ item.name }}</dd>
+            <dt>ID</dt><dd>{{ item.id }}</dd>
+            <dt>Pos</dt><dd>{{ x }}, {{ y }}, {{ z }}</dd>
+          </dl>
         </div>
-        <div v-if="item" class="modal-body">
-          <div class="item-properties">
-            <div class="item-properties-preview">
-              <img :src="item.src" :alt="item.name" />
-            </div>
-            <dl class="item-properties-details">
-              <dt>Name</dt><dd>{{ item.name }}</dd>
-              <dt>ID</dt><dd>{{ item.id }}</dd>
-              <dt>Pos</dt><dd>{{ x }}, {{ y }}, {{ z }}</dd>
-            </dl>
-          </div>
 
-          <div class="item-properties-custom">
-            <div v-for="property in properties" :key="property.key" class="item-properties-row">
-              <code class="item-properties-key" :title="property.key">{{ property.key }}</code>
-              <input type="text" :value="property.value" @change="updateProperty(property, $event)" />
-              <button type="button" title="Remove" @click="removeProperty(property)">&times;</button>
-            </div>
-            <form class="item-properties-row" @submit.prevent="addProperty">
-              <input type="text" v-model="newKey" placeholder="key" spellcheck="false" @blur="normalizeKey" />
-              <input type="text" v-model="newValue" placeholder="value" />
-              <button type="submit" title="Add">+</button>
-            </form>
-            <div v-if="keyPreview && keyPreview !== newKey" class="item-properties-hint">
-              Saved as <code>{{ keyPreview }}</code>
-            </div>
-            <div v-if="error" class="item-properties-error">{{ error }}</div>
+        <div class="item-properties-custom">
+          <div v-for="property in properties" :key="property.key" class="item-properties-row">
+            <code class="item-properties-key" :title="property.key">{{ property.key }}</code>
+            <input type="text" :value="property.value" @change="updateProperty(property, $event)" />
+            <button type="button" title="Remove" @click="removeProperty(property)">&times;</button>
           </div>
+          <form class="item-properties-row" @submit.prevent="addProperty">
+            <input type="text" v-model="newKey" placeholder="key" spellcheck="false" @blur="normalizeKey" />
+            <input type="text" v-model="newValue" placeholder="value" />
+            <button type="submit" title="Add">+</button>
+          </form>
+          <div v-if="keyPreview && keyPreview !== newKey" class="item-properties-hint">
+            Saved as <code>{{ keyPreview }}</code>
+          </div>
+          <div v-if="error" class="item-properties-error">{{ error }}</div>
         </div>
       </div>
-    </div>
+    </Modal>
   `,
 });

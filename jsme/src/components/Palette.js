@@ -1,6 +1,7 @@
 import { defineComponent, computed, ref, watch, nextTick } from '../vendor/vue.esm-browser.prod.js';
 import { store } from '../editor.js';
 import { searchItems } from '../core/catalog.js';
+import ItemGrid from './ItemGrid.js';
 
 /**
  * The map sidebar's item palette, with the same two filters the items
@@ -11,11 +12,12 @@ import { searchItems } from '../core/catalog.js';
  */
 export default defineComponent({
   name: 'Palette',
+  components: { ItemGrid },
   setup() {
-    const paletteEl = ref(null);
+    const gridEl = ref(null);
     const search = ref('');
 
-    // '' is "all layers"; the catalog is small enough to scroll through whole.
+    // A null layer is "all layers"; the catalog is small enough to scroll through whole.
     const visibleItems = computed(() => {
       const { selectedLayer } = store.state;
       const items = selectedLayer ? store.itemsByLayer.value[selectedLayer] ?? [] : store.catalog.value.items;
@@ -23,7 +25,7 @@ export default defineComponent({
     });
 
     function selectLayer(event) {
-      store.state.selectedLayer = event.target.value;
+      store.selectLayer(event.target.value);
       // Hand the keyboard back to the editor, so arrow keys pan the map instead of cycling layers.
       event.target.blur();
     }
@@ -45,7 +47,7 @@ export default defineComponent({
         if (!id) return;
         if (!visibleItems.value.some((item) => item.id === id)) search.value = '';
         await nextTick();
-        paletteEl.value?.querySelector(`[data-item-id="${id}"]`)?.scrollIntoView({ block: 'nearest' });
+        gridEl.value?.scrollToSelected();
       },
     );
 
@@ -54,7 +56,7 @@ export default defineComponent({
       layers: store.layers,
       search,
       visibleItems,
-      paletteEl,
+      gridEl,
       selectLayer,
       pickItem,
     };
@@ -67,18 +69,6 @@ export default defineComponent({
       </select>
       <input type="search" class="items-search" v-model="search" placeholder="name or id" spellcheck="false" />
     </div>
-    <div class="palette" ref="paletteEl">
-      <div
-        v-for="item in visibleItems"
-        :key="item.id"
-        class="item-select"
-        :data-item-id="item.id"
-        :class="{ active: item.id === state.selectedItemId }"
-        :title="item.name + ' (' + item.id + ')'"
-        @click="pickItem(item)"
-      >
-        <img :src="item.src" :alt="item.name" />
-      </div>
-    </div>
+    <ItemGrid ref="gridEl" :items="visibleItems" :selected-id="state.selectedItemId" @pick="pickItem" />
   `,
 });

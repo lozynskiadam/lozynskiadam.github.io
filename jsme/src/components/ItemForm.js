@@ -1,6 +1,6 @@
 import { defineComponent, computed, reactive, ref, watch } from '../vendor/vue.esm-browser.prod.js';
 import { store, config } from '../editor.js';
-import { DEFAULT_LIGHT, ITEM_TRAITS, isGroundItem } from '../core/catalog.js';
+import { DEFAULT_LIGHT, ITEM_TRAITS, isGroundItem, isHexColor } from '../core/catalog.js';
 import { pickImageFile, readImageFile } from '../core/itemsFile.js';
 
 /**
@@ -113,7 +113,7 @@ export default defineComponent({
 
     function commitLightColor() {
       const color = draft.lightColor.trim().toLowerCase();
-      if (!/^#[0-9a-f]{6}$/.test(color)) {
+      if (!isHexColor(color)) {
         error.value = 'The light color has to be a hex value like #ffa500.';
         return;
       }
@@ -161,7 +161,7 @@ export default defineComponent({
       <div class="items-form-image">
         <div class="items-form-preview"><img :src="item.src" :alt="item.name" /></div>
         <div class="items-form-image-info">
-          <span>{{ item.image.width }} &times; {{ item.image.height }} px</span>
+          <span>{{ item.bitmap.width }} &times; {{ item.bitmap.height }} px</span>
           <button type="button" @click="replaceImage">Replace image…</button>
         </div>
       </div>

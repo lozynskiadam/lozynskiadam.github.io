@@ -22,6 +22,12 @@ function cloneTile(tile) {
   return tile ? tile.map(cloneEntry) : [];
 }
 
+/**
+ * Whether a tile came back unchanged. Comparing the serialized form is
+ * enough here because both sides are built by cloneTile from the same
+ * entries, so their keys stay in insertion order; the worst a reordering
+ * could cost is one no-op step on the undo stack.
+ */
 function sameTile(a, b) {
   return JSON.stringify(a) === JSON.stringify(b);
 }
@@ -30,10 +36,6 @@ export function createHistory(map, { limit = 200 } = {}) {
   const undoStack = [];
   const redoStack = [];
   let pending = null; // Map<key, { x, y, z, before }> while a step is being recorded
-
-  function isRecording() {
-    return pending !== null;
-  }
 
   /** Remembers a tile's current content, once per step. */
   function record(x, y, z) {
@@ -94,7 +96,6 @@ export function createHistory(map, { limit = 200 } = {}) {
     undo,
     redo,
     clear,
-    isRecording,
     get undoDepth() {
       return undoStack.length;
     },
