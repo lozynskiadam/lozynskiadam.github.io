@@ -15,7 +15,7 @@
  * file's `traits` is dropped on load, so the editor only ever writes back
  * traits it knows.
  */
-export const ITEM_TRAITS = ['floor', 'blocking', 'moveable'];
+export const ITEM_TRAITS = ['floor', 'blocking', 'moveable', 'pickupable', 'stackable'];
 
 /** A 32x32 fully transparent PNG - the placeholder image a brand new item starts with. */
 export const BLANK_ITEM_PNG =
@@ -87,6 +87,17 @@ export function itemToRaw(item) {
     light: item.light ? { range: item.light.range, color: item.light.color } : null,
     image: item.png,
   };
+}
+
+/**
+ * Items whose name or id contains `needle`, case-insensitively - the
+ * catalog search both the map palette and the items editor's list run over
+ * whatever set of items their layer filter left them with.
+ */
+export function searchItems(items, needle) {
+  const text = String(needle ?? '').trim().toLowerCase();
+  if (!text) return items;
+  return items.filter((item) => item.name.toLowerCase().includes(text) || item.id.includes(text));
 }
 
 export function createCatalog(items) {

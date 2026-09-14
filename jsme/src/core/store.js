@@ -237,8 +237,11 @@ export function createStore(config) {
   function replaceCatalogItems(items) {
     catalog.value = createCatalog(items);
     // An edit can empty a layer out of existence (or invent a new one), so
-    // the palette's layer may no longer be one the catalog has.
-    if (!catalog.value.layers.includes(state.selectedLayer)) state.selectedLayer = catalog.value.layers[0] ?? null;
+    // the palette's layer may no longer be one the catalog has. '' is the
+    // palette's "all layers" and always stays valid.
+    if (state.selectedLayer && !catalog.value.layers.includes(state.selectedLayer)) {
+      state.selectedLayer = catalog.value.layers[0] ?? null;
+    }
     state.itemsDirty = true;
   }
 
@@ -285,12 +288,12 @@ export function createStore(config) {
     return updateItem(id, { png: decoded.png, src: decoded.src, image: decoded.image });
   }
 
-  /** Adds an empty item on the given layer (the palette's by default) and returns its id. */
+  /** Adds an empty item on the given layer (the palette's by default, 'ground' when it is on "all layers") and returns its id. */
   async function addItem(layer = state.selectedLayer) {
     const item = await decodeItem({
       id: nextItemId(),
       name: 'new item',
-      layer: layer ?? 'ground',
+      layer: layer || 'ground',
       altitude: 0,
       traits: [],
       light: null,
@@ -336,7 +339,8 @@ export function createStore(config) {
     const item = getItem(id);
     if (!item) return;
     state.selectedItemId = item.id;
-    state.selectedLayer = item.layer;
+    // On "all layers" the item is already on show, so leave the filter alone.
+    if (state.selectedLayer) state.selectedLayer = item.layer;
   }
 
   function selectSecondaryItem(id) {

@@ -1,5 +1,6 @@
 import { defineComponent, computed, ref, watch, nextTick } from '../vendor/vue.esm-browser.prod.js';
 import { store } from '../editor.js';
+import { searchItems } from '../core/catalog.js';
 
 /**
  * The items editor's sidebar: a filter pair (layer, free text) over the
@@ -18,9 +19,7 @@ export default defineComponent({
 
     const matches = computed(() => {
       const items = layer.value ? store.itemsByLayer.value[layer.value] ?? [] : store.catalog.value.items;
-      const needle = search.value.trim().toLowerCase();
-      if (!needle) return items;
-      return items.filter((item) => item.name.toLowerCase().includes(needle) || item.id.includes(needle));
+      return searchItems(items, search.value);
     });
 
     function pickItem(item) {

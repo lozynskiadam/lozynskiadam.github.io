@@ -53,27 +53,32 @@ button {
 /* Anything that scrolls inside a panel gets a thin scrollbar, so the OS one
    does not cut a wide stripe out of the panel. */
 .palette,
-.items-detail {
+.items-detail,
+.modal-body {
   scrollbar-width: thin;
   scrollbar-color: #4a4a4a transparent;
 }
 .palette::-webkit-scrollbar,
-.items-detail::-webkit-scrollbar {
+.items-detail::-webkit-scrollbar,
+.modal-body::-webkit-scrollbar {
   width: 10px;
 }
 .palette::-webkit-scrollbar-track,
-.items-detail::-webkit-scrollbar-track {
+.items-detail::-webkit-scrollbar-track,
+.modal-body::-webkit-scrollbar-track {
   background: transparent;
 }
 .palette::-webkit-scrollbar-thumb,
-.items-detail::-webkit-scrollbar-thumb {
+.items-detail::-webkit-scrollbar-thumb,
+.modal-body::-webkit-scrollbar-thumb {
   border: 3px solid transparent;
   border-radius: 5px;
   background: #4a4a4a;
   background-clip: content-box;
 }
 .palette::-webkit-scrollbar-thumb:hover,
-.items-detail::-webkit-scrollbar-thumb:hover {
+.items-detail::-webkit-scrollbar-thumb:hover,
+.modal-body::-webkit-scrollbar-thumb:hover {
   background: #5f5f5f;
   background-clip: content-box;
 }
@@ -507,7 +512,6 @@ button {
 .toolbar-button.active {
   background: var(--control-gradient);
   border-color: var(--control-border);
-  box-shadow: 0 1px 1px #636363;
 }
 .toolbar .text-button {
   height: 25px;
@@ -720,11 +724,14 @@ button {
 }
 
 /* ---- palette ---- */
+/* Fixed six columns rather than auto-fill: both sidebars are the same
+   width, so the map editor and the items editor lay their sprites out on
+   the same grid instead of each fitting whatever its width allows. */
 .palette {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  grid-template-columns: repeat(6, 1fr);
   gap: 4px;
   align-content: start;
   overflow-y: auto;
@@ -779,7 +786,8 @@ button {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  width: 236px;
+  /* The map editor's sidebar width, so the palette is the same grid there. */
+  width: 286px;
   min-height: 0;
   padding: 8px;
   background-color: var(--panel-bg);
@@ -788,8 +796,8 @@ button {
   z-index: 3;
   border-radius: var(--panel-border-radius);
 }
-/* The layer picker and the palette are the map sidebar's controls reused
-   here, so they only need stacking - the sidebar does the padding. */
+/* The filter pair above the palette, in both sidebars: they only need
+   stacking, the sidebar around them does the padding. */
 .items-filters {
   flex: none;
   display: flex;
@@ -978,9 +986,15 @@ button {
   align-items: center;
   justify-content: center;
 }
+/* The list inside can outgrow the screen (the shortcut help does), and the
+   modal is centered, so anything past the edge would be unreachable: cap it
+   to the viewport and let the body scroll under a header that stays put. */
 .modal {
+  display: flex;
+  flex-direction: column;
   width: 350px;
   max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 40px);
   background: var(--panel-bg);
   color: #fafafa;
   border-radius: 5px;
@@ -988,6 +1002,7 @@ button {
   overflow: hidden;
 }
 .modal-header {
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1017,6 +1032,9 @@ button {
   background-color: rgba(255, 255, 255, 0.08);
 }
 .modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   padding: 12px;
 }
 .shortcut-row {
