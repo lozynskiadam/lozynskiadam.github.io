@@ -19,11 +19,12 @@ UI / klawiatura  →  actions.js / tools.js  →  store.js  →  renderer.js
 
 | Plik | Rola |
 | --- | --- |
-| `config.js` | Stałe edytora (URL katalogu itemów i mapy startowej, rozmiar kafelka, maks. wysokość stosu, zakres pięter). Leży obok `index.html`, a nie w `src/`, bo to plik do ręcznej edycji przy wdrożeniu. |
+| `config.js` | Stałe edytora (URL katalogu itemów, mapy startowej i wzorców terenu, rozmiar kafelka, maks. wysokość stosu, zakres pięter). Leży obok `index.html`, a nie w `src/`, bo to plik do ręcznej edycji przy wdrożeniu. |
 | `src/editor.js` | Singleton edytora map: tworzy store, narzędzia, akcje i renderer, z których korzystają komponenty. |
 | `src/core/editors.js` | Lista edytorów w railu (`EDITORS`) i stan workspace: który edytor jest aktywny. |
 | `src/core/mapData.js` | Czysty model mapy (piętro → wiersz → kolumna → stos wpisów) i operacje blokowe. Bez wiedzy o UI. |
 | `src/core/catalog.js` | Ładowanie katalogu itemów; indeks `Map` po id i podział na warstwy. |
+| `src/core/terrains.js` | Wzorce terenu: model wzorca (ground + 8 krawędzi zewnętrznych + 4 wewnętrzne) i czysta reguła `borderPlan()`, która dla jednego kafelka wybiera pasujące kawałki. |
 | `src/core/store.js` | Reaktywny stan UI + reguły edycji nad `mapData`. Każda mutacja mapy podbija `state.mapRevision` i jest rejestrowana w historii. |
 | `src/core/history.js` | Cofnij/powtórz: zapamiętuje zawartość kafelków sprzed zmiany; krok = jeden gest myszy albo jedna akcja. |
 | `src/core/tools.js` | Narzędzia (pointer, select, brush, eraser, sampler): reakcja na mysz i rysowanie HUD. |
@@ -33,13 +34,15 @@ UI / klawiatura  →  actions.js / tools.js  →  store.js  →  renderer.js
 | `src/core/shortcuts.js` | Notacja skrótów klawiszowych: normalizacja, dopasowanie do `KeyboardEvent`, format do wyświetlenia. |
 | `src/core/mapFile.js` | Envelope pliku mapy `{ name, respawnPoint, map }`, walidacja i odczyt/zapis. |
 | `src/core/itemsFile.js` | To samo dla `items.json`: serializacja katalogu i wczytanie PNG na sprite itemu. |
+| `src/core/terrainsFile.js` | To samo dla `terrains.json`: serializacja wzorców i ich pobranie z serwera. Plik jest opcjonalny — jego brak znaczy „zero wzorców”, nie błąd. |
 | `src/core/browserFiles.js` | Dwa gesty przeglądarki, z których korzystają oba powyższe: `pickFile()` i `downloadText()`. Jedyne miejsce, które dotyka `<input type=file>` i `<a download>`. |
 | `src/core/renderer.js` | Renderer WebGL. Obserwuje store i sam planuje klatkę (`requestAnimationFrame`). |
 | `src/core/painter.js` | Warstwa WebGL z API w stylu Canvas 2D (batching, atlas tekstur, warstwy offscreen). |
 | `src/core/pointer.js` | Matematyka piksel ↔ kafelek z uwzględnieniem paralaksy pięter. |
 | `src/components/App.js` | Powłoka workspace: `MenuBar` nad wszystkim, `EditorRail` + aktywny edytor (`EDITOR_COMPONENTS`; brak wpisu = `EmptyEditor`), dialogi z paska menu (`DIALOGS`: help, projectProperties, newProject), skróty File. |
-| `src/components/MapEditor.js` | Edytor map w całości: `Sidebar`, `Toolbar`, `MapCanvas`, własne dialogi (`DIALOGS`: itemProperties), skróty mapy. |
-| `src/components/` | Pozostałe komponenty Vue: `MenuBar`, `Toolbar`, `Sidebar`, `Palette`, `MapCanvas`, dialogi. Wspólne kawałki: `Modal` (ramka każdego dialogu — overlay, przeciągany nagłówek, zamykanie), `DialogHost` (renderuje dialog wskazany przez `state.dialog`), `ItemGrid` (siatka sprite'ów dla palety i listy itemów), `ProjectFormFields` (pola nazwy i respawn pointu). |
+| `src/components/MapEditor.js` | Edytor map w całości: `Sidebar`, `Toolbar`, `MapCanvas`, własne dialogi (`DIALOGS`: itemProperties, terrains), skróty mapy. |
+| `src/components/TerrainsModal.js` | Okno „Terrain patterns” (T): lista wzorców, siatka 3×3 z groundem w środku, siatka 2×2 narożników wewnętrznych i wbudowany picker itemów. |
+| `src/components/` | Pozostałe komponenty Vue: `MenuBar`, `Toolbar`, `Sidebar`, `Palette`, `MapCanvas`, dialogi. Wspólne kawałki: `Modal` (ramka każdego dialogu — overlay, przeciągany nagłówek, zamykanie), `DialogHost` (renderuje dialog wskazany przez `state.dialog`), `ItemGrid` (siatka sprite'ów dla palety, listy itemów i pickera we wzorcach terenu), `ProjectFormFields` (pola nazwy i respawn pointu). |
 | `src/composables/` | `useKeyboard` (ogólne: skróty rejestru akcji → klawiatura), `useWorkspaceKeyboard` (skróty File + Escape zamykający dialog), `useMapKeyboard` (skróty edytora map + tryby Shift/Tab), `useDraggable` (przeciąganie okien), `useProjectForm` (walidowany draft nazwy i respawn pointu dla obu dialogów projektu). |
 
 Warstwy nad rendererem to fabryki domknięć (`createStore`, `createTools`,
@@ -78,6 +81,8 @@ edytor ich nie powtarza.
   (to daje cofnij/powtórz), po zmianie `touchFloor(z)` (lub `touchAll()`), i eksport
   w zwracanym obiekcie. Mutacje z jednej akcji same składają się w jeden krok historii;
   gest myszy spina `beginGesture()`/`endGesture()` w `MapCanvas.js`.
+- **Nowy wzorzec terenu** – nie w kodzie: okno „Terrain patterns” (T) w edytorze map,
+  a wynik ląduje w `terrains.json` (przycisk „Save terrains.json” w tym oknie).
 - **Przycisk akcji na pasku narzędzi** – dopisz id do `TOOLBAR_ACTIONS` w `menus.js`.
 - **Nowy element HUD zależny od stanu** – dopisz pole do listy w `renderer.subscribe()`.
 
@@ -102,8 +107,8 @@ Nowy projekt zakłada się z dropdownu projektu w pasku menu (pod listą „Rece
 projects”): „New project” otwiera dialog z nazwą i respawn pointem (domyślnie
 „Untitled” i 100/100/0, stała `NEW_PROJECT` w `NewProjectModal.js`), a dopiero
 przycisk „Create new project” przełącza aplikację — `store.createProject()`
-wczytuje `items.json` od nowa, czyści mapę, ustawia nazwę i centruje widok na
-nowym respawn poincie. Gdy katalog itemów się nie wczyta, bieżący projekt
+wczytuje `items.json` i `terrains.json` od nowa, czyści mapę, ustawia nazwę
+i centruje widok na nowym respawn poincie. Gdy katalog itemów się nie wczyta, bieżący projekt
 zostaje nietknięty, a powód pokazuje się w dialogu.
 
 ## Katalog itemów (`items.json`)
@@ -125,13 +130,53 @@ którym rysuje renderer).
 `pickupable`, `stackable`); nieznane są odrzucane przy wczytaniu. Jedyną, na
 którą reaguje sam edytor, jest `ground`: taki item ląduje na spodzie stosu
 kafelka (`store.pushEntry`), a gumka 1×1 go nie zdejmuje — usuwa go dopiero
-pędzel większy niż 1 (czyści cały kafelek) albo „Delete” z menu kontekstowego.
-Reszta jedzie do pliku dla gry.
+gumka większa niż 1 (czyści cały kafelek), „Delete” z menu kontekstowego albo
+klawisz Delete na zaznaczeniu (czyści cały zaznaczony obszar). Reszta jedzie
+do pliku dla gry.
 
 `light` to źródło światła itemu: `null`, gdy item nie świeci, albo
 `{ level, color }` — zasięg w kafelkach (1–`config.maxLightLevel`) i barwa jako
 hex `#rrggbb`. Edytor itemów tylko to zapisuje; samo światło nie jest nigdzie
 rysowane — pole jest dla gry czytającej katalog.
+
+## Wzorce terenu (`terrains.json`)
+
+Wzorzec terenu to item ziemi plus sprite'y jego krawędzi: pędzel maluje sam
+ground, a krawędzie dokładają się same. Wzorców może być dowolnie wiele
+(trawa, woda, …) — każdy rozpoznawany po swoim itemie ziemi, więc „malowanie
+wzorcem” to po prostu wybranie tego itemu w palecie (panel nad paletą oznacza
+go wtedy plakietką `terrain`).
+
+Jeden wzorzec to 13 itemów: ziemia, 8 krawędzi zewnętrznych (pierścień wokół
+prostokątnej łaty: 4 boki i 4 narożniki wypukłe) i 4 krawędzie wewnętrzne
+(narożniki wklęsłe, gdy teren opływa kafelek z dwóch stron). Każdy slot nazywa
+się od tego, **gdzie leży względem terenu** — dokładnie tak, jak rozkłada je
+okno „Terrain patterns” (T):
+
+```
+ nw   n   ne          wewnętrzne:   nw  ne
+  w  GND   e                        sw  se
+ sw   s   se
+```
+
+Kawałek nigdy nie ląduje na kafelku terenu, tylko na sąsiedzie, który ten teren
+obramowuje — nad jego ziemią, pod tym, co na niej stoi. Czyli `outer.n` to item
+dla kafelka na północ od terenu, a `inner.nw` dla kafelka, który ma teren od
+południa **i** od wschodu. Pusty slot wewnętrzny podmienia się na dwie krawędzie
+proste, które by zastąpił, więc niedokończony wzorzec też maluje coś sensownego.
+
+Krawędzie nie są nigdzie zapamiętane jako „krawędzie” — wynikają z tego, które
+kafelki niosą ziemię wzorca, i są przeliczane wokół każdego pociągnięcia pędzla.
+Dlatego postawienie kawałka oznacza zarazem skasowanie tych, które przestały
+pasować, a kafelek zawsze dostaje swój komplet naraz (`store.refreshTerrainsAround`).
+Gumka działa tak samo, ale tylko gdy zdejmie ziemię wzorca: skasowany ręcznie
+kawałek krawędzi zostaje skasowany, a nie wraca w tej samej chwili.
+
+Plik: tablica wpisów `{ id, name, groundId, outer, inner }`, gdzie `outer`
+i `inner` to mapy slot → id itemu (`null` = pusty). Jest opcjonalny — bez niego
+edytor startuje bez wzorców, a pędzel zachowuje się jak dawniej. Jak `items.json`
+leży obok `index.html` i zapisuje się go pobraniem („Save terrains.json”), po czym
+podmienia się plik na dysku.
 
 ## Testy
 
@@ -153,7 +198,7 @@ a edytor działa dalej.
 
 | Plik | Co pokrywa |
 | --- | --- |
-| `test/core.test.mjs` | Czyste moduły: `mapData`, `history`, `catalog`, `shortcuts`, `mapFile`, `pointer`. |
-| `test/store.test.mjs` | Reguły edycji: stos kafelka i ground, pędzel vs warstwy, cofnij/powtórz i gesty, zaznaczenie i schowek, edycja katalogu. |
+| `test/core.test.mjs` | Czyste moduły: `mapData`, `history`, `catalog`, `terrains`, `shortcuts`, `mapFile`, `pointer`. |
+| `test/store.test.mjs` | Reguły edycji: stos kafelka i ground, pędzel vs warstwy, wzorce terenu i ich krawędzie, cofnij/powtórz i gesty, zaznaczenie i schowek, edycja katalogu. |
 | `test/app.test.mjs` | Zamontowana aplikacja: render, rail, spójność rejestrów akcji, klawiatura (skróty mapy vs File, pisanie w polu, dialog). |
 | `test/dialogs.test.mjs` | Wspólna ramka `Modal` dla wszystkich dialogów i walidacja `useProjectForm`. |

@@ -84,9 +84,14 @@ export function createActions({ store, tools }) {
   });
 
   define('edit.delete', {
-    label: 'Remove highlighted object',
+    label: 'Remove the selection or the highlighted object',
     shortcut: 'Delete',
     run() {
+      // Whatever the user has pointed at most deliberately goes first: a
+      // selection (the whole area, ground included), else the highlighted
+      // item, else the top of the tile under the cursor.
+      if (store.deleteSelection()) return;
+
       if (state.highlightedItem) {
         // Pointed at by name, so it goes even if it is a ground item.
         const { x, y, z } = state.highlightedItem;
@@ -121,6 +126,18 @@ export function createActions({ store, tools }) {
     shortcut: '-',
     run() {
       store.setBrushSize(state.brushSize - 1);
+    },
+  });
+
+  /* ---- terrain ------------------------------------------------------ */
+
+  define('terrain.patterns', {
+    label: 'Terrain patterns…',
+    icon: 'terrain',
+    shortcut: 'T',
+    hint: 'the brush draws the edges of a pattern on its own',
+    run() {
+      store.toggleDialog('terrains');
     },
   });
 

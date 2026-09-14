@@ -6,6 +6,9 @@ import { store } from '../editor.js';
  * shows its two colors: the primary in front, the secondary peeking out
  * behind it (X swaps them, see `edit.swapItems`). The name line keeps its
  * height even with nothing picked, so the palette below never shifts.
+ *
+ * An item that is some terrain pattern's ground says so, since painting it
+ * lays that pattern's edges down as well (see core/terrains.js).
  */
 export default defineComponent({
   name: 'SelectedItemPanel',
@@ -13,6 +16,10 @@ export default defineComponent({
     return {
       selectedItem: computed(() => store.selectedItem.value),
       secondaryItem: computed(() => store.secondaryItem.value),
+      // Painting this item also draws a terrain's edges, which is worth
+      // saying somewhere: the tag rides the id line so the panel keeps its
+      // height and the palette below never shifts.
+      terrain: computed(() => store.terrainForGround(store.state.selectedItemId)),
     };
   },
   template: `
@@ -28,7 +35,10 @@ export default defineComponent({
       <div class="selected-item-details">
         <template v-if="selectedItem">
           <div class="selected-item-name" :title="selectedItem.name">{{ selectedItem.name }}</div>
-          <div class="selected-item-id">#{{ selectedItem.id }}</div>
+          <div class="selected-item-id">
+            #{{ selectedItem.id }}
+            <span v-if="terrain" class="selected-item-terrain" :title="'Terrain pattern: ' + terrain.name">terrain</span>
+          </div>
         </template>
         <div v-else class="selected-item-empty">No object selected</div>
       </div>

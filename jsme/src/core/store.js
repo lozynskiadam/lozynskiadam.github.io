@@ -13,6 +13,8 @@ import {
   normalizeTraits,
 } from './catalog.js';
 import { fetchMapFile, isValidRespawnPoint } from './mapFile.js';
+import { NEIGHBOURS, borderItemIds, borderPlan, createTerrain } from './terrains.js';
+import { fetchTerrains } from './terrainsFile.js';
 
 // Keys of a placed map entry that belong to the editor itself; everything
 // else on the entry is a user-defined property (see setEntryProperty).
@@ -95,7 +97,9 @@ export function createStore(config) {
     clipboard: null, // { width, height, cells } - cells keyed "dx,dy" -> [entry, ...], floor-agnostic
     contextMenu: null, // { screenX, screenY, itemId, x, y, z } - right-click menu for the topmost item on a tile
     dialog: null, // { name, props } - the one modal dialog that can be open at a time (see components/App.js and MapEditor.js)
+    terrains: [], // terrain patterns from terrains.json (see core/terrains.js)
     itemsDirty: false, // the item catalog was edited and items.json has not been saved since
+    terrainsDirty: false, // same, for terrains.json
     mapRevision: 0, // bumped on every map mutation; the renderer's cue to repaint floors
     undoDepth: 0, // mirrors history for the UI (undo/redo buttons, menu items)
     redoDepth: 0,
@@ -526,11 +530,22 @@ export function createStore(config) {
       return;
     }
 
+    // The brush replaces the tile's ground, so a stroke both adds a terrain
+    // (the item painted) and can take one away (the ground it covered).
+    // Either way the neighbourhood needs re-fringing; painting something
+    // that is no terrain's ground leaves the borders alone, so a piece
+    // placed by hand survives.
+    const before = terrainGroundsOn(getTile(x, y, z));
     placeItemOnTile(x, y, z, item.id);
+    const after = terrainGroundsOn(getTile(x, y, z));
+    if (terrainForGround(item.id) || before.some((id) => !after.includes(id))) {
+      refreshTerrainsAround(x, y, x, y, z);
+    }
   }
 
   /**
-   * Takes the top entry off a tile - or the whole stack with `wholeStack`.
+   * Takes the top entry off a tile - or the whole stack with `wholeStack` -
+   * and returns whatever was removed (an empty list when nothing was).
    *
    * A ground item on top survives unless `force` says otherwise: the 1x1
    * eraser must not strip the floor out from under a tile, while an item
@@ -540,15 +555,20 @@ export function createStore(config) {
    */
   function eraseOnTile(x, y, z, { wholeStack = false, force = wholeStack } = {}) {
     const tile = getTile(x, y, z);
-    if (!tile || tile.length === 0) return;
-    if (!force && isGroundItem(getItem(tile[tile.length - 1].id))) return;
+    if (!tile || tile.length === 0) return [];
+    if (!force && isGroundItem(getItem(tile[tile.length - 1].id))) return [];
 
     recordTile(x, y, z);
-    if (wholeStack) tile.length = 0;
-    else tile.pop();
+    const removed = wholeStack ? tile.splice(0) : [tile.pop()];
 
     map.pruneTile(x, y, z);
     touchFloor(z);
+
+    // Only losing a terrain's ground re-fringes the neighbourhood; erasing
+    // a border piece itself is taken at face value, so it stays erased
+    // instead of being put straight back.
+    if (removed.some((entry) => terrainForGround(entry.id))) refreshTerrainsAround(x, y, x, y, z);
+    return removed;
   }
 
   function highlightOnTile(x, y, z) {
@@ -559,6 +579,169 @@ export function createStore(config) {
 
   function clearHighlight() {
     state.highlightedItem = null;
+  }
+
+  /* ---- terrain patterns -------------------------------------------------- */
+
+  /**
+   * Terrain patterns (see core/terrains.js) turn a ground item into a
+   * brush that fringes itself: the pieces are not stored anywhere on the
+   * map, they are derived from which tiles carry the pattern's ground and
+   * recomputed around every stroke. Placing a border piece therefore also
+   * means removing the ones that no longer fit - which is why a tile's
+   * pieces are always replaced as a set.
+   */
+
+  async function loadTerrains() {
+    state.terrains = await fetchTerrains(config.terrainsUrl);
+    state.terrainsDirty = false;
+  }
+
+  function getTerrain(id) {
+    const key = String(id);
+    return state.terrains.find((terrain) => terrain.id === key) ?? null;
+  }
+
+  /** The pattern an item is the ground of, if any - what makes the brush fringe what it paints. */
+  function terrainForGround(itemId) {
+    if (itemId === null || itemId === undefined) return null;
+    const key = String(itemId);
+    return state.terrains.find((terrain) => terrain.groundId === key) ?? null;
+  }
+
+  /** The lowest free pattern id above every id in use, as a string. */
+  function nextTerrainId() {
+    let highest = -1;
+    for (const terrain of state.terrains) highest = Math.max(highest, Number(terrain.id) || 0);
+    return String(highest + 1);
+  }
+
+  function addTerrain(name = 'new terrain') {
+    const terrain = createTerrain({ id: nextTerrainId(), name });
+    state.terrains.push(terrain);
+    state.terrainsDirty = true;
+    return terrain.id;
+  }
+
+  /**
+   * Writes changed fields onto a pattern: `name`, `groundId`, and whole or
+   * partial `outer`/`inner` slot maps. Returns false when the pattern is
+   * gone - the one thing the caller cannot fix by sending other values.
+   */
+  function updateTerrain(id, patch) {
+    const terrain = getTerrain(id);
+    if (!terrain) return false;
+
+    if ('name' in patch) terrain.name = String(patch.name);
+    if ('groundId' in patch) terrain.groundId = patch.groundId ? String(patch.groundId) : null;
+    for (const group of ['outer', 'inner']) {
+      for (const [slot, value] of Object.entries(patch[group] ?? {})) {
+        if (slot in terrain[group]) terrain[group][slot] = value ? String(value) : null;
+      }
+    }
+    state.terrainsDirty = true;
+    return true;
+  }
+
+  function removeTerrain(id) {
+    const terrain = getTerrain(id);
+    if (!terrain) return false;
+    state.terrains = state.terrains.filter((other) => other !== terrain);
+    state.terrainsDirty = true;
+    return true;
+  }
+
+  /** The patterns as terrains.json content - the live list, so serialize it rather than keeping it. */
+  function exportTerrains() {
+    return state.terrains;
+  }
+
+  function markTerrainsSaved() {
+    state.terrainsDirty = false;
+  }
+
+  /** Whether a tile belongs to a pattern, i.e. its stack carries that ground item. */
+  function isTerrainTile(x, y, z, groundId) {
+    const tile = getTile(x, y, z);
+    return !!tile && tile.some((entry) => String(entry.id) === groundId);
+  }
+
+  /** Which of the tile's 8 neighbours are part of the pattern - the input borderPlan() reads. */
+  function terrainNeighbours(x, y, z, groundId) {
+    const neighbours = {};
+    for (const [direction, [dx, dy]] of Object.entries(NEIGHBOURS)) {
+      neighbours[direction] = isTerrainTile(x + dx, y + dy, z, groundId);
+    }
+    return neighbours;
+  }
+
+  /** The ids on a tile that some pattern uses as its ground. */
+  function terrainGroundsOn(tile) {
+    if (!tile) return [];
+    return tile.map((entry) => String(entry.id)).filter((id) => terrainForGround(id));
+  }
+
+  /**
+   * Puts one tile's border pieces in the state the pattern says they
+   * should be in: none at all on a tile of the terrain itself, otherwise
+   * whatever its neighbours call for. Does nothing - no history step, no
+   * repaint - when they already are, because a stroke walks over the same
+   * tiles again and again.
+   *
+   * Pieces sit directly above the tile's ground run, so they cover the
+   * ground they fringe while staying under anything standing on it.
+   */
+  function refreshTerrainTile(x, y, z, terrain, borderIds) {
+    if (!isValidPosition(x, y, z)) return;
+
+    const tile = getTile(x, y, z);
+    const current = (tile ?? []).filter((entry) => borderIds.has(String(entry.id)));
+    const wanted = isTerrainTile(x, y, z, terrain.groundId)
+      ? []
+      : borderPlan(terrainNeighbours(x, y, z, terrain.groundId), (group, slot) => !!terrain[group][slot]).map(
+          ({ group, slot }) => terrain[group][slot],
+        );
+
+    if (current.length === wanted.length && current.every((entry, index) => String(entry.id) === wanted[index])) {
+      return;
+    }
+
+    recordTile(x, y, z);
+    const entries = (tile ?? []).filter((entry) => !borderIds.has(String(entry.id)));
+    let above = 0;
+    while (above < entries.length && isGroundItem(getItem(entries[above].id))) above++;
+    entries.splice(above, 0, ...wanted.map(createEntry));
+    map.setTile(x, y, z, entries);
+    touchFloor(z);
+  }
+
+  /**
+   * Re-fringes every pattern that has anything to do with a rectangle of
+   * tiles - one tile for a brush stroke, a whole area when a selection is
+   * deleted. The ring one tile outside it is included, since those are the
+   * tiles whose own pieces a change inside can alter.
+   *
+   * A pattern is skipped unless its ground or one of its pieces is
+   * somewhere in reach (two tiles out, the furthest a tile's pieces can be
+   * influenced from), so the patterns belonging to other parts of the map
+   * cost one pass over the area and nothing more.
+   */
+  function refreshTerrainsAround(x1, y1, x2, y2, z) {
+    if (state.terrains.length === 0 || !isValidFloor(z)) return;
+
+    const present = new Set();
+    map.forEachTile(z, x1 - 2, y1 - 2, x2 + 2, y2 + 2, (tile) => {
+      for (const entry of tile) present.add(String(entry.id));
+    });
+
+    for (const terrain of state.terrains) {
+      if (!terrain.groundId) continue;
+      const borderIds = borderItemIds(terrain);
+      if (!present.has(terrain.groundId) && ![...borderIds].some((id) => present.has(id))) continue;
+      for (let y = Math.max(y1 - 1, 0); y <= y2 + 1; y++) {
+        for (let x = Math.max(x1 - 1, 0); x <= x2 + 1; x++) refreshTerrainTile(x, y, z, terrain, borderIds);
+      }
+    }
   }
 
   /* ---- context menu & dialogs ------------------------------------------- */
@@ -679,6 +862,28 @@ export function createStore(config) {
     touchFloor(z);
   }
 
+  /**
+   * Wipes every tile the selection covers, ground included - what Delete
+   * does while something is selected. The selection itself stays, so the
+   * area just emptied is still the one a paste lands in.
+   *
+   * Returns false when nothing is selected, which is how the Delete
+   * command knows to fall back to a single item.
+   */
+  function deleteSelection() {
+    const s = state.selection;
+    if (!s) return false;
+
+    let hadTerrain = false;
+    map.forEachTile(s.z, s.x1, s.y1, s.x2, s.y2, (tile) => {
+      hadTerrain = hadTerrain || terrainGroundsOn(tile).length > 0;
+    });
+
+    clearArea(s.x1, s.y1, s.x2, s.y2, s.z);
+    if (hadTerrain) refreshTerrainsAround(s.x1, s.y1, s.x2, s.y2, s.z);
+    return true;
+  }
+
   function copySelection() {
     const s = state.selection;
     if (!s) return;
@@ -778,13 +983,14 @@ export function createStore(config) {
   }
 
   /**
-   * Switches to a brand new project: a fresh item catalog from items.json,
-   * an empty map, and the given name and respawn point (the view centers
-   * on it). The catalog is reloaded first, so a failed load leaves the
-   * current project untouched.
+   * Switches to a brand new project: a fresh item catalog from items.json
+   * and terrain patterns from terrains.json, an empty map, and the given
+   * name and respawn point (the view centers on it). Both files are
+   * reloaded first, so a failed load leaves the current project untouched.
    */
   async function createProject({ name, respawnPoint }) {
     await loadItems();
+    await loadTerrains();
     map.reset();
     setMapName(name);
     setRespawnPoint(respawnPoint);
@@ -861,6 +1067,14 @@ export function createStore(config) {
     forEachTile,
     drawOnTile,
     eraseOnTile,
+    loadTerrains,
+    getTerrain,
+    terrainForGround,
+    addTerrain,
+    updateTerrain,
+    removeTerrain,
+    exportTerrains,
+    markTerrainsSaved,
     highlightOnTile,
     clearHighlight,
     openContextMenu,
@@ -877,6 +1091,7 @@ export function createStore(config) {
     updateSelection,
     clearSelection,
     isInsideSelection,
+    deleteSelection,
     copySelection,
     pasteClipboard,
     beginMoveSelection,

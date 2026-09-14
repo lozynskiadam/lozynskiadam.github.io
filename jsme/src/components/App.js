@@ -46,14 +46,18 @@ export default defineComponent({
 
     // The item catalog is shared (the map needs it to draw, the item editor
     // will edit it), so it loads once here rather than per editor - and so
-    // does the map the editor opens on. Neither blocks the other; a failed
-    // load leaves the editor usable, on an empty map or with no catalog.
+    // do the map the editor opens on and the terrain patterns. None blocks
+    // the others; a failed load leaves the editor usable, on an empty map,
+    // with no catalog or with no patterns.
     onMounted(() => {
       store.loadItems().catch((error) => {
         console.error('Failed to load items', error);
       });
       store.loadDefaultMap().catch((error) => {
         console.error('Failed to load the default map', error);
+      });
+      store.loadTerrains().catch((error) => {
+        console.error('Failed to load the terrain patterns', error);
       });
     });
 

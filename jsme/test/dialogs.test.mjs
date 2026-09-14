@@ -8,6 +8,7 @@ responses['items.json'] = [
   { id: '2', name: 'crate', layer: 'building', elevation: 8, traits: [], light: null, image: 'AA==' },
 ];
 responses['default-map.json'] = { name: 'Test map', respawnPoint: [10, 10, 0], map: {} };
+responses['terrains.json'] = [{ id: '0', name: 'meadow', groundId: '1', outer: { n: '2' }, inner: {} }];
 
 const { store, config } = await import('../src/editor.js');
 const { useProjectForm } = await import('../src/composables/useProjectForm.js');
@@ -29,6 +30,7 @@ test('every dialog renders inside the shared modal shell', async () => {
     ['help', 'Keyboard shortcuts'],
     ['projectProperties', 'Project properties'],
     ['newProject', 'New project'],
+    ['terrains', 'Terrain patterns'],
   ]) {
     await open(name);
     const classes = view.classes();
@@ -62,6 +64,25 @@ test('the item properties dialog shows the item it was opened for', async () => 
   assert.ok(text.includes('Item properties'));
   assert.ok(text.includes('crate'), 'the item name');
   assert.ok(text.includes('4, 5, 0'), 'and where on the map it sits');
+  store.closeDialog();
+  await settle(2);
+});
+
+test('the terrain dialog shows the pattern and fills the slot that is picked', async () => {
+  await open('terrains');
+  const text = view.text();
+  assert.ok(text.includes('meadow'), 'the pattern is listed');
+  assert.ok(text.includes('Ground'), 'with the grid its slots are laid out in');
+  assert.ok(text.includes('Inner corners'));
+  assert.ok(text.includes('sw'), 'an empty slot names itself');
+
+  // What clicking a slot and then an item in the picker comes down to.
+  store.updateTerrain('0', { inner: { sw: '2' } });
+  assert.equal(store.getTerrain('0').inner.sw, '2');
+  assert.equal(store.state.terrainsDirty, true);
+  await settle(2);
+  assert.ok(view.text().includes('unsaved changes'), 'and the dialog says the file needs saving');
+
   store.closeDialog();
   await settle(2);
 });

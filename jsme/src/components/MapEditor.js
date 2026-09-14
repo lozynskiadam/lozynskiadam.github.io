@@ -8,6 +8,7 @@ import MapCanvas from './MapCanvas.js';
 import ContextMenu from './ContextMenu.js';
 import DialogHost from './DialogHost.js';
 import ItemPropertiesModal from './ItemPropertiesModal.js';
+import TerrainsModal from './TerrainsModal.js';
 
 /**
  * The map editor's own dialogs by name - `store.openDialog(name, props)`
@@ -17,6 +18,7 @@ import ItemPropertiesModal from './ItemPropertiesModal.js';
  */
 const DIALOGS = {
   itemProperties: ItemPropertiesModal,
+  terrains: TerrainsModal,
 };
 
 /**

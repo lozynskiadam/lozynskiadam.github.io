@@ -20,4 +20,4 @@ export const MENUS = [
 ];
 
 /** Action buttons shown in the map toolbar, left of the tools; ids from actions.js. */
-export const TOOLBAR_ACTIONS = ['edit.undo', 'edit.redo'];
+export const TOOLBAR_ACTIONS = ['edit.undo', 'edit.redo', 'terrain.patterns'];

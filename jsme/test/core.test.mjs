@@ -24,6 +24,8 @@ import {
   shortcutsOf,
 } from '../src/core/shortcuts.js';
 import { isValidMapFile, isValidRespawnPoint, mapFileName } from '../src/core/mapFile.js';
+import { borderItemIds, borderPlan, createTerrain, isUsableTerrain, terrainToRaw } from '../src/core/terrains.js';
+import { serializeTerrains } from '../src/core/terrainsFile.js';
 import { marginTiles, pixelToTile, tileToPixel, visibleOrigin } from '../src/core/pointer.js';
 
 /* ---- mapData ---------------------------------------------------------- */
@@ -271,4 +273,66 @@ test('tile and pixel conversions are inverses', () => {
   assert.equal(tileToPixel(6, origin, marginPx, tileSize), 96);
   assert.equal(pixelToTile(96, origin, marginPx, tileSize), 6);
   assert.equal(pixelToTile(127, origin, marginPx, tileSize), 6, 'anywhere inside the tile');
+});
+
+/* ---- terrain patterns ------------------------------------------------- */
+
+/** Neighbours as borderPlan takes them: everything false but the directions named. */
+const around = (...directions) =>
+  Object.fromEntries(['nw', 'n', 'ne', 'w', 'e', 'sw', 's', 'se'].map((d) => [d, directions.includes(d)]));
+
+const slots = (pieces) => pieces.map(({ group, slot }) => `${group}.${slot}`);
+
+test('a pattern keeps every slot whatever the file left out', () => {
+  const terrain = createTerrain({ id: 3, name: 'grass', groundId: 1000, outer: { n: 2101, nonsense: 7 } });
+  assert.equal(terrain.groundId, '1000', 'ids are strings, like the catalog\'s');
+  assert.equal(terrain.outer.n, '2101');
+  assert.equal(terrain.outer.s, null, 'an unfilled slot is null, not missing');
+  assert.deepEqual(Object.keys(terrain.inner), ['nw', 'ne', 'sw', 'se']);
+  assert.ok(!('nonsense' in terrain.outer));
+  const written = JSON.parse(serializeTerrains([terrain]))[0];
+  assert.deepEqual(terrainToRaw(terrain), written, 'and it round-trips through the file');
+});
+
+test('a pattern is only usable once it has a ground and a piece', () => {
+  assert.ok(!isUsableTerrain(createTerrain({ groundId: 1000 })));
+  assert.ok(!isUsableTerrain(createTerrain({ outer: { n: 2101 } })));
+  assert.ok(isUsableTerrain(createTerrain({ groundId: 1000, outer: { n: 2101 } })));
+  assert.deepEqual([...borderItemIds(createTerrain({ outer: { n: 2101 }, inner: { nw: 2111 } }))], ['2101', '2111']);
+});
+
+test('a tile beside a terrain gets the piece for the side it is on', () => {
+  assert.deepEqual(slots(borderPlan(around('s'))), ['outer.n'], 'terrain to the south, so this is its north edge');
+  assert.deepEqual(slots(borderPlan(around('w'))), ['outer.e']);
+  assert.deepEqual(
+    slots(borderPlan(around('n', 'e'), (group) => group === 'outer')),
+    ['outer.s', 'outer.w'],
+    'one piece per side, named after the side of the terrain it sits on',
+  );
+});
+
+test('a diagonal neighbour alone is a convex corner - and is dropped once a side covers it', () => {
+  assert.deepEqual(slots(borderPlan(around('se'))), ['outer.nw']);
+  assert.deepEqual(slots(borderPlan(around('se', 's'))), ['outer.n'], 'the north edge already runs past that corner');
+});
+
+test('two sides meeting make one inner corner instead of two edges', () => {
+  assert.deepEqual(slots(borderPlan(around('s', 'e'))), ['inner.nw']);
+  assert.deepEqual(slots(borderPlan(around('n', 'w'))), ['inner.se']);
+  const notches = slots(borderPlan(around('s', 'e', 'w')));
+  assert.deepEqual(notches, ['inner.nw', 'inner.ne'], 'both notches, and no south edge left between them');
+  assert.deepEqual(
+    slots(borderPlan(around('n', 'e', 's', 'w'))),
+    ['inner.nw', 'inner.ne', 'inner.sw', 'inner.se'],
+    'a tile left as a hole in the terrain is fringed all the way round',
+  );
+});
+
+test('an unfilled inner corner falls back to the two edges it would have replaced', () => {
+  const has = (group) => group === 'outer';
+  assert.deepEqual(slots(borderPlan(around('s', 'e'), has)), ['outer.w', 'outer.n']);
+});
+
+test('a tile with no terrain around it needs nothing', () => {
+  assert.deepEqual(borderPlan(around()), []);
 });

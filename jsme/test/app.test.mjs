@@ -74,6 +74,19 @@ test('map shortcuts act on the map', () => {
   assert.equal(store.state.renderFromX, before + 1);
 });
 
+test('Delete clears the whole selection, not just one item', () => {
+  store.selectItem('1');
+  store.drawOnTile(2, 2, 0);
+  store.drawOnTile(3, 2, 0);
+  store.beginSelection(2, 2, 0);
+  store.updateSelection(2, 2, 3, 2);
+
+  keydown({ key: 'Delete' });
+  assert.equal(store.getTile(2, 2, 0), null);
+  assert.equal(store.getTile(3, 2, 0), null, 'the ground went too, across the whole area');
+  store.clearSelection();
+});
+
 test('typing in a field does not paint, pan or switch tools', () => {
   const input = new FakeElement('input');
   const before = store.state.renderFromX;

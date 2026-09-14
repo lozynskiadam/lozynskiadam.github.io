@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 
 import { createStore, toCamelCase } from '../src/core/store.js';
 
-const CONFIG = { itemsUrl: 'items.json', mapUrl: 'default-map.json', tileSize: 32, maxElevation: 64, maxLightLevel: 16, minFloor: -7, maxFloor: 7 };
+const CONFIG = { itemsUrl: 'items.json', mapUrl: 'default-map.json', terrainsUrl: 'terrains.json', tileSize: 32, maxElevation: 64, maxLightLevel: 16, minFloor: -7, maxFloor: 7 };
 
 const ITEMS = [
   { id: '1', name: 'grass', layer: 'ground', elevation: 0, traits: ['ground'], light: null, image: 'AA==' },
@@ -14,11 +14,54 @@ const ITEMS = [
   { id: '4', name: 'bush', layer: 'nature', elevation: 0, traits: [], light: null, image: 'AA==' },
 ];
 
+// A terrain pattern over the fixture catalog: grass (1) as the ground and
+// one edge item per slot, numbered so a piece is recognizable by its id.
+const EDGE_SLOTS = ['nw', 'n', 'ne', 'w', 'e', 'sw', 's', 'se', 'inw', 'ine', 'isw', 'ise'];
+const EDGE_ITEMS = Object.fromEntries(EDGE_SLOTS.map((slot, index) => [slot, String(10 + index)]));
+
+const TERRAIN = {
+  id: '0',
+  name: 'grass',
+  groundId: '1',
+  outer: {
+    nw: EDGE_ITEMS.nw,
+    n: EDGE_ITEMS.n,
+    ne: EDGE_ITEMS.ne,
+    w: EDGE_ITEMS.w,
+    e: EDGE_ITEMS.e,
+    sw: EDGE_ITEMS.sw,
+    s: EDGE_ITEMS.s,
+    se: EDGE_ITEMS.se,
+  },
+  inner: { nw: EDGE_ITEMS.inw, ne: EDGE_ITEMS.ine, sw: EDGE_ITEMS.isw, se: EDGE_ITEMS.ise },
+};
+
+const EDGE_CATALOG = Object.values(EDGE_ITEMS).map((id) => ({
+  id,
+  name: `grass edge ${id}`,
+  layer: 'edge',
+  elevation: 0,
+  traits: [],
+  light: null,
+  image: 'AA==',
+}));
+
 /** A store with the fixture catalog loaded, ready to paint on. */
 async function freshStore() {
   responses['items.json'] = ITEMS;
   const store = createStore(CONFIG);
   await store.loadItems();
+  return store;
+}
+
+/** The same store with the grass pattern loaded from terrains.json, so the brush fringes what it paints. */
+async function terrainStore() {
+  responses['items.json'] = [...ITEMS, ...EDGE_CATALOG];
+  responses['terrains.json'] = [TERRAIN];
+  const store = createStore(CONFIG);
+  await store.loadItems();
+  await store.loadTerrains();
+  store.selectItem('1');
   return store;
 }
 
@@ -214,6 +257,32 @@ test('copy and paste move a block of tiles', async () => {
   assert.deepEqual(store.state.selection, { z: 0, x1: 10, y1: 10, x2: 11, y2: 11 }, 'the selection follows the paste');
 });
 
+test('deleting a selection wipes every tile in it, ground included, in one step', async () => {
+  const store = await freshStore();
+  store.selectItem('1'); // grass, a ground item the 1x1 eraser would leave alone
+  for (const [x, y] of [[0, 0], [1, 0], [1, 1], [3, 3]]) store.drawOnTile(x, y, 0);
+  await Promise.resolve();
+
+  store.beginSelection(0, 0, 0);
+  store.updateSelection(0, 0, 1, 1);
+  assert.equal(store.deleteSelection(), true);
+  await Promise.resolve();
+
+  assert.equal(store.getTile(0, 0, 0), null);
+  assert.equal(store.getTile(1, 1, 0), null);
+  assert.deepEqual(ids(store.getTile(3, 3, 0)), [1], 'what was outside the selection stayed');
+  assert.ok(store.state.selection, 'the selection itself stays, so a paste still lands there');
+
+  store.undo();
+  assert.deepEqual(ids(store.getTile(0, 0, 0)), [1], 'and the whole area comes back as one step');
+  assert.deepEqual(ids(store.getTile(1, 1, 0)), [1]);
+});
+
+test('deleting with nothing selected reports as much, so Delete can fall back', async () => {
+  const store = await freshStore();
+  assert.equal(store.deleteSelection(), false);
+});
+
 test('a selection knows what is inside it', async () => {
   const store = await freshStore();
   store.beginSelection(2, 2, 0);
@@ -350,4 +419,148 @@ test('the floor stays inside the configured range', async () => {
   assert.equal(store.state.currentFloor, 0, 'an out-of-range floor is simply refused');
   store.setCurrentFloor(3);
   assert.equal(store.state.currentFloor, 3);
+});
+
+/* ---- terrain patterns -------------------------------------------------- */
+
+test('the patterns come off terrains.json, and a missing file just means none', async () => {
+  const store = await terrainStore();
+  assert.equal(store.state.terrains.length, 1);
+  assert.equal(store.getTerrain('0').name, 'grass');
+  assert.equal(store.terrainForGround('1').id, '0', 'the ground item is what the brush recognizes');
+  assert.equal(store.terrainForGround('2'), null);
+  assert.equal(store.state.terrainsDirty, false);
+
+  delete responses['terrains.json'];
+  await store.loadTerrains();
+  assert.deepEqual(store.state.terrains, []);
+});
+
+test('painting a terrain lays its edges on the tiles around it', async () => {
+  const store = await terrainStore();
+  store.drawOnTile(5, 5, 0);
+
+  assert.deepEqual(ids(store.getTile(5, 5, 0)), [1], 'the painted tile is just the ground');
+  assert.deepEqual(ids(store.getTile(5, 4, 0)), [Number(EDGE_ITEMS.n)], 'north of the terrain');
+  assert.deepEqual(ids(store.getTile(5, 6, 0)), [Number(EDGE_ITEMS.s)]);
+  assert.deepEqual(ids(store.getTile(4, 5, 0)), [Number(EDGE_ITEMS.w)]);
+  assert.deepEqual(ids(store.getTile(6, 5, 0)), [Number(EDGE_ITEMS.e)]);
+  assert.deepEqual(ids(store.getTile(4, 4, 0)), [Number(EDGE_ITEMS.nw)], 'and the four corners of the ring');
+  assert.deepEqual(ids(store.getTile(6, 6, 0)), [Number(EDGE_ITEMS.se)]);
+  assert.equal(store.getTile(5, 3, 0), null, 'nothing two tiles out');
+});
+
+test('a tile that becomes terrain drops the edges it was carrying', async () => {
+  const store = await terrainStore();
+  store.drawOnTile(5, 5, 0);
+  assert.deepEqual(ids(store.getTile(6, 5, 0)), [Number(EDGE_ITEMS.e)]);
+
+  store.drawOnTile(6, 5, 0);
+  assert.deepEqual(ids(store.getTile(6, 5, 0)), [1], 'the piece went as the ground arrived');
+  assert.deepEqual(ids(store.getTile(7, 5, 0)), [Number(EDGE_ITEMS.e)], 'and the ring moved out with it');
+});
+
+test('a tile with terrain on two sides gets one inner corner', async () => {
+  const store = await terrainStore();
+  store.drawOnTile(6, 5, 0);
+  store.drawOnTile(5, 6, 0);
+  assert.deepEqual(ids(store.getTile(5, 5, 0)), [Number(EDGE_ITEMS.inw)], 'terrain to the south and east');
+});
+
+test('edges land above the ground of the tile they fringe, under what stands on it', async () => {
+  const store = await terrainStore();
+  store.selectItem('2'); // a crate, layer "building"
+  store.drawOnTile(5, 4, 0);
+  store.selectItem('1');
+  store.drawOnTile(5, 4, 0); // grass under the crate, so the tile is a terrain tile
+  store.drawOnTile(5, 5, 0);
+
+  assert.deepEqual(ids(store.getTile(5, 3, 0)), [Number(EDGE_ITEMS.n)]);
+  store.selectItem('2');
+  store.drawOnTile(5, 3, 0);
+  assert.deepEqual(ids(store.getTile(5, 3, 0)), [Number(EDGE_ITEMS.n), 2], 'the crate stacks on top of the edge');
+});
+
+test('erasing the ground takes the edges around it away', async () => {
+  const store = await terrainStore();
+  store.drawOnTile(5, 5, 0);
+  store.eraseOnTile(5, 5, 0, { force: true });
+
+  for (const [x, y] of [[5, 4], [5, 6], [4, 5], [6, 5], [4, 4], [6, 6]]) {
+    assert.equal(store.getTile(x, y, 0), null, `(${x}, ${y}) should be empty again`);
+  }
+});
+
+test('erasing an edge by hand leaves it erased', async () => {
+  const store = await terrainStore();
+  store.drawOnTile(5, 5, 0);
+  assert.deepEqual(store.eraseOnTile(5, 4, 0).map((entry) => entry.id), [Number(EDGE_ITEMS.n)]);
+  assert.equal(store.getTile(5, 4, 0), null, 'removing a piece is taken at face value');
+});
+
+test('painting something that is no terrain leaves the edges alone', async () => {
+  const store = await terrainStore();
+  store.drawOnTile(5, 5, 0);
+  store.selectItem('4'); // a bush, layer "nature"
+  store.drawOnTile(5, 4, 0);
+  assert.deepEqual(ids(store.getTile(5, 4, 0)), [Number(EDGE_ITEMS.n), 4]);
+});
+
+test('the ground and everything it fringed undo as one step', async () => {
+  const store = await terrainStore();
+  store.beginGesture();
+  store.drawOnTile(5, 5, 0);
+  store.drawOnTile(6, 5, 0);
+  store.endGesture();
+  assert.equal(store.state.undoDepth, 1);
+
+  store.undo();
+  for (const [x, y] of [[5, 5], [6, 5], [5, 4], [7, 5], [4, 4]]) {
+    assert.equal(store.getTile(x, y, 0), null, `(${x}, ${y}) should be back to empty`);
+  }
+});
+
+test('a half-filled pattern falls back to the edges it does have', async () => {
+  const store = await terrainStore();
+  store.updateTerrain('0', { inner: { nw: null } });
+  store.drawOnTile(6, 5, 0);
+  store.drawOnTile(5, 6, 0);
+  assert.deepEqual(ids(store.getTile(5, 5, 0)), [Number(EDGE_ITEMS.w), Number(EDGE_ITEMS.n)]);
+});
+
+test('deleting a selection re-fringes the terrain left around it', async () => {
+  const store = await terrainStore();
+  store.beginGesture();
+  for (const [x, y] of [[5, 5], [6, 5], [5, 6], [6, 6]]) store.drawOnTile(x, y, 0);
+  store.endGesture();
+
+  store.beginSelection(6, 5, 0);
+  store.updateSelection(6, 5, 6, 6);
+  store.deleteSelection();
+
+  const east = [Number(EDGE_ITEMS.e)];
+  assert.deepEqual(ids(store.getTile(6, 5, 0)), east, 'the ground went and the east edge took its place');
+  assert.deepEqual(ids(store.getTile(6, 6, 0)), east);
+  assert.deepEqual(ids(store.getTile(5, 4, 0)), [Number(EDGE_ITEMS.n)], 'the edge that still fits stayed');
+  assert.equal(store.getTile(7, 5, 0), null, 'and the ring moved back in with the terrain');
+});
+
+test('patterns are added, edited and dropped, and the file is marked unsaved', async () => {
+  const store = await terrainStore();
+  const id = store.addTerrain();
+  assert.equal(id, '1', 'the lowest free id');
+  assert.equal(store.state.terrainsDirty, true);
+  store.markTerrainsSaved();
+
+  assert.ok(store.updateTerrain(id, { name: 'sand', groundId: 2, outer: { n: 11 } }));
+  const terrain = store.getTerrain(id);
+  assert.equal(terrain.name, 'sand');
+  assert.equal(terrain.groundId, '2', 'ids are stored as strings');
+  assert.equal(terrain.outer.n, '11');
+  assert.equal(store.state.terrainsDirty, true);
+  assert.equal(store.updateTerrain('nope', { name: 'x' }), false);
+
+  assert.ok(store.removeTerrain(id));
+  assert.equal(store.getTerrain(id), null);
+  assert.equal(store.removeTerrain(id), false);
 });
