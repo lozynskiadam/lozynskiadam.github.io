@@ -19,6 +19,11 @@ const ACTION_LIST = TOOLBAR_ACTIONS.map((id) => {
   return { action, tooltip: shortcut ? `${action.label} (${shortcut})` : action.label };
 });
 
+/**
+ * The map editor's toolbar. Its buttons refuse focus the way the rail's do:
+ * shortcuts live on window, and a button that kept focus after a click would
+ * show a focus ring as soon as the next one is pressed.
+ */
 export default defineComponent({
   name: 'Toolbar',
   setup() {
@@ -57,6 +62,7 @@ export default defineComponent({
           :title="button.tooltip"
           :disabled="!isEnabled(button.action)"
           @click="button.action.run()"
+          @mousedown.prevent
         ><span class="ui-icon" :data-icon="button.action.icon"></span></button>
 
         <div class="toolbar-separator"></div>
@@ -69,6 +75,7 @@ export default defineComponent({
           :class="{ active: state.selectedTool === tool.name }"
           :title="tool.tooltip"
           @click="selectTool(tool.name)"
+          @mousedown.prevent
         ><span class="ui-icon" :data-icon="tool.name"></span></button>
 
         <div class="toolbar-separator"></div>

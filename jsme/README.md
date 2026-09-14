@@ -19,7 +19,7 @@ UI / klawiatura  →  actions.js / tools.js  →  store.js  →  renderer.js
 
 | Plik | Rola |
 | --- | --- |
-| `config.js` | Stałe edytora (URL katalogu itemów, rozmiar kafelka, maks. wysokość stosu, zakres pięter). |
+| `config.js` | Stałe edytora (URL katalogu itemów i mapy startowej, rozmiar kafelka, maks. wysokość stosu, zakres pięter). |
 | `src/editor.js` | Singleton edytora map: tworzy store, narzędzia, akcje i renderer, z których korzystają komponenty. |
 | `src/core/editors.js` | Lista edytorów w railu (`EDITORS`) i stan workspace: który edytor jest aktywny. |
 | `src/core/mapData.js` | Czysty model mapy (piętro → wiersz → kolumna → stos wpisów) i operacje blokowe. Bez wiedzy o UI. |
@@ -35,7 +35,7 @@ UI / klawiatura  →  actions.js / tools.js  →  store.js  →  renderer.js
 | `src/core/renderer.js` | Renderer WebGL. Obserwuje store i sam planuje klatkę (`requestAnimationFrame`). |
 | `src/core/painter.js` | Warstwa WebGL z API w stylu Canvas 2D (batching, atlas tekstur, warstwy offscreen). |
 | `src/core/pointer.js` | Matematyka piksel ↔ kafelek z uwzględnieniem paralaksy pięter. |
-| `src/components/App.js` | Powłoka workspace: `MenuBar` nad wszystkim, `EditorRail` + aktywny edytor (`EDITOR_COMPONENTS`; brak wpisu = `EmptyEditor`), dialogi z menu File (`DIALOGS`: help, projectProperties), skróty File. |
+| `src/components/App.js` | Powłoka workspace: `MenuBar` nad wszystkim, `EditorRail` + aktywny edytor (`EDITOR_COMPONENTS`; brak wpisu = `EmptyEditor`), dialogi z paska menu (`DIALOGS`: help, projectProperties, newProject), skróty File. |
 | `src/components/MapEditor.js` | Edytor map w całości: `Sidebar`, `Toolbar`, `MapCanvas`, własne dialogi (`DIALOGS`: itemProperties), skróty mapy. |
 | `src/components/` | Pozostałe komponenty Vue: `MenuBar`, `Toolbar`, `Sidebar`, `Palette`, `MapCanvas`, dialogi. |
 | `src/composables/` | `useKeyboard` (ogólne: skróty rejestru akcji → klawiatura), `useWorkspaceKeyboard` (skróty File + Escape zamykający dialog), `useMapKeyboard` (skróty edytora map + tryby Shift/Tab), `useDraggable` (przeciąganie okien). |
@@ -83,20 +83,39 @@ edytor ich nie powtarza.
 `map` to `{ [z]: { [y]: { [x]: [ { id, ...właściwości }, … ] } } }`. `id` to numer
 itemu z katalogu; pozostałe klucze wpisu to własne właściwości ustawione w
 dialogu „Properties” (klucze normalizowane do camelCase). Po New/Open widok
-centruje się na `respawnPoint` i przełącza na jego piętro. Stare pliki (goły
-obiekt `map`) nadal się otwierają z domyślnymi `name`/`respawnPoint` z `config.js`.
+centruje się na `respawnPoint` i przełącza na jego piętro.
+
+Edytor startuje na mapie z `config.mapUrl` (`default-map.json` obok
+`index.html`) — jej `name` i `respawnPoint` uzupełniają zarazem stare pliki
+(goły obiekt `map`, bez envelope). Gdy pliku nie da się wczytać, edytor
+startuje na pustej mapie bez nazwy (błąd trafia do konsoli).
+
+Nowy projekt zakłada się z dropdownu projektu w pasku menu (pod listą „Recent
+projects”): „New project” otwiera dialog z nazwą i respawn pointem (domyślnie
+„Untitled” i 100/100/0, stała `NEW_PROJECT` w `NewProjectModal.js`), a dopiero
+przycisk „Create new project” przełącza aplikację — `store.createProject()`
+wczytuje `items.json` od nowa, czyści mapę, ustawia nazwę i centruje widok na
+nowym respawn poincie. Gdy katalog itemów się nie wczyta, bieżący projekt
+zostaje nietknięty, a powód pokazuje się w dialogu.
 
 ## Katalog itemów (`items.json`)
 
-Tablica wpisów `{ id, name, layer, altitude, traits, light, image }`. `image` to PNG w base64,
+Tablica wpisów `{ id, name, layer, elevation, traits, light, image }`. `image` to PNG w base64,
 `layer` decyduje o zakładce w palecie i o tym, który wpis na kafelku zastępuje
-pędzel. `altitude` to wysokość itemu w px: każdy wpis leżący wyżej na stosie
-kafelka jest rysowany przesunięty w górę i w lewo o sumę `altitude` wpisów pod
-nim (`store.stackAltitude`), więc np. skrzynia o wysokości 8 „unosi” to, co na
-niej stoi. Suma jest przycinana do `config.maxAltitude` (64 px). Renderer, podgląd pędzla i podgląd przenoszenia zaznaczenia liczą
+pędzel. `elevation` to wysokość itemu w px: każdy wpis leżący wyżej na stosie
+kafelka jest rysowany przesunięty w górę i w lewo o sumę `elevation` wpisów pod
+nim (`store.stackElevation`), więc np. skrzynia o wysokości 8 „unosi” to, co na
+niej stoi. Suma jest przycinana do `config.maxElevation` (64 px). Renderer, podgląd pędzla i podgląd przenoszenia zaznaczenia liczą
 to tak samo.
 
+`traits` to flagi z `ITEM_TRAITS` (`ground`, `floor`, `blocking`, `movable`,
+`pickupable`, `stackable`); nieznane są odrzucane przy wczytaniu. Jedyną, na
+którą reaguje sam edytor, jest `ground`: taki item ląduje na spodzie stosu
+kafelka (`store.pushEntry`), a gumka 1×1 go nie zdejmuje — usuwa go dopiero
+pędzel większy niż 1 (czyści cały kafelek) albo „Delete” z menu kontekstowego.
+Reszta jedzie do pliku dla gry.
+
 `light` to źródło światła itemu: `null`, gdy item nie świeci, albo
-`{ range, color }` — zasięg w kafelkach (1–`config.maxLightRange`) i barwa jako
+`{ level, color }` — zasięg w kafelkach (1–`config.maxLightLevel`) i barwa jako
 hex `#rrggbb`. Edytor itemów tylko to zapisuje; samo światło nie jest nigdzie
 rysowane — pole jest dla gry czytającej katalog.

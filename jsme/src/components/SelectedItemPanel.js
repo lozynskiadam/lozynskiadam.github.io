@@ -3,7 +3,7 @@ import { store } from '../editor.js';
 
 /**
  * The pair of objects the brush paints with, shown the way a paint program
- * shows its two colours: the primary in front, the secondary peeking out
+ * shows its two colors: the primary in front, the secondary peeking out
  * behind it (X swaps them, see `edit.swapItems`). The name line keeps its
  * height even with nothing picked, so the palette below never shifts.
  */

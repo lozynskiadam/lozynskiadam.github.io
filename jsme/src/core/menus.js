@@ -15,7 +15,7 @@ export const MENUS = [
     id: 'file',
     label: 'File',
     icon: 'menu',
-    items: ['file.new', 'file.open', 'file.save', null, 'file.properties', null, 'help.shortcuts'],
+    items: ['file.open', 'file.save', null, 'file.properties', null, 'help.shortcuts'],
   },
 ];
 

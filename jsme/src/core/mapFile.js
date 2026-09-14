@@ -38,10 +38,17 @@ export function pickMapFile() {
 }
 
 /**
- * Reads and validates a map file; rejects with a user-presentable message.
- * Files from before the envelope existed (a bare map object) still open -
- * they come back as `{ map }` and the store fills in the defaults.
+ * Parsed JSON as an envelope, or null when it is neither shape. Files from
+ * before the envelope existed (a bare map object) still open - they come
+ * back as `{ map }` and the store fills in the defaults.
  */
+function toEnvelope(parsed) {
+  if (isValidMapFile(parsed)) return { name: parsed.name, respawnPoint: parsed.respawnPoint, map: parsed.map };
+  if (isValidMapData(parsed)) return { map: parsed };
+  return null;
+}
+
+/** Reads and validates a picked map file; rejects with a user-presentable message. */
 export async function readMapFile(file) {
   let parsed;
   try {
@@ -49,9 +56,22 @@ export async function readMapFile(file) {
   } catch {
     throw new Error(INVALID);
   }
-  if (isValidMapFile(parsed)) return { name: parsed.name, respawnPoint: parsed.respawnPoint, map: parsed.map };
-  if (isValidMapData(parsed)) return { map: parsed };
-  throw new Error(INVALID);
+  const envelope = toEnvelope(parsed);
+  if (!envelope) throw new Error(INVALID);
+  return envelope;
+}
+
+/**
+ * The same envelope, fetched from a URL instead of picked: the map the
+ * editor opens on (`config.mapUrl`). Cache-busted like the item catalog,
+ * so editing the file next to index.html is enough to see it.
+ */
+export async function fetchMapFile(url) {
+  const response = await fetch(`${url}?v=${Date.now()}`);
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const envelope = toEnvelope(await response.json());
+  if (!envelope) throw new Error(`${url} is not a valid map editor file`);
+  return envelope;
 }
 
 /** "My Town!" -> "my-town.json"; falls back to map.json for an empty name. */

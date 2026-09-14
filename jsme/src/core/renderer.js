@@ -5,7 +5,7 @@ import { pixelToTile, tileToPixel, marginTiles, visibleOrigin } from './pointer.
 // Ruler strip thickness in px, and how often (in tiles) a tick gets a label.
 const RULER_SIZE = 20;
 const MAJOR_TICK_EVERY = 5;
-// Ruler colours - the strips are chrome around the map, so they read as part
+// Ruler colors - the strips are chrome around the map, so they read as part
 // of the panel behind them and take its background (--ruler-bg in app.css,
 // which paints the corner between the two strips to match).
 const RULER_BG = '#191a1c'; // --panel-bg in app.css
@@ -265,7 +265,7 @@ export class MapRenderer {
           ? tile.length - 1
           : -1;
 
-      // Every item under this one lifts it by its altitude (up and left), up to config.maxAltitude.
+      // Every item under this one lifts it by its elevation (up and left), up to config.maxElevation.
       let lift = 0;
       for (let index = 0; index < tile.length; index++) {
         const item = store.getItem(tile[index].id);
@@ -273,7 +273,7 @@ export class MapRenderer {
 
         const drawX = tileX + (config.tileSize - item.image.width) - lift;
         const drawY = tileY + (config.tileSize - item.image.height) - lift;
-        lift = Math.min(lift + (item.altitude ?? 0), config.maxAltitude);
+        lift = Math.min(lift + (item.elevation ?? 0), config.maxElevation);
         // The highlighted item stays in place; the second, additive pass only brightens it.
         ctx.drawImage(item.image, drawX, drawY);
         if (index === highlightedIndex) {

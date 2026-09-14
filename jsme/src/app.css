@@ -717,7 +717,7 @@ button {
   outline: 1px solid var(--accent);
   outline-offset: -1px;
 }
-/* The dropdown itself is drawn by the OS, which does not inherit the panel's colours. */
+/* The dropdown itself is drawn by the OS, which does not inherit the panel's colors. */
 .layer-list option {
   background-color: #2b2b2b;
   color: var(--text);

@@ -6,12 +6,13 @@ import {
   EMPTY_CATALOG,
   createCatalog,
   decodeItem,
+  isGroundItem,
   itemToRaw,
   loadCatalog,
   normalizeLight,
   normalizeTraits,
 } from './catalog.js';
-import { isValidRespawnPoint } from './mapFile.js';
+import { fetchMapFile, isValidRespawnPoint } from './mapFile.js';
 
 // Keys of a placed map entry that belong to the editor itself; everything
 // else on the entry is a user-defined property (see setEntryProperty).
@@ -67,11 +68,17 @@ export function createStore(config) {
   // (re)loaded without Vue deep-proxying every item.
   const catalog = shallowRef(EMPTY_CATALOG);
 
+  // Taken from the map the editor opens on (config.mapUrl): what File → New
+  // goes back to, and what stands in for the fields a pre-envelope map file
+  // lacks. Until that file loads - or if it cannot be read - the editor sits
+  // on an empty, unnamed map at the origin.
+  let defaults = { name: '', respawnPoint: [0, 0, 0] };
+
   const state = reactive({
     loading: true,
     loadError: null,
-    name: config.name, // map name, saved in the file envelope
-    respawnPoint: [...config.respawnPoint], // [x, y, z] - where the view centers after new/open
+    name: defaults.name, // map name, saved in the file envelope
+    respawnPoint: [...defaults.respawnPoint], // [x, y, z] - where the view centers after new/open
     viewport: { width: 0, height: 0 }, // map canvas size in px, reported by the renderer
     selectedLayer: null,
     selectedTool: 'pointer',
@@ -199,16 +206,16 @@ export function createStore(config) {
 
   /**
    * How many px the entry at `index` of a tile stack is lifted by the
-   * items under it: the sum of their `altitude` (catalog field, px). A
+   * items under it: the sum of their `elevation` (catalog field, px). A
    * lifted sprite is drawn that much further up and left, so a tall
    * bottom item visibly carries whatever gets stacked on top of it. With
    * no index, returns the elevation of the next item put on the stack.
-   * The total is capped at `config.maxAltitude`.
+   * The total is capped at `config.maxElevation`.
    */
-  function stackAltitude(entries, index = entries.length) {
-    let altitude = 0;
-    for (let i = 0; i < index; i++) altitude += getItem(entries[i].id)?.altitude ?? 0;
-    return Math.min(altitude, config.maxAltitude);
+  function stackElevation(entries, index = entries.length) {
+    let elevation = 0;
+    for (let i = 0; i < index; i++) elevation += getItem(entries[i].id)?.elevation ?? 0;
+    return Math.min(elevation, config.maxElevation);
   }
 
   async function loadItems() {
@@ -232,7 +239,7 @@ export function createStore(config) {
    * Swaps in a catalog built from an edited item list. The catalog is
    * replaced rather than mutated in place: that re-indexes it, re-runs the
    * computeds the palette and the item list read, and is what the renderer
-   * watches to redraw the map with the new names, layers and altitudes.
+   * watches to redraw the map with the new names, layers and elevations.
    */
   function replaceCatalogItems(items) {
     catalog.value = createCatalog(items);
@@ -254,7 +261,7 @@ export function createStore(config) {
 
   /**
    * Writes changed fields onto a catalog item. `patch` takes the same
-   * fields items.json has (id, name, layer, altitude, traits, light,
+   * fields items.json has (id, name, layer, elevation, traits, light,
    * png); the
    * caller is expected to have validated them. Returns false when the item
    * is gone or the new id is taken - the two things a caller cannot fix by
@@ -294,7 +301,7 @@ export function createStore(config) {
       id: nextItemId(),
       name: 'new item',
       layer: layer || 'ground',
-      altitude: 0,
+      elevation: 0,
       traits: [],
       light: null,
       image: BLANK_ITEM_PNG,
@@ -457,8 +464,8 @@ export function createStore(config) {
   }
 
   /** Puts an entry on a tile's stack: ground items at the bottom, everything else on top. */
-  function pushEntry(tile, entry, layer) {
-    if (layer === 'ground') tile.unshift(entry);
+  function pushEntry(tile, entry, item) {
+    if (isGroundItem(item)) tile.unshift(entry);
     else tile.push(entry);
   }
 
@@ -480,7 +487,7 @@ export function createStore(config) {
       }
       tile[sameLayerIndex] = createEntry(itemId);
     } else {
-      pushEntry(tile, createEntry(itemId), item.layer);
+      pushEntry(tile, createEntry(itemId), item);
     }
     touchFloor(z);
   }
@@ -496,7 +503,7 @@ export function createStore(config) {
     const item = getItem(entry.id);
     if (!item || !isValidPosition(x, y, z)) return;
     recordTile(x, y, z);
-    pushEntry(map.ensureTile(x, y, z), entry, item.layer);
+    pushEntry(map.ensureTile(x, y, z), entry, item);
     touchFloor(z);
   }
 
@@ -522,7 +529,7 @@ export function createStore(config) {
     if (!tile || tile.length === 0) return;
 
     const topItem = getItem(tile[tile.length - 1].id);
-    if (!hardClear && topItem?.layer === 'ground' && !state.highlightedItem) return;
+    if (!hardClear && isGroundItem(topItem) && !state.highlightedItem) return;
 
     recordTile(x, y, z);
     if (hardClear) tile.length = 0;
@@ -758,15 +765,36 @@ export function createStore(config) {
     touchAll();
   }
 
-  function newMap() {
+  /**
+   * Switches to a brand new project: a fresh item catalog from items.json,
+   * an empty map, and the given name and respawn point (the view centers
+   * on it). The catalog is reloaded first, so a failed load leaves the
+   * current project untouched.
+   */
+  async function createProject({ name, respawnPoint }) {
+    await loadItems();
     map.reset();
-    setMapName(config.name);
-    setRespawnPoint(config.respawnPoint);
+    setMapName(name);
+    setRespawnPoint(respawnPoint);
     resetView();
   }
 
-  /** Replaces the map with a validated file envelope (see mapFile.readMapFile); missing fields fall back to the config defaults. */
-  function loadMapFile({ name = config.name, respawnPoint = config.respawnPoint, map: data }) {
+  /**
+   * Opens `config.mapUrl`, the map the editor starts on, and keeps its
+   * name and respawn point as the defaults - so the starting map lives in
+   * a file next to index.html rather than in config.js.
+   */
+  async function loadDefaultMap() {
+    const envelope = await fetchMapFile(config.mapUrl);
+    defaults = {
+      name: envelope.name ?? defaults.name,
+      respawnPoint: envelope.respawnPoint ?? defaults.respawnPoint,
+    };
+    loadMapFile(envelope);
+  }
+
+  /** Replaces the map with a validated file envelope (see mapFile.js); missing fields fall back to the default map's. */
+  function loadMapFile({ name = defaults.name, respawnPoint = defaults.respawnPoint, map: data }) {
     map.replace(data);
     setMapName(name);
     setRespawnPoint(respawnPoint);
@@ -792,7 +820,7 @@ export function createStore(config) {
     undo,
     redo,
     getItem,
-    stackAltitude,
+    stackElevation,
     loadItems,
     updateItem,
     setItemImage,
@@ -845,7 +873,8 @@ export function createStore(config) {
     hasMapContent,
     setMapName,
     setRespawnPoint,
-    newMap,
+    createProject,
+    loadDefaultMap,
     loadMapFile,
     exportMapFile,
   };

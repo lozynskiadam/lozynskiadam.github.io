@@ -12,7 +12,8 @@ import { primaryShortcutLabel } from '../core/shortcuts.js';
  * The project switcher on its right shares the same open/close state, so
  * only one dropdown is ever open. Its "Recent projects" list is a mock:
  * the editor holds one project at a time, so the current one is all there
- * is until projects live somewhere they can be listed from.
+ * is until projects live somewhere they can be listed from. "New project"
+ * under that list is real - it opens the dialog that starts one.
  */
 export default defineComponent({
   name: 'MenuBar',
@@ -85,7 +86,19 @@ export default defineComponent({
       window.removeEventListener('keydown', handleKeydown, true);
     });
 
-    return { barEl, menus, openMenuId, PROJECT_MENU_ID, recentProjects, isEnabled, toggle, hover, run, close };
+    return {
+      barEl,
+      menus,
+      openMenuId,
+      PROJECT_MENU_ID,
+      recentProjects,
+      newProject: workspaceActions['project.new'],
+      isEnabled,
+      toggle,
+      hover,
+      run,
+      close,
+    };
   },
   template: `
     <nav class="menubar" ref="barEl" role="menubar">
@@ -150,6 +163,12 @@ export default defineComponent({
           >
             <span class="menubar-project-icon">{{ project.initial }}</span>
             <span class="menubar-item-label">{{ project.name }}</span>
+          </button>
+
+          <div class="menubar-separator" role="separator"></div>
+          <button type="button" class="menubar-item" role="menuitem" @click="run(newProject)">
+            <span class="menubar-item-icon ui-icon" :data-icon="newProject.icon"></span>
+            <span class="menubar-item-label">{{ newProject.label }}</span>
           </button>
         </div>
       </div>

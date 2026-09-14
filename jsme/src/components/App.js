@@ -9,6 +9,7 @@ import ItemsEditor from './ItemsEditor.js';
 import EmptyEditor from './EmptyEditor.js';
 import HelpModal from './HelpModal.js';
 import ProjectPropertiesModal from './ProjectPropertiesModal.js';
+import NewProjectModal from './NewProjectModal.js';
 
 /**
  * Editor components by id (see core/editors.js). An editor without a
@@ -20,13 +21,14 @@ const EDITOR_COMPONENTS = {
 };
 
 /**
- * Dialogs opened from the File menu, by name - rendered here so they show
+ * Dialogs opened from the menu bar, by name - rendered here so they show
  * whichever editor is active. An editor's own dialogs go in that editor
  * (see MapEditor.js).
  */
 const DIALOGS = {
   help: HelpModal,
   projectProperties: ProjectPropertiesModal,
+  newProject: NewProjectModal,
 };
 
 /**
@@ -42,10 +44,15 @@ export default defineComponent({
     useWorkspaceKeyboard();
 
     // The item catalog is shared (the map needs it to draw, the item editor
-    // will edit it), so it loads once here rather than per editor.
+    // will edit it), so it loads once here rather than per editor - and so
+    // does the map the editor opens on. Neither blocks the other; a failed
+    // load leaves the editor usable, on an empty map or with no catalog.
     onMounted(() => {
       store.loadItems().catch((error) => {
         console.error('Failed to load items', error);
+      });
+      store.loadDefaultMap().catch((error) => {
+        console.error('Failed to load the default map', error);
       });
     });
 

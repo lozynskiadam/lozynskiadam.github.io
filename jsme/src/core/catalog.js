@@ -15,11 +15,21 @@
  * file's `traits` is dropped on load, so the editor only ever writes back
  * traits it knows.
  */
-export const ITEM_TRAITS = ['floor', 'blocking', 'moveable', 'pickupable', 'stackable'];
+export const ITEM_TRAITS = ['ground', 'floor', 'blocking', 'movable', 'pickupable', 'stackable'];
 
 /** A 32x32 fully transparent PNG - the placeholder image a brand new item starts with. */
 export const BLANK_ITEM_PNG =
   'iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAGklEQVR42u3BAQEAAACCIP+vbkhAAQAAAO8GECAAAcm1w7EAAAAASUVORK5CYII=';
+
+/**
+ * The one trait the editor itself acts on: a ground item sinks to the
+ * bottom of a tile's stack and the eraser passes over it (see
+ * `pushEntry` / `eraseOnTile` in store.js). Every other trait is written
+ * to the file for the game to read.
+ */
+export function isGroundItem(item) {
+  return Boolean(item?.traits?.includes('ground'));
+}
 
 /** Canonical trait list: known traits only, in ITEM_TRAITS order, without duplicates. */
 export function normalizeTraits(traits) {
@@ -28,25 +38,25 @@ export function normalizeTraits(traits) {
 }
 
 /** What an item that starts emitting light gets: a short warm pool of it. */
-export const DEFAULT_LIGHT = { range: 3, color: '#ffa500' };
+export const DEFAULT_LIGHT = { level: 3, color: '#ffa500' };
 
 const HEX_COLOR = /^#[0-9a-f]{6}$/i;
 
 /**
- * An item's light source in canonical form - `{ range, color }` with the
- * colour as lowercase `#rrggbb` - or null when the item emits none.
+ * An item's light source in canonical form - `{ level, color }` with the
+ * color as lowercase `#rrggbb` - or null when the item emits none.
  *
- * A light that is there but unusable (no range, a colour in some other
+ * A light that is there but unusable (no level, a color in some other
  * notation) keeps the light and falls back to DEFAULT_LIGHT's value for
  * the broken field: a hand-edited items.json should not lose an item's
  * light over a typo in one of the two numbers.
  */
 export function normalizeLight(light) {
   if (!light || typeof light !== 'object') return null;
-  const range = Math.round(Number(light.range));
+  const level = Math.round(Number(light.level));
   const color = String(light.color ?? '');
   return {
-    range: Number.isFinite(range) && range > 0 ? range : DEFAULT_LIGHT.range,
+    level: Number.isFinite(level) && level > 0 ? level : DEFAULT_LIGHT.level,
     color: HEX_COLOR.test(color) ? color.toLowerCase() : DEFAULT_LIGHT.color,
   };
 }
@@ -64,7 +74,7 @@ export function decodeItem(raw) {
       id: String(raw.id),
       name: String(raw.name ?? ''),
       layer: String(raw.layer ?? ''),
-      altitude: Number(raw.altitude) || 0,
+      elevation: Number(raw.elevation) || 0,
       traits: normalizeTraits(raw.traits),
       light: normalizeLight(raw.light),
       png: raw.image,
@@ -82,9 +92,9 @@ export function itemToRaw(item) {
     id: String(item.id),
     name: item.name,
     layer: item.layer,
-    altitude: item.altitude,
+    elevation: item.elevation,
     traits: [...item.traits],
-    light: item.light ? { range: item.light.range, color: item.light.color } : null,
+    light: item.light ? { level: item.light.level, color: item.light.color } : null,
     image: item.png,
   };
 }

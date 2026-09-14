@@ -16,12 +16,14 @@ export function createWorkspaceActions({ store }) {
     actions[id] = { id, ...definition };
   }
 
-  define('file.new', {
-    label: 'New',
+  // Not in MENUS: the project dropdown in the menu bar runs this one. The
+  // dialog it opens is what actually starts the new project (see
+  // NewProjectModal), so this only asks for it.
+  define('project.new', {
+    label: 'New project',
     icon: 'new',
     run() {
-      if (store.hasMapContent() && !confirm('Discard the current map?')) return;
-      store.newMap();
+      store.openDialog('newProject');
     },
   });
 

@@ -1,6 +1,6 @@
 import { defineComponent, computed, reactive, ref, watch } from '../vendor/vue.esm-browser.prod.js';
 import { store, config } from '../editor.js';
-import { DEFAULT_LIGHT, ITEM_TRAITS } from '../core/catalog.js';
+import { DEFAULT_LIGHT, ITEM_TRAITS, isGroundItem } from '../core/catalog.js';
 import { pickImageFile, readImageFile } from '../core/itemsFile.js';
 
 /**
@@ -19,7 +19,7 @@ export default defineComponent({
     item: { type: Object, required: true },
   },
   setup(props) {
-    const draft = reactive({ id: '', name: '', layer: '', altitude: 0, lightRange: 0, lightColor: '' });
+    const draft = reactive({ id: '', name: '', layer: '', elevation: 0, lightLevel: 0, lightColor: '' });
     const error = ref('');
 
     // Every commit replaces the item object, which re-syncs the draft with
@@ -30,11 +30,11 @@ export default defineComponent({
         draft.id = item.id;
         draft.name = item.name;
         draft.layer = item.layer;
-        draft.altitude = item.altitude;
+        draft.elevation = item.elevation;
         // An item that emits nothing still needs something in the two
         // light fields for the moment its checkbox is ticked; the default
         // light is what that tick then stores.
-        draft.lightRange = (item.light ?? DEFAULT_LIGHT).range;
+        draft.lightLevel = (item.light ?? DEFAULT_LIGHT).level;
         draft.lightColor = (item.light ?? DEFAULT_LIGHT).color;
         error.value = '';
       },
@@ -80,41 +80,41 @@ export default defineComponent({
       commit({ layer });
     }
 
-    function commitAltitude() {
-      const altitude = Number(draft.altitude);
-      if (!Number.isInteger(altitude) || altitude < 0 || altitude > config.maxAltitude) {
-        error.value = `The altitude has to be a whole number between 0 and ${config.maxAltitude}.`;
+    function commitElevation() {
+      const elevation = Number(draft.elevation);
+      if (!Number.isInteger(elevation) || elevation < 0 || elevation > config.maxElevation) {
+        error.value = `The elevation has to be a whole number between 0 and ${config.maxElevation}.`;
         return;
       }
-      commit({ altitude });
+      commit({ elevation });
     }
 
     /**
-     * Light is one field, `{ range, color }` or null, so both inputs
+     * Light is one field, `{ level, color }` or null, so both inputs
      * commit the pair - the one they did not change taken from the draft,
      * which the watch above keeps in step with the stored light.
      */
     function commitLight(patch) {
-      commit({ light: { range: Number(draft.lightRange), color: draft.lightColor, ...patch } });
+      commit({ light: { level: Number(draft.lightLevel), color: draft.lightColor, ...patch } });
     }
 
     function toggleLight(on) {
       commit({ light: on ? { ...DEFAULT_LIGHT } : null });
     }
 
-    function commitLightRange() {
-      const range = Number(draft.lightRange);
-      if (!Number.isInteger(range) || range < 1 || range > config.maxLightRange) {
-        error.value = `The light range has to be a whole number between 1 and ${config.maxLightRange}.`;
+    function commitLightLevel() {
+      const level = Number(draft.lightLevel);
+      if (!Number.isInteger(level) || level < 1 || level > config.maxLightLevel) {
+        error.value = `The light level has to be a whole number between 1 and ${config.maxLightLevel}.`;
         return;
       }
-      commitLight({ range });
+      commitLight({ level });
     }
 
     function commitLightColor() {
       const color = draft.lightColor.trim().toLowerCase();
       if (!/^#[0-9a-f]{6}$/.test(color)) {
-        error.value = 'The light colour has to be a hex value like #ffa500.';
+        error.value = 'The light color has to be a hex value like #ffa500.';
         return;
       }
       commitLight({ color });
@@ -141,16 +141,16 @@ export default defineComponent({
       draft,
       error,
       traits: ITEM_TRAITS,
-      maxAltitude: config.maxAltitude,
-      maxLightRange: config.maxLightRange,
+      maxElevation: config.maxElevation,
+      maxLightLevel: config.maxLightLevel,
       layers: store.layers,
-      isGround: computed(() => props.item.layer === 'ground'),
+      isGround: computed(() => isGroundItem(props.item)),
       commitId,
       commitName,
       commitLayer,
-      commitAltitude,
+      commitElevation,
       toggleLight,
-      commitLightRange,
+      commitLightLevel,
       commitLightColor,
       toggleTrait,
       replaceImage,
@@ -188,15 +188,14 @@ export default defineComponent({
       </datalist>
       <div class="items-form-hint">
         The palette tab the item appears on; a brush replaces the item of its own layer on a tile.
-        <template v-if="isGround">Ground items sit at the bottom of a tile's stack.</template>
       </div>
 
       <label class="items-form-field">
-        <span>Altitude</span>
-        <input type="number" min="0" :max="maxAltitude" step="1" v-model="draft.altitude" @change="commitAltitude" />
+        <span>Elevation</span>
+        <input type="number" min="0" :max="maxElevation" step="1" v-model="draft.elevation" @change="commitElevation" />
       </label>
       <div class="items-form-hint">
-        How high in px this item lifts whatever is stacked on top of it (0–{{ maxAltitude }}).
+        How high in px this item lifts whatever is stacked on top of it (0–{{ maxElevation }}).
       </div>
 
       <div class="items-form-field">
@@ -207,6 +206,9 @@ export default defineComponent({
             {{ trait }}
           </label>
         </div>
+      </div>
+      <div v-if="isGround" class="items-form-hint">
+        Ground items sit at the bottom of a tile's stack, and a 1&times;1 eraser passes over them.
       </div>
 
       <div class="items-form-field">
@@ -224,22 +226,22 @@ export default defineComponent({
 
       <template v-if="item.light">
         <label class="items-form-field">
-          <span>Range</span>
-          <input type="number" min="1" :max="maxLightRange" step="1" v-model="draft.lightRange" @change="commitLightRange" />
+          <span>Level</span>
+          <input type="number" min="1" :max="maxLightLevel" step="1" v-model="draft.lightLevel" @change="commitLightLevel" />
         </label>
         <div class="items-form-hint">
-          How far in tiles the light reaches (1-{{ maxLightRange }}).
+          How far in tiles the light reaches (1-{{ maxLightLevel }}).
         </div>
 
         <div class="items-form-field">
-          <span>Colour</span>
+          <span>Color</span>
           <div class="items-form-color">
             <input type="color" v-model="draft.lightColor" @change="commitLightColor" />
             <input type="text" v-model="draft.lightColor" spellcheck="false" maxlength="7" @change="commitLightColor" />
           </div>
         </div>
         <div class="items-form-hint">
-          The colour the light is tinted with, as hex (#rrggbb).
+          The color the light is tinted with, as hex (#rrggbb).
         </div>
       </template>
 
