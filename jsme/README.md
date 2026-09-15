@@ -41,7 +41,7 @@ UI / klawiatura  →  actions.js / tools.js  →  store.js  →  renderer.js
 | `src/core/pointer.js` | Matematyka piksel ↔ kafelek z uwzględnieniem paralaksy pięter. |
 | `src/components/App.js` | Powłoka workspace: `MenuBar` nad wszystkim, `EditorRail` + aktywny edytor (`EDITOR_COMPONENTS`; brak wpisu = `EmptyEditor`), dialogi z paska menu (`DIALOGS`: help, projectProperties, newProject), skróty File. |
 | `src/components/MapEditor.js` | Edytor map w całości: `Sidebar`, `Toolbar`, `MapCanvas`, własne dialogi (`DIALOGS`: itemProperties, terrains), skróty mapy. |
-| `src/components/TerrainsModal.js` | Okno „Terrain patterns” (T): lista wzorców, siatka 3×3 z groundem w środku, siatka 2×2 narożników wewnętrznych i wbudowany picker itemów. |
+| `src/components/TerrainsModal.js` | Okno „Terrain patterns” (T): lista wzorców (z kolejnością = pierwszeństwem, przestawianą „▲ Up” / „▼ Down”), siatka 3×3 z groundem w środku, siatka 2×2 narożników wewnętrznych i wbudowany picker itemów. |
 | `src/components/` | Pozostałe komponenty Vue: `MenuBar`, `Toolbar`, `Sidebar`, `Palette`, `MapCanvas`, dialogi. Wspólne kawałki: `Modal` (ramka każdego dialogu — overlay, przeciągany nagłówek, zamykanie), `DialogHost` (renderuje dialog wskazany przez `state.dialog`), `ItemGrid` (siatka sprite'ów dla palety, listy itemów i pickera we wzorcach terenu), `ProjectFormFields` (pola nazwy i respawn pointu). |
 | `src/composables/` | `useKeyboard` (ogólne: skróty rejestru akcji → klawiatura), `useWorkspaceKeyboard` (skróty File + Escape zamykający dialog), `useMapKeyboard` (skróty edytora map + tryby Shift/Tab), `useDraggable` (przeciąganie okien), `useProjectForm` (walidowany draft nazwy i respawn pointu dla obu dialogów projektu). |
 
@@ -113,21 +113,39 @@ zostaje nietknięty, a powód pokazuje się w dialogu.
 
 ## Katalog itemów (`items.json`)
 
-Tablica wpisów `{ id, name, layer, elevation, traits, light, image }`. `image` to PNG w base64,
+Tablica wpisów `{ id, name, layer, elevation, offsetX, offsetY, traits, light, image }`. `image` to PNG w base64,
 `layer` decyduje o zakładce w palecie i o tym, który wpis na kafelku zastępuje
 pędzel. `elevation` to wysokość itemu w px: każdy wpis leżący wyżej na stosie
 kafelka jest rysowany przesunięty w górę i w lewo o sumę `elevation` wpisów pod
 nim (`store.stackElevation`), więc np. skrzynia o wysokości 8 „unosi” to, co na
-niej stoi. Suma jest przycinana do `config.maxElevation` (64 px). Renderer, podgląd pędzla i podgląd przenoszenia zaznaczenia liczą
-to tak samo.
+niej stoi. Suma jest przycinana do `config.maxElevation` (64 px).
+
+`offsetX` i `offsetY` to własne przesunięcie sprite'a w px — o tyle jest
+rysowany w lewo i w górę względem swojego kafelka (wartość ujemna spycha go w
+prawo i w dół), niezależnie od tego, co pod nim leży. Dzięki temu item może
+wystawać poza kafelek, do którego należy; domyślnie oba są zerowe.
+Formularz itemu ogranicza je do rozmiaru sprite'a, żeby nie zawędrował na
+sąsiedni kafelek.
+
+Pozycję sprite'a liczy jedno miejsce — `store.itemDrawPosition` — więc renderer,
+podgląd pędzla i podgląd przenoszenia zaznaczenia stawiają go tak samo.
 
 Po wczytaniu `image` z pliku rozkłada się w katalogu na trzy pola, żeby
 każda nazwa znaczyła jedną rzecz: `png` (to samo base64, do zapisu z
 powrotem), `src` (data URL dla `<img>`) i `bitmap` (zdekodowany `Image`,
 którym rysuje renderer).
 
-`traits` to flagi z `ITEM_TRAITS` (`ground`, `floor`, `blocking`, `movable`,
-`pickupable`, `stackable`); nieznane są odrzucane przy wczytaniu. Jedyną, na
+`traits` to flagi z `ITEM_TRAITS` (`ground`, `stickBottom`, `stickTop`,
+`blockingCreatures`, `blockingProjectiles`, `blockingItems`,
+`movable`, `pickupable`, `stackable`, `multiUse`); nieznane są odrzucane przy
+wczytaniu. `ground`, `stickBottom` i `stickTop` to rodzina „pozycja w stosie”:
+gdzie na stosie kafelka item osiada — od samej podłogi, przez to, co się jej
+trzyma (ściana, podstawa dywanu), po to, co zostaje na wierzchu (dywan, miejsce
+na linę). Item bez żadnej z nich jest luźny i układa się w kolejności
+postawienia. Trzy flagi
+`blocking*` są niezależne: ściana zatrzymuje wszystko, stół zatrzymuje
+stworzenia i przedmioty, ale przepuszcza strzałę, a okno zatrzymuje same
+stworzenia. Jedyną, na
 którą reaguje sam edytor, jest `ground`: taki item ląduje na spodzie stosu
 kafelka (`store.pushEntry`), a gumka 1×1 go nie zdejmuje — usuwa go dopiero
 gumka większa niż 1 (czyści cały kafelek), „Delete” z menu kontekstowego albo
@@ -172,8 +190,18 @@ pasować, a kafelek zawsze dostaje swój komplet naraz (`store.refreshTerrainsAr
 Gumka działa tak samo, ale tylko gdy zdejmie ziemię wzorca: skasowany ręcznie
 kawałek krawędzi zostaje skasowany, a nie wraca w tej samej chwili.
 
+Kolejność wzorców na liście to ich **pierwszeństwo**, licząc od góry. Gdy dwa
+tereny się spotykają, ten wyżej trzyma swoją ziemię czystą: krawędzie wzorca
+nigdy nie wchodzą na ziemię wzorca stojącego nad nim, a na ziemie tych niżej
+wchodzą normalnie (`store.refreshTerrainTile`). Kolejność zmienia się
+przyciskami „▲ Up” / „▼ Down” w oknie „Terrain patterns”
+(`store.moveTerrain`) i zapisuje się jako kolejność wpisów w pliku. Jak każda
+inna zmiana wzorca dotyczy tego, co pędzel narysuje od teraz — krawędzie już
+leżące na mapie zostają, dopóki się po nich nie pomaluje.
+
 Plik: tablica wpisów `{ id, name, groundId, outer, inner }`, gdzie `outer`
-i `inner` to mapy slot → id itemu (`null` = pusty). Jest opcjonalny — bez niego
+i `inner` to mapy slot → id itemu (`null` = pusty); ich kolejność w tablicy
+niesie pierwszeństwo wzorców. Jest opcjonalny — bez niego
 edytor startuje bez wzorców, a pędzel zachowuje się jak dawniej. Jak `items.json`
 leży obok `index.html` i zapisuje się go pobraniem („Save terrains.json”), po czym
 podmienia się plik na dysku.

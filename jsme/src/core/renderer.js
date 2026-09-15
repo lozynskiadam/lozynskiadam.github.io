@@ -283,8 +283,7 @@ export class MapRenderer {
         const item = store.getItem(tile[index].id);
         if (!item) continue;
 
-        const drawX = tileX + (config.tileSize - item.bitmap.width) - lift;
-        const drawY = tileY + (config.tileSize - item.bitmap.height) - lift;
+        const { x: drawX, y: drawY } = store.itemDrawPosition(item, tileX, tileY, lift);
         lift = Math.min(lift + (item.elevation ?? 0), config.maxElevation);
         // The highlighted item stays in place; the second, additive pass only brightens it.
         ctx.drawImage(item.bitmap, drawX, drawY);

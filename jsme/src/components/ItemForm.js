@@ -19,7 +19,7 @@ export default defineComponent({
     item: { type: Object, required: true },
   },
   setup(props) {
-    const draft = reactive({ id: '', name: '', layer: '', elevation: 0, lightLevel: 0, lightColor: '' });
+    const draft = reactive({ id: '', name: '', layer: '', elevation: 0, offsetX: 0, offsetY: 0, lightLevel: 0, lightColor: '' });
     const error = ref('');
 
     // Every commit replaces the item object, which re-syncs the draft with
@@ -31,6 +31,8 @@ export default defineComponent({
         draft.name = item.name;
         draft.layer = item.layer;
         draft.elevation = item.elevation;
+        draft.offsetX = item.offsetX;
+        draft.offsetY = item.offsetY;
         // An item that emits nothing still needs something in the two
         // light fields for the moment its checkbox is ticked; the default
         // light is what that tick then stores.
@@ -87,6 +89,21 @@ export default defineComponent({
         return;
       }
       commit({ elevation });
+    }
+
+    /**
+     * The two offsets share one rule: whole px, and no further than the
+     * sprite itself, so an item can hang off its tile but cannot wander
+     * onto a neighbour it has nothing to do with.
+     */
+    function commitOffset(axis) {
+      const value = Number(draft[axis]);
+      const limit = axis === 'offsetX' ? props.item.bitmap.width : props.item.bitmap.height;
+      if (!Number.isInteger(value) || value < -limit || value > limit) {
+        error.value = `The offset has to be a whole number between -${limit} and ${limit}.`;
+        return;
+      }
+      commit({ [axis]: value });
     }
 
     /**
@@ -149,6 +166,7 @@ export default defineComponent({
       commitName,
       commitLayer,
       commitElevation,
+      commitOffset,
       toggleLight,
       commitLightLevel,
       commitLightColor,
@@ -170,9 +188,6 @@ export default defineComponent({
         <span>ID</span>
         <input type="number" min="0" step="1" v-model="draft.id" @change="commitId" />
       </label>
-      <div class="items-form-hint">
-        Renumbering an item leaves copies already placed on a map pointing at the old ID.
-      </div>
 
       <label class="items-form-field">
         <span>Name</span>
@@ -186,16 +201,24 @@ export default defineComponent({
       <datalist id="items-form-layers">
         <option v-for="name in layers" :key="name" :value="name"></option>
       </datalist>
-      <div class="items-form-hint">
-        The palette tab the item appears on; a brush replaces the item of its own layer on a tile.
-      </div>
 
       <label class="items-form-field">
         <span>Elevation</span>
         <input type="number" min="0" :max="maxElevation" step="1" v-model="draft.elevation" @change="commitElevation" />
       </label>
-      <div class="items-form-hint">
-        How high in px this item lifts whatever is stacked on top of it (0–{{ maxElevation }}).
+
+      <div class="items-form-field">
+        <span>Offset</span>
+        <div class="items-form-pair">
+          <label>
+            <span>X</span>
+            <input type="number" step="1" v-model="draft.offsetX" @change="commitOffset('offsetX')" />
+          </label>
+          <label>
+            <span>Y</span>
+            <input type="number" step="1" v-model="draft.offsetY" @change="commitOffset('offsetY')" />
+          </label>
+        </div>
       </div>
 
       <div class="items-form-field">
@@ -219,9 +242,6 @@ export default defineComponent({
             emits light
           </label>
         </div>
-      </div>
-      <div class="items-form-hint">
-        Nothing draws it yet - it is the catalog telling the game which items are a light source.
       </div>
 
       <template v-if="item.light">

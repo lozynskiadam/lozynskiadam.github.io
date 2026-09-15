@@ -221,6 +221,22 @@ export function createStore(config) {
     return Math.min(elevation, config.maxElevation);
   }
 
+  /**
+   * Where an item's sprite goes, in px on whatever surface is being drawn:
+   * sitting in the bottom-right of its tile, moved up and left by `lift`
+   * (what the stack under it adds, see stackElevation) and then by the
+   * item's own `offsetX`/`offsetY` - the nudge left and up that lets a
+   * sprite hang off the tile it belongs to. The map, the brush preview and
+   * the move preview all place sprites through here, so a sprite never
+   * lands anywhere its preview did not.
+   */
+  function itemDrawPosition(item, tileX, tileY, lift = 0) {
+    return {
+      x: tileX + (config.tileSize - item.bitmap.width) - lift - (item.offsetX ?? 0),
+      y: tileY + (config.tileSize - item.bitmap.height) - lift - (item.offsetY ?? 0),
+    };
+  }
+
   async function loadItems() {
     state.loading = true;
     try {
@@ -260,11 +276,11 @@ export function createStore(config) {
 
   /**
    * Writes changed fields onto a catalog item. `patch` carries the
-   * catalog item's own fields (id, name, layer, elevation, traits, light,
-   * and png/src/bitmap for the sprite - see catalog.decodeItem); the
-   * caller is expected to have validated them. Returns false when the item
-   * is gone or the new id is taken - the two things a caller cannot fix by
-   * formatting its input differently.
+   * catalog item's own fields (id, name, layer, elevation, offsetX,
+   * offsetY, traits, light, and png/src/bitmap for the sprite - see
+   * catalog.decodeItem); the caller is expected to have validated them.
+   * Returns false when the item is gone or the new id is taken - the two
+   * things a caller cannot fix by formatting its input differently.
    *
    * Renumbering an item does not touch the map: entries already placed
    * keep the old id and stop resolving, which is why the editor warns
@@ -301,6 +317,8 @@ export function createStore(config) {
       name: 'new item',
       layer: layer || 'ground',
       elevation: 0,
+      offsetX: 0,
+      offsetY: 0,
       traits: [],
       light: null,
       image: BLANK_ITEM_PNG,
@@ -590,6 +608,12 @@ export function createStore(config) {
    * recomputed around every stroke. Placing a border piece therefore also
    * means removing the ones that no longer fit - which is why a tile's
    * pieces are always replaced as a set.
+   *
+   * The list `state.terrains` is in precedence order, top first: where two
+   * patterns meet, the one further up keeps its ground clean and the one
+   * further down goes without that edge (see moveTerrain and
+   * refreshTerrainTile). terrains.json stores that order as the order of
+   * its entries.
    */
 
   async function loadTerrains() {
@@ -651,6 +675,30 @@ export function createStore(config) {
     return true;
   }
 
+  /**
+   * Moves a pattern one place up or down the list (`offset` -1 or 1).
+   * The list is an order of precedence, not just the order the dialog
+   * shows: a pattern's edges stop at the ground of any pattern above it
+   * (see refreshTerrainTile), so this is how two terrains that meet are
+   * told which one keeps its edge. Returns false at either end of the
+   * list, the one thing the caller cannot fix by asking again.
+   *
+   * Like every other edit to a pattern, this changes what the brush draws
+   * from here on and leaves edges already on the map where they are -
+   * painting over them is what brings them in line.
+   */
+  function moveTerrain(id, offset) {
+    const step = Math.sign(offset);
+    const index = state.terrains.findIndex((terrain) => terrain.id === String(id));
+    const target = index + step;
+    if (!step || index === -1 || target < 0 || target >= state.terrains.length) return false;
+
+    const [terrain] = state.terrains.splice(index, 1);
+    state.terrains.splice(target, 0, terrain);
+    state.terrainsDirty = true;
+    return true;
+  }
+
   /** The patterns as terrains.json content - the live list, so serialize it rather than keeping it. */
   function exportTerrains() {
     return state.terrains;
@@ -682,6 +730,20 @@ export function createStore(config) {
   }
 
   /**
+   * Whether the tile is the ground of a pattern listed above the one at
+   * `rank` - the tile a lower pattern's edges have to stop at. Patterns
+   * further down the list are fringed over as usual, so the list reads
+   * top-down as "what wins where two terrains meet".
+   */
+  function outrankedTerrainTile(tile, rank) {
+    if (!tile) return false;
+    return tile.some((entry) => {
+      const owner = terrainForGround(entry.id);
+      return !!owner && state.terrains.indexOf(owner) < rank;
+    });
+  }
+
+  /**
    * Puts one tile's border pieces in the state the pattern says they
    * should be in: none at all on a tile of the terrain itself, otherwise
    * whatever its neighbours call for. Does nothing - no history step, no
@@ -690,17 +752,23 @@ export function createStore(config) {
    *
    * Pieces sit directly above the tile's ground run, so they cover the
    * ground they fringe while staying under anything standing on it.
+   *
+   * `rank` is the pattern's place in the list: a tile belonging to a
+   * pattern above it keeps its own look and gets no pieces at all (see
+   * outrankedTerrainTile), while one belonging to a pattern below is
+   * fringed like any other tile.
    */
-  function refreshTerrainTile(x, y, z, terrain, borderIds) {
+  function refreshTerrainTile(x, y, z, terrain, borderIds, rank) {
     if (!isValidPosition(x, y, z)) return;
 
     const tile = getTile(x, y, z);
     const current = (tile ?? []).filter((entry) => borderIds.has(String(entry.id)));
-    const wanted = isTerrainTile(x, y, z, terrain.groundId)
-      ? []
-      : borderPlan(terrainNeighbours(x, y, z, terrain.groundId), (group, slot) => !!terrain[group][slot]).map(
-          ({ group, slot }) => terrain[group][slot],
-        );
+    const wanted =
+      isTerrainTile(x, y, z, terrain.groundId) || outrankedTerrainTile(tile, rank)
+        ? []
+        : borderPlan(terrainNeighbours(x, y, z, terrain.groundId), (group, slot) => !!terrain[group][slot]).map(
+            ({ group, slot }) => terrain[group][slot],
+          );
 
     if (current.length === wanted.length && current.every((entry, index) => String(entry.id) === wanted[index])) {
       return;
@@ -734,12 +802,12 @@ export function createStore(config) {
       for (const entry of tile) present.add(String(entry.id));
     });
 
-    for (const terrain of state.terrains) {
+    for (const [rank, terrain] of state.terrains.entries()) {
       if (!terrain.groundId) continue;
       const borderIds = borderItemIds(terrain);
       if (!present.has(terrain.groundId) && ![...borderIds].some((id) => present.has(id))) continue;
       for (let y = Math.max(y1 - 1, 0); y <= y2 + 1; y++) {
-        for (let x = Math.max(x1 - 1, 0); x <= x2 + 1; x++) refreshTerrainTile(x, y, z, terrain, borderIds);
+        for (let x = Math.max(x1 - 1, 0); x <= x2 + 1; x++) refreshTerrainTile(x, y, z, terrain, borderIds, rank);
       }
     }
   }
@@ -1039,6 +1107,7 @@ export function createStore(config) {
     redo,
     getItem,
     stackElevation,
+    itemDrawPosition,
     loadItems,
     updateItem,
     setItemImage,
@@ -1073,6 +1142,7 @@ export function createStore(config) {
     addTerrain,
     updateTerrain,
     removeTerrain,
+    moveTerrain,
     exportTerrains,
     markTerrainsSaved,
     highlightOnTile,

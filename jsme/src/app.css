@@ -929,6 +929,25 @@ button {
 .items-form input[type='checkbox'] {
   accent-color: var(--accent);
 }
+/* Two numbers under one label (the offsets): each box keeps its axis tag
+   beside it, so the pair reads as one field rather than two rows. */
+.items-form-pair {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.items-form-pair label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.items-form-pair span {
+  color: var(--text-muted);
+}
+.items-form-pair input[type='number'] {
+  width: 64px;
+}
 /* The swatch and its hex share the value column: the swatch stays the size
    of a button, the hex field takes what is left. */
 .items-form-color {
@@ -1359,6 +1378,12 @@ label.key {
 .terrains-list-actions button:disabled {
   opacity: 0.5;
   cursor: default;
+}
+/* Why the order of the list matters, said where the reordering buttons are. */
+.terrains-list-hint {
+  color: var(--text-muted);
+  font-size: 10px;
+  line-height: 1.35;
 }
 
 .terrains-detail {

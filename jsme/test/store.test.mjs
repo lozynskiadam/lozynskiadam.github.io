@@ -46,6 +46,39 @@ const EDGE_CATALOG = Object.values(EDGE_ITEMS).map((id) => ({
   image: 'AA==',
 }));
 
+// A second pattern, so a test can watch two terrains meet: its own ground
+// item and its own edge ids, again one per slot.
+const SAND_EDGE_ITEMS = Object.fromEntries(EDGE_SLOTS.map((slot, index) => [slot, String(30 + index)]));
+
+const SAND_GROUND = { id: '5', name: 'sand', layer: 'ground', elevation: 0, traits: ['ground'], light: null, image: 'AA==' };
+
+const SAND_TERRAIN = {
+  id: '1',
+  name: 'sand',
+  groundId: SAND_GROUND.id,
+  outer: {
+    nw: SAND_EDGE_ITEMS.nw,
+    n: SAND_EDGE_ITEMS.n,
+    ne: SAND_EDGE_ITEMS.ne,
+    w: SAND_EDGE_ITEMS.w,
+    e: SAND_EDGE_ITEMS.e,
+    sw: SAND_EDGE_ITEMS.sw,
+    s: SAND_EDGE_ITEMS.s,
+    se: SAND_EDGE_ITEMS.se,
+  },
+  inner: { nw: SAND_EDGE_ITEMS.inw, ne: SAND_EDGE_ITEMS.ine, sw: SAND_EDGE_ITEMS.isw, se: SAND_EDGE_ITEMS.ise },
+};
+
+const SAND_EDGE_CATALOG = Object.values(SAND_EDGE_ITEMS).map((id) => ({
+  id,
+  name: `sand edge ${id}`,
+  layer: 'edge',
+  elevation: 0,
+  traits: [],
+  light: null,
+  image: 'AA==',
+}));
+
 /** A store with the fixture catalog loaded, ready to paint on. */
 async function freshStore() {
   responses['items.json'] = ITEMS;
@@ -62,6 +95,20 @@ async function terrainStore() {
   await store.loadItems();
   await store.loadTerrains();
   store.selectItem('1');
+  return store;
+}
+
+/**
+ * A store with two patterns that can meet: grass (ground 1, edges 10-21)
+ * and sand (ground 5, edges 30-41). `order` is the precedence order the
+ * file lists them in, first one highest.
+ */
+async function twoTerrainStore(order = [TERRAIN, SAND_TERRAIN]) {
+  responses['items.json'] = [...ITEMS, SAND_GROUND, ...EDGE_CATALOG, ...SAND_EDGE_CATALOG];
+  responses['terrains.json'] = order;
+  const store = createStore(CONFIG);
+  await store.loadItems();
+  await store.loadTerrains();
   return store;
 }
 
@@ -176,6 +223,23 @@ test('stack elevation is the sum underneath, capped by config', async () => {
   assert.equal(store.stackElevation(tile, 1), 8);
   assert.equal(store.stackElevation(tile), 12);
   assert.equal(store.stackElevation(Array.from({ length: 20 }, () => ({ id: 2 }))), CONFIG.maxElevation);
+});
+
+test('a sprite sits in the bottom-right of its tile, moved up-left by the lift and its own offsets', async () => {
+  const store = await freshStore();
+  const sprite = { bitmap: { width: 24, height: 16 } };
+  assert.deepEqual(store.itemDrawPosition(sprite, 64, 96), { x: 72, y: 112 }, 'no lift, no offsets');
+  assert.deepEqual(store.itemDrawPosition(sprite, 64, 96, 8), { x: 64, y: 104 }, 'the stack under it lifts it up-left');
+  assert.deepEqual(
+    store.itemDrawPosition({ ...sprite, offsetX: 4, offsetY: 2 }, 64, 96),
+    { x: 68, y: 110 },
+    'its own offsets move it further left and up',
+  );
+  assert.deepEqual(
+    store.itemDrawPosition({ ...sprite, offsetX: -4, offsetY: -2 }, 64, 96),
+    { x: 76, y: 114 },
+    'a negative offset pushes it right and down',
+  );
 });
 
 /* ---- undo / redo ------------------------------------------------------ */
@@ -543,6 +607,57 @@ test('deleting a selection re-fringes the terrain left around it', async () => {
   assert.deepEqual(ids(store.getTile(6, 6, 0)), east);
   assert.deepEqual(ids(store.getTile(5, 4, 0)), [Number(EDGE_ITEMS.n)], 'the edge that still fits stayed');
   assert.equal(store.getTile(7, 5, 0), null, 'and the ring moved back in with the terrain');
+});
+
+test('a pattern is moved up and down the list, and the file is marked unsaved', async () => {
+  const store = await twoTerrainStore();
+  const order = () => store.state.terrains.map((terrain) => terrain.id);
+  assert.deepEqual(order(), ['0', '1'], 'the file order is the precedence order');
+
+  assert.ok(store.moveTerrain('1', -1));
+  assert.deepEqual(order(), ['1', '0']);
+  assert.equal(store.state.terrainsDirty, true);
+  store.markTerrainsSaved();
+
+  assert.ok(store.moveTerrain('1', 1));
+  assert.deepEqual(order(), ['0', '1'], 'and back down again');
+
+  assert.equal(store.moveTerrain('0', -1), false, 'the top pattern has nowhere to go up');
+  assert.equal(store.moveTerrain('1', 1), false, 'nor the bottom one down');
+  assert.equal(store.moveTerrain('nope', -1), false);
+});
+
+test('edges stop at the ground of a pattern above, and are drawn on the ones below', async () => {
+  const store = await twoTerrainStore();
+
+  store.selectItem('1'); // grass, the pattern listed first
+  store.drawOnTile(5, 5, 0);
+  store.selectItem(SAND_GROUND.id); // sand, listed under it
+  store.drawOnTile(6, 5, 0);
+
+  assert.deepEqual(
+    ids(store.getTile(6, 5, 0)),
+    [Number(SAND_GROUND.id), Number(EDGE_ITEMS.e)],
+    'the grass edge sits on the sand it borders, above its ground',
+  );
+  assert.deepEqual(ids(store.getTile(5, 5, 0)), [1], 'but the sand edge stays off the grass above it');
+  assert.deepEqual(ids(store.getTile(7, 5, 0)), [Number(SAND_EDGE_ITEMS.e)], 'the sand still fringes plain tiles');
+});
+
+test('moving a pattern up hands it the edge where the two terrains meet', async () => {
+  const store = await twoTerrainStore([SAND_TERRAIN, TERRAIN]);
+
+  store.selectItem('1'); // grass, now the lower pattern
+  store.drawOnTile(5, 5, 0);
+  store.selectItem(SAND_GROUND.id);
+  store.drawOnTile(6, 5, 0);
+
+  assert.deepEqual(ids(store.getTile(6, 5, 0)), [Number(SAND_GROUND.id)], 'the grass edge gives way to the sand above it');
+  assert.deepEqual(
+    ids(store.getTile(5, 5, 0)),
+    [1, Number(SAND_EDGE_ITEMS.w)],
+    'and the sand edge is the one that lands on the grass',
+  );
 });
 
 test('patterns are added, edited and dropped, and the file is marked unsaved', async () => {

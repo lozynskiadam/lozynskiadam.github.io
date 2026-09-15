@@ -162,11 +162,11 @@ test('the items editor shows the decoded sprite size of the edited item', async 
   await settle(3);
 
   // The name and the other values sit in input values, so what the tree
-  // renders as text is the sprite size line and the field hints.
+  // renders as text is the sprite size line and the field labels.
   const text = view.text().replace(/\s+/g, ' ');
   assert.ok(view.classes().has('items-form'), 'the edit form rendered');
   assert.match(text, /32 × 32 px/, 'the form reads the sprite through item.bitmap');
-  assert.match(text, /Renumbering an item/, 'and the rest of the form came with it');
+  assert.match(text, /Offset/, 'and the rest of the form came with it');
   selectEditor('map');
   await settle(3);
 });

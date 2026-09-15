@@ -14,8 +14,29 @@
  * The traits an item may carry. A closed set: anything else found in a
  * file's `traits` is dropped on load, so the editor only ever writes back
  * traits it knows.
+ *
+ * `ground`, `stickBottom` and `stickTop` are the stack-position family:
+ * where on a tile's stack the item settles, from the floor itself, through
+ * what clings to it (a wall, a carpet's base), up to what always stays on
+ * view (a carpet, a rope spot). An item carrying none of them is a loose
+ * one and stacks in the order it was placed.
+ *
+ * The three `blocking*` traits are independent: a wall stops all three, a
+ * table stops creatures and items but lets an arrow over it, and a window
+ * stops creatures alone.
  */
-export const ITEM_TRAITS = ['ground', 'floor', 'blocking', 'movable', 'pickupable', 'stackable'];
+export const ITEM_TRAITS = [
+  'ground',
+  'stickBottom',
+  'stickTop',
+  'blockingCreatures',
+  'blockingProjectiles',
+  'blockingItems',
+  'movable',
+  'pickupable',
+  'stackable',
+  'multiUse',
+];
 
 /** A 32x32 fully transparent PNG - the placeholder image a brand new item starts with. */
 export const BLANK_ITEM_PNG =
@@ -81,6 +102,8 @@ export function decodeItem(raw) {
       name: String(raw.name ?? ''),
       layer: String(raw.layer ?? ''),
       elevation: Number(raw.elevation) || 0,
+      offsetX: Math.round(Number(raw.offsetX)) || 0,
+      offsetY: Math.round(Number(raw.offsetY)) || 0,
       traits: normalizeTraits(raw.traits),
       light: normalizeLight(raw.light),
       png: raw.image,
@@ -99,6 +122,8 @@ export function itemToRaw(item) {
     name: item.name,
     layer: item.layer,
     elevation: item.elevation,
+    offsetX: item.offsetX,
+    offsetY: item.offsetY,
     traits: [...item.traits],
     light: item.light ? { level: item.light.level, color: item.light.color } : null,
     image: item.png,

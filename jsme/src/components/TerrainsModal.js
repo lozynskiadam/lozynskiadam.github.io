@@ -120,6 +120,16 @@ export default defineComponent({
       selectedId.value = store.addTerrain();
     }
 
+    /** Whether the selected pattern has anywhere to go in that direction. */
+    function canMove(offset) {
+      const index = store.state.terrains.findIndex((pattern) => pattern.id === selectedId.value);
+      return index !== -1 && index + offset >= 0 && index + offset < store.state.terrains.length;
+    }
+
+    function moveTerrain(offset) {
+      if (terrain.value) store.moveTerrain(terrain.value.id, offset);
+    }
+
     function removeTerrain() {
       const current = terrain.value;
       if (!current) return;
@@ -158,6 +168,8 @@ export default defineComponent({
       clearSlot,
       commitName,
       addTerrain,
+      canMove,
+      moveTerrain,
       removeTerrain,
       save,
     };
@@ -184,8 +196,16 @@ export default defineComponent({
             <div v-if="state.terrains.length === 0" class="terrains-list-empty">No patterns yet.</div>
           </div>
           <div class="terrains-list-actions">
+            <button type="button" :disabled="!canMove(-1)" title="Move the pattern up" @click="moveTerrain(-1)">&#9650; Up</button>
+            <button type="button" :disabled="!canMove(1)" title="Move the pattern down" @click="moveTerrain(1)">&#9660; Down</button>
+          </div>
+          <div class="terrains-list-actions">
             <button type="button" @click="addTerrain">New pattern</button>
             <button type="button" :disabled="!terrain" @click="removeTerrain">Delete</button>
+          </div>
+          <div class="terrains-list-hint">
+            Higher in the list wins: a pattern's edges are never drawn on the ground of a pattern above it,
+            only on the grounds of the ones below.
           </div>
         </div>
 

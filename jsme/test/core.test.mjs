@@ -159,7 +159,10 @@ test('undo and redo on an empty stack report nothing', () => {
 /* ---- catalog ---------------------------------------------------------- */
 
 test('traits are filtered to the known set, in canonical order, without duplicates', () => {
-  assert.deepEqual(normalizeTraits(['blocking', 'nonsense', 'ground', 'ground']), ['ground', 'blocking']);
+  assert.deepEqual(normalizeTraits(['blockingCreatures', 'nonsense', 'ground', 'ground']), [
+    'ground',
+    'blockingCreatures',
+  ]);
   assert.deepEqual(normalizeTraits(undefined), []);
   assert.ok(isGroundItem({ traits: ['ground'] }));
   assert.ok(!isGroundItem({ traits: [] }));
@@ -204,13 +207,29 @@ test('search matches name or id, case-insensitively', () => {
 });
 
 test('decodeItem splits the file image into png/src/bitmap, and itemToRaw puts it back', async () => {
-  const raw = { id: 7, name: 'crate', layer: 'building', elevation: 8, traits: ['movable'], light: null, image: 'AA==' };
+  const raw = {
+    id: 7,
+    name: 'crate',
+    layer: 'building',
+    elevation: 8,
+    offsetX: 4,
+    offsetY: 2,
+    traits: ['movable'],
+    light: null,
+    image: 'AA==',
+  };
   const item = await decodeItem(raw);
   assert.equal(item.id, '7', 'catalog ids are strings');
   assert.equal(item.png, 'AA==');
   assert.ok(item.bitmap, 'the decoded sprite is `bitmap`');
   assert.equal(item.src, 'data:image/png;base64,AA==');
   assert.deepEqual(itemToRaw(item), { ...raw, id: '7' });
+});
+
+test('an item with no offsets in the file sits flush on its tile', async () => {
+  const item = await decodeItem({ id: '1', name: 'grass', layer: 'ground', elevation: 0, traits: [], light: null, image: 'AA==' });
+  assert.equal(item.offsetX, 0);
+  assert.equal(item.offsetY, 0);
 });
 
 /* ---- shortcuts -------------------------------------------------------- */

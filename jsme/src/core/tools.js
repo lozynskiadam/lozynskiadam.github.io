@@ -76,8 +76,12 @@ export function createTools(store, config) {
       for (const entry of entries) {
         const item = store.getItem(entry.id);
         if (!item) continue;
-        const drawX = blockX + dx * config.tileSize + (config.tileSize - item.bitmap.width) - 6 - lift;
-        const drawY = blockY + dy * config.tileSize + (config.tileSize - item.bitmap.height) - 6 - lift;
+        const { x: drawX, y: drawY } = store.itemDrawPosition(
+          item,
+          blockX + dx * config.tileSize,
+          blockY + dy * config.tileSize,
+          lift + 6,
+        );
         lift = Math.min(lift + (item.elevation ?? 0), config.maxElevation);
         ctx.drawImage(item.bitmap, drawX, drawY);
         ctx.globalCompositeOperation = 'lighter';
@@ -200,8 +204,12 @@ export function createTools(store, config) {
           const tile = store.getTile(tileX + dx, tileY + dy, z) ?? [];
           const slot = tile.findIndex((entry) => store.getItem(entry.id)?.layer === item.layer);
           const lift = store.stackElevation(tile, slot === -1 ? tile.length : slot);
-          const drawX = x + config.tileSize - item.bitmap.width + dx * config.tileSize - lift;
-          const drawY = y + config.tileSize - item.bitmap.height + dy * config.tileSize - lift;
+          const { x: drawX, y: drawY } = store.itemDrawPosition(
+            item,
+            x + dx * config.tileSize,
+            y + dy * config.tileSize,
+            lift,
+          );
           ctx.drawImage(item.bitmap, drawX, drawY);
           drawCellOutline(ctx, x + dx * config.tileSize, y + dy * config.tileSize, config.tileSize, '#ffffff');
         });
